@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { mockRecipes } from '@/data/recipes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Clock, Flame, Plus } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { MealPlanItem } from '@/data/types';
+import { MealPlanItem, Recipe } from '@/data/types';
 import { motion } from 'framer-motion';
+import AddToPlanModal from '@/components/AddToPlanModal';
 
 const CATEGORY_LABELS: Record<string, string> = {
   protein: '🥩 Protéines',
@@ -21,7 +23,11 @@ export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
-  const recipe = mockRecipes.find(r => r.id === id);
+  const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
+  const [showModal, setShowModal] = useState(false);
+
+  const allRecipes = [...mockRecipes, ...customRecipes];
+  const recipe = allRecipes.find(r => r.id === id);
 
   if (!recipe) {
     return (
@@ -34,18 +40,6 @@ export default function RecipeDetail() {
     );
   }
 
-  const addToPlan = () => {
-    const today = new Date().toISOString().slice(0, 10);
-    setMealPlan(prev => [...prev, {
-      id: `mp_${Date.now()}`,
-      date: today,
-      mealType: recipe.mealType,
-      recipeId: recipe.id,
-      isBatchCooking: false,
-    }]);
-  };
-
-  // Group ingredients by category
   const grouped = recipe.ingredients.reduce((acc, ing) => {
     const cat = ing.category;
     if (!acc[cat]) acc[cat] = [];
@@ -74,7 +68,6 @@ export default function RecipeDetail() {
           </span>
         </div>
 
-        {/* Macros */}
         <div className="card-elevated p-4">
           <h2 className="font-display font-semibold text-sm mb-3">Macronutriments estimés</h2>
           <div className="grid grid-cols-3 gap-3 text-center">
@@ -93,7 +86,6 @@ export default function RecipeDetail() {
           </div>
         </div>
 
-        {/* Ingredients */}
         <div className="card-elevated p-4">
           <h2 className="font-display font-semibold text-sm mb-3">Ingrédients</h2>
           <div className="space-y-4">
@@ -113,7 +105,6 @@ export default function RecipeDetail() {
           </div>
         </div>
 
-        {/* Steps */}
         <div className="card-elevated p-4">
           <h2 className="font-display font-semibold text-sm mb-3">Préparation</h2>
           <ol className="space-y-3">
@@ -128,10 +119,17 @@ export default function RecipeDetail() {
           </ol>
         </div>
 
-        <Button className="w-full gap-2 tap-scale" size="lg" onClick={addToPlan}>
+        <Button className="w-full gap-2 tap-scale" size="lg" onClick={() => setShowModal(true)}>
           <Plus className="w-5 h-5" /> Ajouter au planning
         </Button>
       </motion.div>
+
+      <AddToPlanModal
+        open={showModal}
+        onOpenChange={setShowModal}
+        recipe={recipe}
+        onAdd={(item) => setMealPlan(prev => [...prev, item])}
+      />
     </AppLayout>
   );
 }

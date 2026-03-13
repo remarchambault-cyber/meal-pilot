@@ -13,6 +13,7 @@ import RecipeDetail from "./pages/RecipeDetail";
 import Shopping from "./pages/Shopping";
 import Tracking from "./pages/Tracking";
 import SettingsPage from "./pages/Settings";
+import MyRecipes from "./pages/MyRecipes";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/meals" element={<Meals />} />
+          <Route path="/my-recipes" element={<MyRecipes />} />
           <Route path="/planning" element={<Planning />} />
           <Route path="/recipe/:id" element={<RecipeDetail />} />
           <Route path="/shopping" element={<Shopping />} />

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { UserProfile } from '@/data/types';
+import { UserProfile, Recipe } from '@/data/types';
 import { mockRecipes } from '@/data/recipes';
 import { calculateCalorieTarget } from '@/lib/calories';
 import AppLayout from '@/components/AppLayout';
@@ -10,39 +10,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Clock, Flame, RefreshCw, Plus, Eye } from 'lucide-react';
 import { MealPlanItem } from '@/data/types';
 import { motion } from 'framer-motion';
+import AddToPlanModal from '@/components/AddToPlanModal';
 
 export default function Meals() {
   const navigate = useNavigate();
   const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
   const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
+  const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
   const [filter, setFilter] = useState<string>('all');
   const [seed, setSeed] = useState(0);
+  const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
+
+  const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
 
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
 
   const filtered = useMemo(() => {
-    let recipes = [...mockRecipes];
+    let recipes = [...allRecipes];
     if (filter !== 'all') {
       recipes = recipes.filter(r => r.mealType === filter);
     }
     if (profile?.dietPreference && profile.dietPreference !== 'none') {
       recipes = recipes.filter(r => r.dietTags.includes(profile.dietPreference));
     }
-    // Simple shuffle based on seed
     return recipes.sort(() => Math.sin(seed + recipes.length) - 0.5);
-  }, [filter, profile, seed]);
-
-  const addToPlan = (recipeId: string, mealType: string) => {
-    const today = new Date().toISOString().slice(0, 10);
-    const item: MealPlanItem = {
-      id: `mp_${Date.now()}`,
-      date: today,
-      mealType: mealType as MealPlanItem['mealType'],
-      recipeId,
-      isBatchCooking: false,
-    };
-    setMealPlan(prev => [...prev, item]);
-  };
+  }, [filter, profile, seed, allRecipes]);
 
   return (
     <AppLayout>
@@ -102,7 +94,7 @@ export default function Meals() {
                 <Button
                   size="sm"
                   className="gap-1.5 tap-scale"
-                  onClick={() => addToPlan(recipe.id, recipe.mealType)}
+                  onClick={() => setModalRecipe(recipe)}
                 >
                   <Plus className="w-4 h-4" /> Au planning
                 </Button>
@@ -120,6 +112,15 @@ export default function Meals() {
           )}
         </div>
       </div>
+
+      {modalRecipe && (
+        <AddToPlanModal
+          open={!!modalRecipe}
+          onOpenChange={(open) => !open && setModalRecipe(null)}
+          recipe={modalRecipe}
+          onAdd={(item) => setMealPlan(prev => [...prev, item])}
+        />
+      )}
     </AppLayout>
   );
 }
