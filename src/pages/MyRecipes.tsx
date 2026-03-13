@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { Recipe, RecipeIngredient } from '@/data/types';
+import { Recipe, RecipeIngredient, MealPlanItem } from '@/data/types';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,9 +9,21 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Trash2, Edit, Eye, Flame, Clock } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Plus, Trash2, Edit, Eye, Flame, Clock, CalendarPlus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
+import AddToPlanModal from '@/components/AddToPlanModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const EMPTY_INGREDIENT: RecipeIngredient = { name: '', quantity: 0, unit: 'g', category: 'other' };
 
@@ -29,13 +41,21 @@ const EMPTY_RECIPE: Omit<Recipe, 'id'> = {
   dietTags: [],
 };
 
+const MEAL_BADGE: Record<string, string> = {
+  breakfast: 'Petit déj.',
+  lunch: 'Déjeuner',
+  dinner: 'Dîner',
+};
+
 export default function MyRecipes() {
   const navigate = useNavigate();
   const [recipes, setRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
+  const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
   const [showEditor, setShowEditor] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<Recipe, 'id'>>(EMPTY_RECIPE);
   const [newStep, setNewStep] = useState('');
+  const [planRecipe, setPlanRecipe] = useState<Recipe | null>(null);
 
   const startCreate = () => {
     setEditingId(null);
@@ -107,46 +127,79 @@ export default function MyRecipes() {
         </div>
 
         {recipes.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16 text-muted-foreground">
             <p className="text-lg">Aucune recette personnelle</p>
             <p className="text-sm mt-1">Crée tes propres recettes pour les ajouter au planning.</p>
-          </div>
+            <Button className="mt-4 gap-1.5 tap-scale" onClick={startCreate}>
+              <Plus className="w-4 h-4" /> Créer ma première recette
+            </Button>
+          </motion.div>
         ) : (
           <div className="space-y-3">
-            {recipes.map((recipe, i) => (
-              <motion.div
-                key={recipe.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className="card-elevated p-4 space-y-3"
-              >
-                <div>
-                  <h3 className="font-display font-semibold text-base">{recipe.title}</h3>
-                  {recipe.description && <p className="text-sm text-body-text mt-0.5">{recipe.description}</p>}
-                </div>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1"><Flame className="w-4 h-4 text-accent" />{recipe.calories} kcal</span>
-                  <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{recipe.prepTime} min</span>
-                  <span>{recipe.ingredients.length} ingrédients</span>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="gap-1.5 tap-scale" onClick={() => navigate(`/recipe/${recipe.id}`)}>
-                    <Eye className="w-4 h-4" /> Voir
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5 tap-scale" onClick={() => startEdit(recipe)}>
-                    <Edit className="w-4 h-4" /> Modifier
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5 tap-scale text-destructive" onClick={() => handleDelete(recipe.id)}>
-                    <Trash2 className="w-4 h-4" /> Supprimer
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
+            <AnimatePresence>
+              {recipes.map((recipe, i) => (
+                <motion.div
+                  key={recipe.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ delay: i * 0.03, duration: 0.3 }}
+                  className="card-elevated p-4 space-y-3 transition-shadow duration-200 hover:shadow-md"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-display font-semibold text-base">{recipe.title}</h3>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                          {MEAL_BADGE[recipe.mealType] || recipe.mealType}
+                        </span>
+                      </div>
+                      {recipe.description && <p className="text-sm text-body-text mt-0.5">{recipe.description}</p>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1"><Flame className="w-4 h-4 text-accent" />{recipe.calories} kcal</span>
+                    <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{recipe.prepTime} min</span>
+                    <span>{recipe.ingredients.length} ingrédients</span>
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button variant="outline" size="sm" className="gap-1.5 tap-scale" onClick={() => navigate(`/recipe/${recipe.id}`)}>
+                      <Eye className="w-4 h-4" /> Voir
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-1.5 tap-scale" onClick={() => startEdit(recipe)}>
+                      <Edit className="w-4 h-4" /> Modifier
+                    </Button>
+                    <Button size="sm" className="gap-1.5 tap-scale" onClick={() => setPlanRecipe(recipe)}>
+                      <CalendarPlus className="w-4 h-4" /> Au planning
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-1.5 tap-scale text-destructive">
+                          <Trash2 className="w-4 h-4" /> Supprimer
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Supprimer cette recette ?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            « {recipe.title} » sera définitivement supprimée.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(recipe.id)}>Supprimer</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </div>
 
+      {/* Recipe Editor Dialog */}
       <Dialog open={showEditor} onOpenChange={setShowEditor}>
         <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
@@ -154,16 +207,16 @@ export default function MyRecipes() {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div>
-              <Label className="text-xs">Titre *</Label>
-              <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="mt-1" />
+              <Label className="text-xs font-medium">Titre *</Label>
+              <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="mt-1" placeholder="Ex: Salade césar maison" />
             </div>
             <div>
-              <Label className="text-xs">Description</Label>
-              <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="mt-1" rows={2} />
+              <Label className="text-xs font-medium">Description</Label>
+              <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="mt-1" rows={2} placeholder="Courte description…" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">Type de repas</Label>
+                <Label className="text-xs font-medium">Type de repas</Label>
                 <Select value={form.mealType} onValueChange={(v) => setForm(f => ({ ...f, mealType: v as Recipe['mealType'] }))}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -174,25 +227,25 @@ export default function MyRecipes() {
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Temps (min)</Label>
+                <Label className="text-xs font-medium">Temps (min)</Label>
                 <Input type="number" value={form.prepTime} onChange={e => setForm(f => ({ ...f, prepTime: parseInt(e.target.value) || 0 }))} className="mt-1" />
               </div>
             </div>
             <div className="grid grid-cols-4 gap-2">
               <div>
-                <Label className="text-xs">Calories</Label>
+                <Label className="text-xs font-medium">Calories</Label>
                 <Input type="number" value={form.calories} onChange={e => setForm(f => ({ ...f, calories: parseInt(e.target.value) || 0 }))} className="mt-1" />
               </div>
               <div>
-                <Label className="text-xs">Prot. (g)</Label>
+                <Label className="text-xs font-medium">Prot. (g)</Label>
                 <Input type="number" value={form.protein} onChange={e => setForm(f => ({ ...f, protein: parseInt(e.target.value) || 0 }))} className="mt-1" />
               </div>
               <div>
-                <Label className="text-xs">Gluc. (g)</Label>
+                <Label className="text-xs font-medium">Gluc. (g)</Label>
                 <Input type="number" value={form.carbs} onChange={e => setForm(f => ({ ...f, carbs: parseInt(e.target.value) || 0 }))} className="mt-1" />
               </div>
               <div>
-                <Label className="text-xs">Lip. (g)</Label>
+                <Label className="text-xs font-medium">Lip. (g)</Label>
                 <Input type="number" value={form.fat} onChange={e => setForm(f => ({ ...f, fat: parseInt(e.target.value) || 0 }))} className="mt-1" />
               </div>
             </div>
@@ -201,8 +254,8 @@ export default function MyRecipes() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Label className="text-xs font-semibold">Ingrédients</Label>
-                <Button variant="ghost" size="sm" className="gap-1 h-7 text-xs" onClick={addIngredient}>
-                  <Plus className="w-3 h-3" /> Ajouter
+                <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={addIngredient}>
+                  <Plus className="w-3 h-3" /> Ajouter un ingrédient
                 </Button>
               </div>
               <div className="space-y-2">
@@ -228,6 +281,9 @@ export default function MyRecipes() {
                     </Button>
                   </div>
                 ))}
+                {form.ingredients.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-2">Aucun ingrédient ajouté</p>
+                )}
               </div>
             </div>
 
@@ -251,12 +307,22 @@ export default function MyRecipes() {
               </div>
             </div>
 
-            <Button className="w-full tap-scale" onClick={handleSave}>
-              {editingId ? 'Enregistrer les modifications' : 'Créer la recette'}
+            <Button className="w-full tap-scale font-semibold" onClick={handleSave}>
+              {editingId ? 'Enregistrer les modifications' : '✅ Créer la recette'}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add to Plan Modal */}
+      {planRecipe && (
+        <AddToPlanModal
+          open={!!planRecipe}
+          onOpenChange={(open) => !open && setPlanRecipe(null)}
+          recipe={planRecipe}
+          onAdd={(item) => setMealPlan(prev => [...prev, item])}
+        />
+      )}
     </AppLayout>
   );
 }
