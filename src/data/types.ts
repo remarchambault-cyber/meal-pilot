@@ -36,9 +36,10 @@ export interface RecipeIngredient {
 export interface MealPlanItem {
   id: string;
   date: string; // YYYY-MM-DD
-  mealType: 'breakfast' | 'lunch' | 'dinner';
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   recipeId: string;
   isBatchCooking: boolean;
+  portions: number;
 }
 
 export interface WeightLog {

@@ -1,20 +1,52 @@
 import { useMemo, useState } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { MealPlanItem } from '@/data/types';
+import { MealPlanItem, Recipe } from '@/data/types';
 import { mockRecipes } from '@/data/recipes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Copy, ChefHat, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, ChefHat, Trash2, Plus, Flame } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
-const MEAL_TYPE_LABELS = { breakfast: 'Petit déj.', lunch: 'Déjeuner', dinner: 'Dîner' };
+const MEAL_TYPE_LABELS: Record<string, string> = {
+  breakfast: '🌅 Petit déj.',
+  lunch: '☀️ Déjeuner',
+  dinner: '🌙 Dîner',
+  snack: '🍎 Collation',
+};
+
+const MEAL_TYPE_COLORS: Record<string, string> = {
+  breakfast: 'border-l-accent',
+  lunch: 'border-l-primary',
+  dinner: 'border-l-secondary',
+  snack: 'border-l-muted-foreground',
+};
 
 export default function Planning() {
   const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
+  const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
   const [weekOffset, setWeekOffset] = useState(0);
+  const [addDialogDate, setAddDialogDate] = useState<string | null>(null);
+  const [selectedRecipeId, setSelectedRecipeId] = useState('');
+  const [selectedMealType, setSelectedMealType] = useState<string>('lunch');
+
+  const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
 
   const weekStart = useMemo(() => {
     const now = new Date();
@@ -28,19 +60,47 @@ export default function Planning() {
     return mealPlan.filter(m => m.date === dateStr);
   };
 
-  const getRecipe = (id: string) => mockRecipes.find(r => r.id === id);
+  const getRecipe = (id: string) => allRecipes.find(r => r.id === id);
 
   const removeMeal = (id: string) => {
     setMealPlan(prev => prev.filter(m => m.id !== id));
+    toast({ title: '🗑️ Repas supprimé' });
   };
 
   const duplicateMeal = (item: MealPlanItem) => {
     const nextDay = format(addDays(new Date(item.date), 1), 'yyyy-MM-dd');
     setMealPlan(prev => [...prev, { ...item, id: `mp_${Date.now()}`, date: nextDay }]);
+    toast({ title: '📋 Repas dupliqué', description: 'Copié au jour suivant' });
   };
 
   const toggleBatchCooking = (id: string) => {
     setMealPlan(prev => prev.map(m => m.id === id ? { ...m, isBatchCooking: !m.isBatchCooking } : m));
+  };
+
+  const handleQuickAdd = () => {
+    if (!addDialogDate || !selectedRecipeId) return;
+    const recipe = getRecipe(selectedRecipeId);
+    if (!recipe) return;
+    const item: MealPlanItem = {
+      id: `mp_${Date.now()}`,
+      date: addDialogDate,
+      mealType: selectedMealType as MealPlanItem['mealType'],
+      recipeId: selectedRecipeId,
+      isBatchCooking: false,
+      portions: 1,
+    };
+    setMealPlan(prev => [...prev, item]);
+    setAddDialogDate(null);
+    setSelectedRecipeId('');
+    toast({ title: '✅ Repas ajouté' });
+  };
+
+  const getDayCalories = (date: Date) => {
+    const meals = getMealsForDay(date);
+    return meals.reduce((sum, m) => {
+      const recipe = getRecipe(m.recipeId);
+      return sum + (recipe ? recipe.calories * (m.portions || 1) : 0);
+    }, 0);
   };
 
   return (
@@ -65,6 +125,7 @@ export default function Planning() {
           {days.map((day, i) => {
             const meals = getMealsForDay(day);
             const isToday = isSameDay(day, new Date());
+            const dayCalories = getDayCalories(day);
             return (
               <motion.div
                 key={day.toISOString()}
@@ -73,49 +134,133 @@ export default function Planning() {
                 transition={{ delay: i * 0.03 }}
                 className={`card-elevated p-4 ${isToday ? 'ring-2 ring-primary/30' : ''}`}
               >
-                <h3 className={`font-display font-semibold text-sm mb-2 capitalize ${isToday ? 'text-primary' : ''}`}>
-                  {format(day, 'EEEE d MMMM', { locale: fr })}
-                  {isToday && <span className="ml-2 text-xs font-normal text-primary">(aujourd'hui)</span>}
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className={`font-display font-semibold text-sm capitalize ${isToday ? 'text-primary' : ''}`}>
+                    {format(day, 'EEEE d MMMM', { locale: fr })}
+                    {isToday && <span className="ml-2 text-xs font-normal text-primary">(aujourd'hui)</span>}
+                  </h3>
+                  {dayCalories > 0 && (
+                    <span className="text-xs font-medium text-accent flex items-center gap-1">
+                      <Flame className="w-3 h-3" /> {dayCalories} kcal
+                    </span>
+                  )}
+                </div>
 
                 {meals.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Aucun repas planifié</p>
+                  <p className="text-sm text-muted-foreground mb-2">Aucun repas planifié</p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-2 mb-2">
                     {meals.map(meal => {
                       const recipe = getRecipe(meal.recipeId);
                       if (!recipe) return null;
                       return (
-                        <div key={meal.id} className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2">
+                        <div key={meal.id} className={`flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2 border-l-3 ${MEAL_TYPE_COLORS[meal.mealType] || ''}`}>
                           <div className="flex items-center gap-2 min-w-0">
                             {meal.isBatchCooking && <ChefHat className="w-4 h-4 text-secondary shrink-0" />}
-                            <span className="text-xs text-muted-foreground w-16 shrink-0">
+                            <span className="text-xs text-muted-foreground w-20 shrink-0">
                               {MEAL_TYPE_LABELS[meal.mealType]}
                             </span>
                             <span className="text-sm font-medium truncate">{recipe.title}</span>
-                            <span className="text-xs text-muted-foreground">{recipe.calories} kcal</span>
+                            {(meal.portions || 1) > 1 && <span className="text-xs text-muted-foreground">×{meal.portions}</span>}
+                            <span className="text-xs text-muted-foreground">{recipe.calories * (meal.portions || 1)} kcal</span>
                           </div>
                           <div className="flex gap-1 shrink-0">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleBatchCooking(meal.id)}>
-                              <ChefHat className={`w-3.5 h-3.5 ${meal.isBatchCooking ? 'text-secondary' : 'text-muted-foreground'}`} />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => duplicateMeal(meal)}>
-                              <Copy className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeMeal(meal.id)}>
-                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleBatchCooking(meal.id)}>
+                                  <ChefHat className={`w-3.5 h-3.5 ${meal.isBatchCooking ? 'text-secondary' : 'text-muted-foreground'}`} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Batch cooking</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => duplicateMeal(meal)}>
+                                  <Copy className="w-3.5 h-3.5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Dupliquer au jour suivant</TooltipContent>
+                            </Tooltip>
+                            <AlertDialog>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>Supprimer</TooltipContent>
+                              </Tooltip>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Supprimer ce repas ?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {recipe.title} sera retiré du planning.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => removeMeal(meal.id)}>Supprimer</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
                       );
                     })}
                   </div>
                 )}
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 text-muted-foreground hover:text-primary tap-scale w-full justify-center"
+                  onClick={() => { setAddDialogDate(format(day, 'yyyy-MM-dd')); setSelectedMealType('lunch'); setSelectedRecipeId(''); }}
+                >
+                  <Plus className="w-4 h-4" /> Ajouter un repas
+                </Button>
               </motion.div>
             );
           })}
         </div>
       </div>
+
+      <Dialog open={!!addDialogDate} onOpenChange={(open) => !open && setAddDialogDate(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display">Ajouter un repas</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div>
+              <label className="text-xs font-medium">Type de repas</label>
+              <Select value={selectedMealType} onValueChange={setSelectedMealType}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="breakfast">Petit déjeuner</SelectItem>
+                  <SelectItem value="lunch">Déjeuner</SelectItem>
+                  <SelectItem value="dinner">Dîner</SelectItem>
+                  <SelectItem value="snack">Collation</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-medium">Recette</label>
+              <Select value={selectedRecipeId} onValueChange={setSelectedRecipeId}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Choisir une recette" /></SelectTrigger>
+                <SelectContent>
+                  {allRecipes.map(r => (
+                    <SelectItem key={r.id} value={r.id}>{r.title} ({r.calories} kcal)</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button className="w-full tap-scale" onClick={handleQuickAdd} disabled={!selectedRecipeId}>
+              Ajouter
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

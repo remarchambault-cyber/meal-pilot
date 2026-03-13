@@ -1,33 +1,52 @@
 import { useState, useMemo } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { UserProfile, WeightLog, CalorieLog } from '@/data/types';
+import { UserProfile, WeightLog, CalorieLog, MealPlanItem, Recipe } from '@/data/types';
 import { calculateCalorieTarget } from '@/lib/calories';
+import { mockRecipes } from '@/data/recipes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
-import { Plus, TrendingUp, TrendingDown, Minus, Lightbulb } from 'lucide-react';
+import { Plus, Lightbulb, TrendingUp, TrendingDown, Minus, Flame, Target, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { toast } from '@/hooks/use-toast';
 
 export default function Tracking() {
   const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
   const [weightLogs, setWeightLogs] = useLocalStorage<WeightLog[]>('mealpilot_weight', []);
   const [calorieLogs, setCalorieLogs] = useLocalStorage<CalorieLog[]>('mealpilot_calories', []);
+  const [mealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
+  const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
 
   const [newWeight, setNewWeight] = useState('');
   const [newCalConsumed, setNewCalConsumed] = useState('');
   const [newCalBurned, setNewCalBurned] = useState('');
 
+  const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
 
   const today = new Date().toISOString().slice(0, 10);
+
+  // Auto-calculated planned calories from planning
+  const plannedCalories = useMemo(() => {
+    const todayMeals = mealPlan.filter(m => m.date === today);
+    return todayMeals.reduce((sum, m) => {
+      const recipe = allRecipes.find(r => r.id === m.recipeId);
+      return sum + (recipe ? recipe.calories * (m.portions || 1) : 0);
+    }, 0);
+  }, [mealPlan, today, allRecipes]);
+
+  const todayCalories = calorieLogs.find(l => l.date === today);
+  const consumed = todayCalories?.caloriesConsumed || 0;
+  const ecart = consumed - plannedCalories;
 
   const addWeight = () => {
     if (!newWeight) return;
     const log: WeightLog = { id: `w_${Date.now()}`, date: today, weight: parseFloat(newWeight) };
     setWeightLogs(prev => [...prev.filter(l => l.date !== today), log]);
     setNewWeight('');
+    toast({ title: '✅ Poids enregistré', description: `${log.weight} kg` });
   };
 
   const addCalories = () => {
@@ -41,6 +60,7 @@ export default function Tracking() {
     setCalorieLogs(prev => [...prev.filter(l => l.date !== today), log]);
     setNewCalConsumed('');
     setNewCalBurned('');
+    toast({ title: '✅ Calories enregistrées' });
   };
 
   // Advice logic
@@ -53,17 +73,28 @@ export default function Tracking() {
     const weeklyChange = (delta / recent.length) * 7;
 
     if (profile.goal === 'lose') {
-      if (weeklyChange > 0.1) return { type: 'warning', text: 'Ton poids augmente. Vérifie ton apport calorique et essaie de rester proche de ta cible.' };
-      if (weeklyChange < -1) return { type: 'warning', text: 'Ta perte est rapide ! Pense à ne pas descendre trop bas pour préserver ta santé.' };
-      if (Math.abs(weeklyChange) < 0.1) return { type: 'info', text: 'Ton poids est stable. Si tu veux relancer la perte, essaie de légèrement réduire tes calories ou augmenter ton activité.' };
+      if (weeklyChange > 0.1) return { type: 'warning' as const, text: 'Ton poids augmente. Vérifie ton apport calorique et essaie de rester proche de ta cible.' };
+      if (weeklyChange < -1) return { type: 'warning' as const, text: 'Ta perte est rapide ! Pense à ne pas descendre trop bas pour préserver ta santé.' };
+      if (Math.abs(weeklyChange) < 0.1) return { type: 'info' as const, text: 'Ton poids est stable. Si tu veux relancer la perte, essaie de légèrement réduire tes calories ou augmenter ton activité.' };
     }
     if (profile.goal === 'gain') {
-      if (weeklyChange < -0.1) return { type: 'warning', text: 'Ton poids baisse. Pense à augmenter légèrement tes calories.' };
-      if (weeklyChange > 1) return { type: 'warning', text: 'Ta prise est rapide ! Ralentis un peu pour privilégier le muscle.' };
-      if (Math.abs(weeklyChange) < 0.1) return { type: 'info', text: 'Ton poids stagne. Ajoute 100-200 kcal par jour pour relancer la prise.' };
+      if (weeklyChange < -0.1) return { type: 'warning' as const, text: 'Ton poids baisse. Pense à augmenter légèrement tes calories.' };
+      if (weeklyChange > 1) return { type: 'warning' as const, text: 'Ta prise est rapide ! Ralentis un peu pour privilégier le muscle.' };
+      if (Math.abs(weeklyChange) < 0.1) return { type: 'info' as const, text: 'Ton poids stagne. Ajoute 100-200 kcal par jour pour relancer la prise.' };
     }
     return null;
   }, [profile, weightLogs]);
+
+  // Trend
+  const trend = useMemo(() => {
+    if (weightLogs.length < 2) return null;
+    const sorted = [...weightLogs].sort((a, b) => a.date.localeCompare(b.date));
+    const last = sorted[sorted.length - 1].weight;
+    const prev = sorted[sorted.length - 2].weight;
+    const diff = last - prev;
+    if (Math.abs(diff) < 0.05) return { direction: 'stable' as const, diff: 0 };
+    return { direction: diff > 0 ? 'up' as const : 'down' as const, diff };
+  }, [weightLogs]);
 
   const chartData = useMemo(() => {
     return [...weightLogs]
@@ -76,6 +107,50 @@ export default function Tracking() {
     <AppLayout>
       <div className="space-y-6">
         <h1 className="text-2xl font-display font-bold">Suivi</h1>
+
+        {/* Planned vs consumed calories */}
+        <div className="grid grid-cols-3 gap-3">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-elevated p-4 text-center">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-2">
+              <Target className="w-4 h-4 text-primary" />
+            </div>
+            <p className="font-display font-bold text-lg">{plannedCalories}</p>
+            <p className="text-xs text-muted-foreground">Prévues</p>
+          </motion.div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.05 }} className="card-elevated p-4 text-center">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mx-auto mb-2">
+              <Flame className="w-4 h-4 text-accent" />
+            </div>
+            <p className="font-display font-bold text-lg">{consumed}</p>
+            <p className="text-xs text-muted-foreground">Consommées</p>
+          </motion.div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="card-elevated p-4 text-center">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2 ${ecart > 0 ? 'bg-destructive/10' : 'bg-secondary/10'}`}>
+              <BarChart3 className={`w-4 h-4 ${ecart > 0 ? 'text-destructive' : 'text-secondary'}`} />
+            </div>
+            <p className={`font-display font-bold text-lg ${ecart > 0 ? 'text-destructive' : 'text-secondary'}`}>
+              {ecart > 0 ? '+' : ''}{ecart}
+            </p>
+            <p className="text-xs text-muted-foreground">Écart</p>
+          </motion.div>
+        </div>
+
+        {/* Trend */}
+        {trend && (
+          <div className="card-elevated p-4 flex items-center gap-3">
+            {trend.direction === 'up' && <TrendingUp className="w-5 h-5 text-accent" />}
+            {trend.direction === 'down' && <TrendingDown className="w-5 h-5 text-secondary" />}
+            {trend.direction === 'stable' && <Minus className="w-5 h-5 text-muted-foreground" />}
+            <div>
+              <p className="text-sm font-medium">
+                {trend.direction === 'up' && `En hausse (+${Math.abs(trend.diff).toFixed(1)} kg)`}
+                {trend.direction === 'down' && `En baisse (${trend.diff.toFixed(1)} kg)`}
+                {trend.direction === 'stable' && 'Poids stable'}
+              </p>
+              <p className="text-xs text-muted-foreground">Tendance récente</p>
+            </div>
+          </div>
+        )}
 
         {/* Weight entry */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-elevated p-4 space-y-3">
