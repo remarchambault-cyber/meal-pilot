@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { UserProfile, WeightLog, CalorieLog, MealPlanItem } from '@/data/types';
-import { getGoalLabel, getActivityLabel, getDietLabel } from '@/lib/calories';
+import { UserProfile, WeightLog, CalorieLog, MealPlanItem, Recipe } from '@/data/types';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +9,18 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Save, Trash2, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { toast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -18,6 +29,7 @@ export default function SettingsPage() {
   const [, setWeightLogs] = useLocalStorage<WeightLog[]>('mealpilot_weight', []);
   const [, setCalorieLogs] = useLocalStorage<CalorieLog[]>('mealpilot_calories', []);
   const [, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
+  const [, setCustomRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
 
   const [form, setForm] = useState<UserProfile>(profile || {
     firstName: '', age: 25, sex: 'male', heightCm: 170, weightKg: 70,
@@ -27,14 +39,15 @@ export default function SettingsPage() {
 
   const handleSave = () => {
     setProfile(form);
+    toast({ title: '✅ Profil sauvegardé' });
   };
 
   const handleReset = () => {
-    if (confirm('Es-tu sûr de vouloir réinitialiser toutes tes données ?')) {
-      setWeightLogs([]);
-      setCalorieLogs([]);
-      setMealPlan([]);
-    }
+    setWeightLogs([]);
+    setCalorieLogs([]);
+    setMealPlan([]);
+    setCustomRecipes([]);
+    toast({ title: '🗑️ Données réinitialisées' });
   };
 
   const handleLogout = () => {
@@ -135,9 +148,25 @@ export default function SettingsPage() {
         </motion.div>
 
         <div className="space-y-2">
-          <Button variant="outline" className="w-full gap-2 tap-scale text-destructive" onClick={handleReset}>
-            <Trash2 className="w-4 h-4" /> Réinitialiser mes données
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" className="w-full gap-2 tap-scale text-destructive">
+                <Trash2 className="w-4 h-4" /> Réinitialiser mes données
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Réinitialiser toutes les données ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Cette action supprimera ton historique de poids, calories, planning et recettes personnelles. Cette action est irréversible.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction onClick={handleReset}>Réinitialiser</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Button variant="outline" className="w-full gap-2 tap-scale" onClick={handleLogout}>
             <LogOut className="w-4 h-4" /> Se déconnecter
           </Button>

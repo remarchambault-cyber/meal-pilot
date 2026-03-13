@@ -1,10 +1,11 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, UtensilsCrossed, ShoppingCart, TrendingUp, Settings } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, UtensilsCrossed, ShoppingCart, TrendingUp, Settings, BookOpen } from 'lucide-react';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/planning', icon: CalendarDays, label: 'Planning' },
-  { to: '/meals', icon: UtensilsCrossed, label: 'Repas' },
+  { to: '/meals', icon: UtensilsCrossed, label: 'Idées repas' },
+  { to: '/my-recipes', icon: BookOpen, label: 'Mes recettes' },
   { to: '/shopping', icon: ShoppingCart, label: 'Courses' },
   { to: '/tracking', icon: TrendingUp, label: 'Suivi' },
   { to: '/settings', icon: Settings, label: 'Paramètres' },
