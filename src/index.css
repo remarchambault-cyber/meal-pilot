@@ -93,7 +93,7 @@
 
 @layer utilities {
   .card-elevated {
-    @apply bg-card rounded-xl shadow-sm border border-border;
+    @apply bg-card rounded-xl shadow-sm border border-border transition-shadow duration-200;
   }
   
   .tap-scale {

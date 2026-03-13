@@ -21,9 +21,18 @@ interface AddToPlanModalProps {
   onAdd: (item: MealPlanItem) => void;
 }
 
+// Determine compatible meal types for a recipe
+function getCompatibleMealTypes(recipe: Recipe): MealPlanItem['mealType'][] {
+  if (recipe.mealType === 'breakfast') {
+    return ['breakfast', 'snack'];
+  }
+  return ['lunch', 'dinner'];
+}
+
 export default function AddToPlanModal({ open, onOpenChange, recipe, onAdd }: AddToPlanModalProps) {
+  const compatibleTypes = getCompatibleMealTypes(recipe);
   const [date, setDate] = useState<Date>(new Date());
-  const [mealType, setMealType] = useState<MealPlanItem['mealType']>(recipe.mealType);
+  const [mealType, setMealType] = useState<MealPlanItem['mealType']>(compatibleTypes[0]);
   const [portions, setPortions] = useState(1);
   const [isBatchCooking, setIsBatchCooking] = useState(false);
 
@@ -39,6 +48,13 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, onAdd }: Ad
     onAdd(item);
     onOpenChange(false);
     toast({ title: '✅ Repas ajouté au planning', description: `${recipe.title} — ${format(date, 'EEEE d MMMM', { locale: fr })}` });
+  };
+
+  const MEAL_LABELS: Record<string, string> = {
+    breakfast: 'Petit déjeuner',
+    lunch: 'Déjeuner',
+    dinner: 'Dîner',
+    snack: 'Collation',
   };
 
   return (
@@ -79,10 +95,9 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, onAdd }: Ad
             <Select value={mealType} onValueChange={(v) => setMealType(v as MealPlanItem['mealType'])}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="breakfast">Petit déjeuner</SelectItem>
-                <SelectItem value="lunch">Déjeuner</SelectItem>
-                <SelectItem value="dinner">Dîner</SelectItem>
-                <SelectItem value="snack">Collation</SelectItem>
+                {compatibleTypes.map(type => (
+                  <SelectItem key={type} value={type}>{MEAL_LABELS[type]}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

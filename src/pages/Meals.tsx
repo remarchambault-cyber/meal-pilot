@@ -27,14 +27,27 @@ export default function Meals() {
 
   const filtered = useMemo(() => {
     let recipes = [...allRecipes];
+    // Strict meal type filtering
     if (filter !== 'all') {
-      recipes = recipes.filter(r => r.mealType === filter);
+      if (filter === 'breakfast') {
+        recipes = recipes.filter(r => r.mealType === 'breakfast');
+      } else {
+        // lunch and dinner share the same pool (non-breakfast recipes)
+        recipes = recipes.filter(r => r.mealType === 'lunch' || r.mealType === 'dinner');
+        // If user specifically picked lunch or dinner, prefer that but show all savory
+      }
     }
     if (profile?.dietPreference && profile.dietPreference !== 'none') {
       recipes = recipes.filter(r => r.dietTags.includes(profile.dietPreference));
     }
     return recipes.sort(() => Math.sin(seed + recipes.length) - 0.5);
   }, [filter, profile, seed, allRecipes]);
+
+  const MEAL_TYPE_BADGE: Record<string, string> = {
+    breakfast: 'Petit déj.',
+    lunch: 'Déjeuner',
+    dinner: 'Dîner',
+  };
 
   return (
     <AppLayout>
@@ -58,8 +71,7 @@ export default function Meals() {
           <SelectContent>
             <SelectItem value="all">Tous</SelectItem>
             <SelectItem value="breakfast">Petit déjeuner</SelectItem>
-            <SelectItem value="lunch">Déjeuner</SelectItem>
-            <SelectItem value="dinner">Dîner</SelectItem>
+            <SelectItem value="lunch">Déjeuner / Dîner</SelectItem>
           </SelectContent>
         </Select>
 
@@ -69,12 +81,17 @@ export default function Meals() {
               key={recipe.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03 }}
-              className="card-elevated p-4 space-y-3"
+              transition={{ delay: i * 0.03, duration: 0.3 }}
+              className="card-elevated p-4 space-y-3 transition-shadow duration-200 hover:shadow-md"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-display font-semibold text-base">{recipe.title}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-display font-semibold text-base">{recipe.title}</h3>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                      {MEAL_TYPE_BADGE[recipe.mealType] || recipe.mealType}
+                    </span>
+                  </div>
                   <p className="text-sm text-body-text mt-0.5">{recipe.description}</p>
                 </div>
               </div>
