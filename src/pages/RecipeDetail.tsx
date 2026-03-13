@@ -1,0 +1,137 @@
+import { useParams, useNavigate } from 'react-router-dom';
+import { mockRecipes } from '@/data/recipes';
+import AppLayout from '@/components/AppLayout';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Clock, Flame, Plus } from 'lucide-react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { MealPlanItem } from '@/data/types';
+import { motion } from 'framer-motion';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  protein: '🥩 Protéines',
+  carbs: '🍚 Féculents',
+  vegetables: '🥬 Légumes',
+  dairy: '🧀 Produits laitiers',
+  fruits: '🍎 Fruits',
+  condiments: '🧂 Assaisonnements',
+  other: '📦 Autres',
+};
+
+export default function RecipeDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
+  const recipe = mockRecipes.find(r => r.id === id);
+
+  if (!recipe) {
+    return (
+      <AppLayout>
+        <div className="text-center py-20">
+          <p className="text-muted-foreground">Recette introuvable</p>
+          <Button variant="outline" className="mt-4" onClick={() => navigate('/meals')}>Retour aux repas</Button>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  const addToPlan = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    setMealPlan(prev => [...prev, {
+      id: `mp_${Date.now()}`,
+      date: today,
+      mealType: recipe.mealType,
+      recipeId: recipe.id,
+      isBatchCooking: false,
+    }]);
+  };
+
+  // Group ingredients by category
+  const grouped = recipe.ingredients.reduce((acc, ing) => {
+    const cat = ing.category;
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(ing);
+    return acc;
+  }, {} as Record<string, typeof recipe.ingredients>);
+
+  return (
+    <AppLayout>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+        <Button variant="ghost" className="gap-2 -ml-2 tap-scale" onClick={() => navigate(-1)}>
+          <ArrowLeft className="w-4 h-4" /> Retour
+        </Button>
+
+        <div>
+          <h1 className="text-2xl font-display font-bold">{recipe.title}</h1>
+          <p className="text-body-text mt-1">{recipe.description}</p>
+        </div>
+
+        <div className="flex items-center gap-4 text-sm">
+          <span className="flex items-center gap-1.5 bg-accent/10 text-accent px-3 py-1 rounded-full font-medium">
+            <Flame className="w-4 h-4" /> {recipe.calories} kcal
+          </span>
+          <span className="flex items-center gap-1.5 bg-muted px-3 py-1 rounded-full">
+            <Clock className="w-4 h-4" /> {recipe.prepTime} min
+          </span>
+        </div>
+
+        {/* Macros */}
+        <div className="card-elevated p-4">
+          <h2 className="font-display font-semibold text-sm mb-3">Macronutriments estimés</h2>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="bg-primary/5 rounded-lg p-3">
+              <p className="font-display font-bold text-lg">{recipe.protein}g</p>
+              <p className="text-xs text-muted-foreground">Protéines</p>
+            </div>
+            <div className="bg-accent/5 rounded-lg p-3">
+              <p className="font-display font-bold text-lg">{recipe.carbs}g</p>
+              <p className="text-xs text-muted-foreground">Glucides</p>
+            </div>
+            <div className="bg-secondary/5 rounded-lg p-3">
+              <p className="font-display font-bold text-lg">{recipe.fat}g</p>
+              <p className="text-xs text-muted-foreground">Lipides</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Ingredients */}
+        <div className="card-elevated p-4">
+          <h2 className="font-display font-semibold text-sm mb-3">Ingrédients</h2>
+          <div className="space-y-4">
+            {Object.entries(grouped).map(([cat, items]) => (
+              <div key={cat}>
+                <p className="text-xs text-muted-foreground font-medium mb-1">{CATEGORY_LABELS[cat] || cat}</p>
+                <ul className="space-y-1">
+                  {items.map((ing, i) => (
+                    <li key={i} className="text-sm flex justify-between">
+                      <span>{ing.name}</span>
+                      <span className="text-muted-foreground">{ing.quantity} {ing.unit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Steps */}
+        <div className="card-elevated p-4">
+          <h2 className="font-display font-semibold text-sm mb-3">Préparation</h2>
+          <ol className="space-y-3">
+            {recipe.steps.map((step, i) => (
+              <li key={i} className="flex gap-3 text-sm">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary font-display font-bold text-xs flex items-center justify-center">
+                  {i + 1}
+                </span>
+                <span className="text-body-text pt-0.5">{step}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <Button className="w-full gap-2 tap-scale" size="lg" onClick={addToPlan}>
+          <Plus className="w-5 h-5" /> Ajouter au planning
+        </Button>
+      </motion.div>
+    </AppLayout>
+  );
+}
