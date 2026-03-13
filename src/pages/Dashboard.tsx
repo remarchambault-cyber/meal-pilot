@@ -1,0 +1,126 @@
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { UserProfile, WeightLog, CalorieLog } from '@/data/types';
+import { calculateCalorieTarget, getGoalLabel } from '@/lib/calories';
+import AppLayout from '@/components/AppLayout';
+import { Button } from '@/components/ui/button';
+import { CalendarDays, ShoppingCart, TrendingUp, Target, Scale, Flame } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
+  const [weightLogs] = useLocalStorage<WeightLog[]>('mealpilot_weight', []);
+  const [calorieLogs] = useLocalStorage<CalorieLog[]>('mealpilot_calories', []);
+
+  const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
+
+  const currentWeight = weightLogs.length > 0
+    ? weightLogs[weightLogs.length - 1].weight
+    : profile?.weightKg || 0;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const todayCalories = calorieLogs.find(l => l.date === today);
+
+  if (!profile || !target) {
+    navigate('/onboarding');
+    return null;
+  }
+
+  const cards = [
+    {
+      icon: Target,
+      label: 'Objectif',
+      value: getGoalLabel(profile.goal),
+      color: 'text-primary',
+      bg: 'bg-primary/10',
+    },
+    {
+      icon: Flame,
+      label: 'Cible du jour',
+      value: `${target.target} kcal`,
+      color: 'text-accent',
+      bg: 'bg-accent/10',
+    },
+    {
+      icon: Scale,
+      label: 'Poids actuel',
+      value: `${currentWeight} kg`,
+      color: 'text-secondary',
+      bg: 'bg-secondary/10',
+    },
+  ];
+
+  const actions = [
+    { icon: CalendarDays, label: 'Planifier mes repas', to: '/planning' },
+    { icon: ShoppingCart, label: 'Liste de courses', to: '/shopping' },
+    { icon: TrendingUp, label: 'Enregistrer mon poids', to: '/tracking' },
+  ];
+
+  return (
+    <AppLayout>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-display font-bold">Bonjour {profile.firstName} 👋</h1>
+          <p className="text-body-text text-sm mt-1">
+            Maintien estimé : {target.tdee} kcal · Objectif : {target.target} kcal/jour
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {cards.map((card, i) => (
+            <motion.div
+              key={card.label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="card-elevated p-4 flex items-center gap-3"
+            >
+              <div className={`w-10 h-10 rounded-lg ${card.bg} flex items-center justify-center`}>
+                <card.icon className={`w-5 h-5 ${card.color}`} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">{card.label}</p>
+                <p className="font-display font-bold text-lg">{card.value}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {todayCalories && (
+          <div className="card-elevated p-4">
+            <p className="text-xs text-muted-foreground mb-1">Calories aujourd'hui</p>
+            <div className="flex items-center gap-4">
+              <span className="font-display font-bold text-xl">{todayCalories.caloriesConsumed} kcal</span>
+              <span className="text-sm text-muted-foreground">consommées</span>
+              {todayCalories.caloriesBurned > 0 && (
+                <>
+                  <span className="font-display font-bold text-xl text-secondary">{todayCalories.caloriesBurned} kcal</span>
+                  <span className="text-sm text-muted-foreground">dépensées</span>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <h2 className="text-lg font-display font-semibold">Actions rapides</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {actions.map(action => (
+              <Button
+                key={action.to}
+                variant="outline"
+                className="h-auto py-4 justify-start gap-3 tap-scale"
+                onClick={() => navigate(action.to)}
+              >
+                <action.icon className="w-5 h-5 text-primary" />
+                <span className="font-medium text-sm">{action.label}</span>
+              </Button>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    </AppLayout>
+  );
+}
