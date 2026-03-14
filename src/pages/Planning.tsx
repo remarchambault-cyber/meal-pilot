@@ -342,6 +342,15 @@ export default function Planning() {
                               ) : (
                                 <div className="flex gap-1 shrink-0">
                                   <Button
+                                    variant={meal.consumed ? 'default' : 'outline'}
+                                    size="sm"
+                                    className={cn('h-7 px-2 gap-1 text-xs', meal.consumed && 'bg-secondary hover:bg-secondary/80 text-secondary-foreground')}
+                                    onClick={() => toggleConsumed(meal.id)}
+                                  >
+                                    {meal.consumed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+                                    {meal.consumed ? 'Consommé' : 'Consommer'}
+                                  </Button>
+                                  <Button
                                     variant="outline"
                                     size="sm"
                                     className="h-7 px-2 gap-1 text-xs"
