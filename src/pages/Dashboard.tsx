@@ -39,6 +39,23 @@ export default function Dashboard() {
       }, 0);
   }, [mealPlan, today, allRecipes]);
 
+  const todayMeals = useMemo(() => {
+    const meals = mealPlan.filter(m => m.date === today);
+    return PLANNING_MEAL_TYPE_ORDER
+      .flatMap(type => meals.filter(m => m.mealType === type))
+      .map(m => {
+        const recipe = allRecipes.find(r => r.id === m.recipeId);
+        const sf = m.scaleFactor || 1;
+        return recipe ? {
+          name: recipe.title,
+          mealType: m.mealType,
+          calories: Math.round(recipe.calories * sf) * (m.portions || 1),
+          consumed: !!m.consumed,
+        } : null;
+      })
+      .filter(Boolean) as { name: string; mealType: MealPlanItem['mealType']; calories: number; consumed: boolean }[];
+  }, [mealPlan, today, allRecipes]);
+
   if (!profile || !target) {
     navigate('/onboarding');
     return null;
