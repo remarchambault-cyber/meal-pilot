@@ -93,6 +93,7 @@ export default function Meals() {
               <SelectItem value="breakfast">Petit déjeuner</SelectItem>
               <SelectItem value="lunch">Déjeuner</SelectItem>
               <SelectItem value="dinner">Dîner</SelectItem>
+              <SelectItem value="snack">Collation</SelectItem>
             </SelectContent>
           </Select>
 
