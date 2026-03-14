@@ -159,12 +159,13 @@ export default function Tracking() {
     return sortedWeightLogsAsc.slice(-30).map(log => ({ date: log.date.slice(5), poids: log.weight }));
   }, [sortedWeightLogsAsc]);
 
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
   const cardVariants = {
     hidden: { opacity: 0, y: 12 },
     visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.35 } }),
   };
 
-  // Color helper: negative = red (destructive), positive = green (secondary), zero = neutral
   const gapColor = (val: number) =>
     val > 0 ? 'text-secondary' : val < 0 ? 'text-destructive' : 'text-muted-foreground';
   const gapBg = (val: number) =>
@@ -172,110 +173,120 @@ export default function Tracking() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-5">
         <h1 className="text-2xl font-display font-bold">Suivi</h1>
 
-        {/* Row 1: Target + Planned */}
-        <div className="grid grid-cols-2 gap-3">
-          <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-2">
-              <Target className="w-4 h-4 text-primary" />
+        {/* ═══ NIVEAU 1 — 4 indicateurs principaux ═══ */}
+        <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
+          <div className="grid grid-cols-4 gap-2 text-center">
+            {/* Cible */}
+            <div>
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-1.5">
+                <Target className="w-4 h-4 text-primary" />
+              </div>
+              <p className="font-display font-bold text-base leading-tight">{dailyTarget || '—'}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Cible</p>
             </div>
-            <p className="font-display font-bold text-lg">{dailyTarget || '—'}</p>
-            <p className="text-xs text-muted-foreground">Cible du jour</p>
-          </motion.div>
-
-          <motion.div custom={1} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
-            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center mx-auto mb-2">
-              <CalendarCheck className="w-4 h-4 text-muted-foreground" />
+            {/* Prévues */}
+            <div>
+              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center mx-auto mb-1.5">
+                <CalendarCheck className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <p className="font-display font-bold text-base leading-tight">{plannedCalories}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Prévues</p>
             </div>
-            <p className="font-display font-bold text-lg">{plannedCalories}</p>
-            <p className="text-xs text-muted-foreground">Prévues (planning)</p>
-          </motion.div>
-        </div>
-
-        {/* Row 2: Consumed + Gap planned vs target */}
-        <div className="grid grid-cols-2 gap-3">
-          <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
-            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mx-auto mb-2">
-              <Utensils className="w-4 h-4 text-accent" />
+            {/* Net consommé */}
+            <div>
+              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mx-auto mb-1.5">
+                <Utensils className="w-4 h-4 text-accent" />
+              </div>
+              <p className="font-display font-bold text-base leading-tight">{netConsumed}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Net conso.</p>
             </div>
-            <p className="font-display font-bold text-lg">{consumed}</p>
-            <p className="text-xs text-muted-foreground">Consommées</p>
-            {(consumedFromMeals > 0 || manualConsumed > 0) && (
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                {consumedFromMeals > 0 && `${consumedFromMeals} repas`}
-                {consumedFromMeals > 0 && manualConsumed > 0 && ' + '}
-                {manualConsumed > 0 && `${manualConsumed} manuel`}
+            {/* Écart vs cible */}
+            <div>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-1.5 ${gapBg(ecartConsomme)}`}>
+                <Target className={`w-4 h-4 ${gapColor(ecartConsomme)}`} />
+              </div>
+              <p className={`font-display font-bold text-base leading-tight ${gapColor(ecartConsomme)}`}>
+                {ecartConsomme > 0 ? '+' : ''}{ecartConsomme}
               </p>
-            )}
-          </motion.div>
-
-          <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2 ${gapBg(ecartPlanifie)}`}>
-              <CalendarCheck className={`w-4 h-4 ${gapColor(ecartPlanifie)}`} />
-            </div>
-            <p className={`font-display font-bold text-lg ${gapColor(ecartPlanifie)}`}>
-              {ecartPlanifie > 0 ? '+' : ''}{ecartPlanifie}
-            </p>
-            <p className="text-xs text-muted-foreground">Planifié vs cible</p>
-          </motion.div>
-        </div>
-
-        {/* Row 3: Burned + Net consumed */}
-        <div className="grid grid-cols-2 gap-3">
-          <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
-            <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center mx-auto mb-2">
-              <Flame className="w-4 h-4 text-destructive" />
-            </div>
-            <p className="font-display font-bold text-lg">{extraBurned}</p>
-            <p className="text-xs text-muted-foreground">Dépensées extra</p>
-          </motion.div>
-
-          <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2 ${gapBg(ecartConsomme)}`}>
-              <Target className={`w-4 h-4 ${gapColor(ecartConsomme)}`} />
-            </div>
-            <p className={`font-display font-bold text-lg ${gapColor(ecartConsomme)}`}>
-              {ecartConsomme > 0 ? '+' : ''}{ecartConsomme}
-            </p>
-            <p className="text-xs text-muted-foreground">Net vs cible</p>
-          </motion.div>
-        </div>
-
-        {/* Recap detail card */}
-        <motion.div custom={6} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
-          <h2 className="font-display font-semibold text-sm mb-2">Récapitulatif du jour</h2>
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Cible</span><span>{dailyTarget} kcal</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Prévues (planning)</span><span>{plannedCalories} kcal</span></div>
-            <div className="border-t border-border my-1" />
-            <div className="flex justify-between"><span className="text-muted-foreground">Consommées repas</span><span>{consumedFromMeals} kcal</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Consommées manuelles</span><span>{manualConsumed} kcal</span></div>
-            <div className="flex justify-between font-medium"><span>Total consommées</span><span>{consumed} kcal</span></div>
-            {extraBurned > 0 && (
-              <div className="flex justify-between text-destructive"><span>− Dépensées extra</span><span>−{extraBurned} kcal</span></div>
-            )}
-            <div className="border-t border-border my-1" />
-            <div className="flex justify-between font-semibold">
-              <span>Net consommé</span>
-              <span>{netConsumed} kcal</span>
-            </div>
-            <div className={`flex justify-between font-semibold ${gapColor(ecartConsomme)}`}>
-              <span>Écart vs cible</span>
-              <span>{ecartConsomme > 0 ? '+' : ''}{ecartConsomme} kcal</span>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Écart</p>
             </div>
           </div>
         </motion.div>
 
-        {/* Today's planned meals */}
+        {/* ═══ NIVEAU 2 — Détails complémentaires (collapsible) ═══ */}
+        <motion.div custom={1} variants={cardVariants} initial="hidden" animate="visible">
+          <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
+            <CollapsibleTrigger asChild>
+              <button className="card-elevated p-3 w-full flex items-center justify-between text-sm font-medium hover:bg-muted/50 transition-colors rounded-xl">
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <span>Détail du jour</span>
+                  {(consumedFromMeals > 0 || manualConsumed > 0 || extraBurned > 0) && (
+                    <span className="text-[10px] font-normal">
+                      {consumed} conso. {extraBurned > 0 && `· −${extraBurned} extra`}
+                    </span>
+                  )}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${detailsOpen ? 'rotate-180' : ''}`} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="card-elevated mt-1 p-4 rounded-xl space-y-3">
+                {/* Secondary metrics row */}
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="p-2 rounded-lg bg-muted/40">
+                    <p className="font-display font-semibold text-sm">{consumedFromMeals}</p>
+                    <p className="text-[10px] text-muted-foreground">Repas</p>
+                  </div>
+                  <div className="p-2 rounded-lg bg-muted/40">
+                    <p className="font-display font-semibold text-sm">{manualConsumed}</p>
+                    <p className="text-[10px] text-muted-foreground">Manuelles</p>
+                  </div>
+                  <div className="p-2 rounded-lg bg-destructive/5">
+                    <p className="font-display font-semibold text-sm text-destructive">{extraBurned > 0 ? `−${extraBurned}` : '0'}</p>
+                    <p className="text-[10px] text-muted-foreground">Extra brûlées</p>
+                  </div>
+                </div>
+
+                {/* Full recap table */}
+                <div className="space-y-1 text-sm border-t border-border pt-3">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Cible</span><span>{dailyTarget} kcal</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Prévues (planning)</span><span>{plannedCalories} kcal</span></div>
+                  <div className={`flex justify-between text-xs ${gapColor(ecartPlanifie)}`}>
+                    <span className="pl-2">↳ Écart planifié</span>
+                    <span>{ecartPlanifie > 0 ? '+' : ''}{ecartPlanifie} kcal</span>
+                  </div>
+                  <div className="border-t border-border my-1" />
+                  <div className="flex justify-between"><span className="text-muted-foreground">Consommées repas</span><span>{consumedFromMeals} kcal</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Consommées manuelles</span><span>{manualConsumed} kcal</span></div>
+                  <div className="flex justify-between font-medium"><span>Total consommées</span><span>{consumed} kcal</span></div>
+                  {extraBurned > 0 && (
+                    <div className="flex justify-between text-destructive"><span>− Dépensées extra</span><span>−{extraBurned} kcal</span></div>
+                  )}
+                  <div className="border-t border-border my-1" />
+                  <div className="flex justify-between font-semibold">
+                    <span>Net consommé</span><span>{netConsumed} kcal</span>
+                  </div>
+                  <div className={`flex justify-between font-semibold ${gapColor(ecartConsomme)}`}>
+                    <span>Écart vs cible</span>
+                    <span>{ecartConsomme > 0 ? '+' : ''}{ecartConsomme} kcal</span>
+                  </div>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </motion.div>
+
+        {/* ═══ Repas du jour ═══ */}
         {todayMealDetails.length > 0 && (
-          <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
-            <h2 className="font-display font-semibold text-sm mb-2">Repas prévus aujourd'hui</h2>
-            <p className="text-[10px] text-muted-foreground mb-2">Marque tes repas comme consommés depuis le planning pour mettre à jour le suivi.</p>
-            <div className="space-y-1">
+          <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
+            <h2 className="font-display font-semibold text-sm mb-2">Repas du jour</h2>
+            <p className="text-[10px] text-muted-foreground mb-2">Marque tes repas comme consommés depuis le planning.</p>
+            <div className="space-y-0.5">
               {todayMealDetails.map((meal, i) => (
-                <div key={`${meal.name}-${i}`} className="flex justify-between text-sm py-1 border-b border-border last:border-0">
+                <div key={`${meal.name}-${i}`} className="flex justify-between text-sm py-1.5 border-b border-border last:border-0">
                   <span className="flex items-center gap-1.5">
                     {meal.consumed && <CheckCircle2 className="w-3.5 h-3.5 text-secondary" />}
                     <span className={meal.consumed ? '' : 'text-muted-foreground'}>{meal.name}</span>
@@ -288,80 +299,107 @@ export default function Tracking() {
         )}
 
         {plannedCalories === 0 && (
-          <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center text-sm text-muted-foreground">
+          <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center text-sm text-muted-foreground">
             Aucun repas planifié aujourd'hui.
           </motion.div>
         )}
 
-        {trend && (
-          <motion.div custom={6} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 flex items-center gap-3">
-            {trend.direction === 'up' && <TrendingUp className="w-5 h-5 text-accent" />}
-            {trend.direction === 'down' && <TrendingDown className="w-5 h-5 text-secondary" />}
-            {trend.direction === 'stable' && <Minus className="w-5 h-5 text-muted-foreground" />}
-            <div>
-              <p className="text-sm font-medium">
-                {trend.direction === 'up' && `En hausse (+${Math.abs(trend.diff).toFixed(1)} kg)`}
-                {trend.direction === 'down' && `En baisse (${trend.diff.toFixed(1)} kg)`}
-                {trend.direction === 'stable' && 'Poids stable'}
-              </p>
-              <p className="text-xs text-muted-foreground">Tendance récente</p>
-            </div>
+        {/* ═══ Tendance + Conseil ═══ */}
+        {(trend || advice) && (
+          <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="space-y-3">
+            {trend && (
+              <div className="card-elevated p-3 flex items-center gap-3">
+                {trend.direction === 'up' && <TrendingUp className="w-5 h-5 text-accent" />}
+                {trend.direction === 'down' && <TrendingDown className="w-5 h-5 text-secondary" />}
+                {trend.direction === 'stable' && <Minus className="w-5 h-5 text-muted-foreground" />}
+                <div>
+                  <p className="text-sm font-medium">
+                    {trend.direction === 'up' && `En hausse (+${Math.abs(trend.diff).toFixed(1)} kg)`}
+                    {trend.direction === 'down' && `En baisse (${trend.diff.toFixed(1)} kg)`}
+                    {trend.direction === 'stable' && 'Poids stable'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Tendance récente</p>
+                </div>
+              </div>
+            )}
+            {advice && (
+              <div className={`card-elevated p-3 border-l-4 ${
+                advice.type === 'warning' ? 'border-l-accent' : advice.type === 'success' ? 'border-l-secondary' : 'border-l-primary'
+              }`}>
+                <div className="flex gap-3">
+                  <Lightbulb className={`w-4 h-4 shrink-0 mt-0.5 ${
+                    advice.type === 'warning' ? 'text-accent' : advice.type === 'success' ? 'text-secondary' : 'text-primary'
+                  }`} />
+                  <div>
+                    <h3 className="font-display font-semibold text-xs">Conseil {advice.icon}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{advice.text}</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
 
-        {advice && (
-          <motion.div
-            custom={7}
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            className={`card-elevated p-4 border-l-4 ${
-              advice.type === 'warning' ? 'border-l-accent' : advice.type === 'success' ? 'border-l-secondary' : 'border-l-primary'
-            }`}
-          >
-            <div className="flex gap-3">
-              <Lightbulb className={`w-5 h-5 shrink-0 mt-0.5 ${
-                advice.type === 'warning' ? 'text-accent' : advice.type === 'success' ? 'text-secondary' : 'text-primary'
-              }`} />
+        {/* ═══ Saisies ═══ */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Poids */}
+          <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
+            <h2 className="font-display font-semibold text-sm flex items-center gap-2">
+              <Scale className="w-4 h-4 text-primary" /> Poids
+            </h2>
+            <div className="flex gap-2">
+              <Input type="number" step="0.1" placeholder="Ex: 72.5" value={newWeight} onChange={e => setNewWeight(e.target.value)} className="flex-1" />
+              <Button className="gap-1.5 tap-scale" onClick={addWeight}>
+                <Plus className="w-4 h-4" /> {todayWeightLog ? 'MAJ' : 'OK'}
+              </Button>
+            </div>
+            {todayWeightLog && (
+              <p className="text-xs text-muted-foreground">
+                Aujourd'hui : <span className="font-medium text-foreground">{todayWeightLog.weight} kg</span>
+                {todayWeightLog.updatedAt && (
+                  <span> — {format(new Date(todayWeightLog.updatedAt), 'HH:mm')}</span>
+                )}
+              </p>
+            )}
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Une pesée par jour. Pèse-toi le matin à jeun.
+            </p>
+          </motion.div>
+
+          {/* Calories manuelles */}
+          <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
+            <h2 className="font-display font-semibold text-sm flex items-center gap-2">
+              <Flame className="w-4 h-4 text-accent" /> Calories extra
+            </h2>
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <h3 className="font-display font-semibold text-sm">Conseil {advice.icon}</h3>
-                <p className="text-sm text-muted-foreground mt-1">{advice.text}</p>
+                <Label className="text-xs">Consommées</Label>
+                <Input type="number" placeholder="kcal" value={newCalConsumed} onChange={e => setNewCalConsumed(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">Dépensées</Label>
+                <Input type="number" placeholder="kcal" value={newCalBurned} onChange={e => setNewCalBurned(e.target.value)} />
               </div>
             </div>
-          </motion.div>
-        )}
-
-        <motion.div custom={8} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
-          <h2 className="font-display font-semibold text-sm flex items-center gap-2">
-            <Scale className="w-4 h-4 text-primary" /> Enregistrer le poids
-          </h2>
-          <div className="flex gap-2">
-            <Input type="number" step="0.1" placeholder="Ex: 72.5" value={newWeight} onChange={e => setNewWeight(e.target.value)} className="flex-1" />
-            <Button className="gap-1.5 tap-scale" onClick={addWeight}>
-              <Plus className="w-4 h-4" /> {todayWeightLog ? 'Mettre à jour' : 'OK'}
+            <Button className="w-full gap-1.5 tap-scale" variant="outline" onClick={addCalories}>
+              <Plus className="w-4 h-4" /> Ajouter
             </Button>
-          </div>
-          {todayWeightLog && (
-            <p className="text-xs text-muted-foreground">
-              Pesée du jour : <span className="font-medium text-foreground">{todayWeightLog.weight} kg</span>
-              {todayWeightLog.updatedAt && (
-                <span> — mise à jour à {format(new Date(todayWeightLog.updatedAt), 'HH:mm')}</span>
-              )}
-            </p>
-          )}
-          <p className="text-[10px] text-muted-foreground leading-relaxed">
-            Une seule pesée est conservée par jour. Une nouvelle saisie remplacera la précédente.
-            Pour un suivi fiable, pèse-toi le matin à jeun, dans des conditions similaires.
-          </p>
-        </motion.div>
+            {(manualConsumed > 0 || extraBurned > 0) && (
+              <p className="text-[10px] text-muted-foreground text-center">
+                {manualConsumed > 0 && `+${manualConsumed} conso.`}{manualConsumed > 0 && extraBurned > 0 && ' · '}{extraBurned > 0 && `−${extraBurned} dép.`}
+              </p>
+            )}
+          </motion.div>
+        </div>
 
+        {/* ═══ Graphique poids ═══ */}
         {chartData.length >= 1 && (
-          <motion.div custom={9} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
+          <motion.div custom={6} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
             <h2 className="font-display font-semibold text-sm mb-3">📈 Évolution du poids</h2>
             {chartData.length < 2 ? (
-              <p className="text-xs text-muted-foreground">Ajoute une pesée un autre jour pour voir le graphique d'évolution.</p>
+              <p className="text-xs text-muted-foreground">Ajoute une pesée un autre jour pour voir le graphique.</p>
             ) : (
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
@@ -382,41 +420,15 @@ export default function Tracking() {
           </motion.div>
         )}
 
-        <motion.div custom={10} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
-          <h2 className="font-display font-semibold text-sm flex items-center gap-2">
-            <Flame className="w-4 h-4 text-accent" /> Ajouter des calories
-          </h2>
-          <p className="text-[10px] text-muted-foreground leading-relaxed">
-            Chaque saisie s'ajoute au total du jour. Utilise ce formulaire pour les calories hors planning (snack, boisson…) ou les dépenses extra (sport…).
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs">Consommées (à ajouter)</Label>
-              <Input type="number" placeholder="kcal" value={newCalConsumed} onChange={e => setNewCalConsumed(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Dépensées extra</Label>
-              <Input type="number" placeholder="kcal" value={newCalBurned} onChange={e => setNewCalBurned(e.target.value)} />
-            </div>
-          </div>
-          <Button className="w-full gap-1.5 tap-scale" variant="outline" onClick={addCalories}>
-            <Plus className="w-4 h-4" /> Ajouter au total du jour
-          </Button>
-          {(manualConsumed > 0 || extraBurned > 0) && (
-            <p className="text-xs text-muted-foreground text-center">
-              Aujourd'hui : {manualConsumed > 0 && `+${manualConsumed} kcal manuelles`}{manualConsumed > 0 && extraBurned > 0 && ' · '}{extraBurned > 0 && `−${extraBurned} kcal dépensées`}
-            </p>
-          )}
-        </motion.div>
-
+        {/* ═══ Historique pesées ═══ */}
         {recentWeightLogsDesc.length > 0 && (
-          <motion.div custom={11} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
+          <motion.div custom={7} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
             <h2 className="font-display font-semibold text-sm mb-3">Historique des pesées</h2>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {recentWeightLogsDesc.map(log => {
                 const diff = weightDiffByLogId[log.id];
                 return (
-                  <div key={log.id} className="flex justify-between items-center text-sm py-2 border-b border-border last:border-0">
+                  <div key={log.id} className="flex justify-between items-center text-sm py-1.5 border-b border-border last:border-0">
                     <span className="text-muted-foreground">
                       {format(new Date(`${log.date}T12:00:00`), 'd MMM yyyy', { locale: fr })}
                     </span>
