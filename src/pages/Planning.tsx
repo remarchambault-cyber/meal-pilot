@@ -334,6 +334,14 @@ export default function Planning() {
                                     variant="outline"
                                     size="sm"
                                     className="h-7 px-2 gap-1 text-xs"
+                                    onClick={() => navigate(`/recipe/${meal.recipeId}${meal.scaleFactor ? `?scale=${meal.scaleFactor}` : ''}`)}
+                                  >
+                                    <Eye className="w-3.5 h-3.5" /> Voir
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2 gap-1 text-xs"
                                     onClick={() => openDuplicateDialog(meal)}
                                   >
                                     <Copy className="w-3.5 h-3.5" /> Dupliquer
