@@ -20,6 +20,7 @@ const FILTER_LABELS: Record<MealFilter, string> = {
   breakfast: 'Petit déjeuner',
   lunch: 'Déjeuner',
   dinner: 'Dîner',
+  snack: 'Collation',
 };
 
 function getSeededJitter(seed: number, recipeId: string) {
