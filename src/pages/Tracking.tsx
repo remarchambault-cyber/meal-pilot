@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { Plus, Lightbulb, TrendingUp, TrendingDown, Minus, Flame, Target, BarChart3, Scale } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -27,10 +27,27 @@ export default function Tracking() {
 
   const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
+  const today = format(new Date(), 'yyyy-MM-dd');
 
-  const today = new Date().toISOString().slice(0, 10);
+  const sortedWeightLogsAsc = useMemo(
+    () => [...weightLogs].sort((a, b) => a.date.localeCompare(b.date)),
+    [weightLogs]
+  );
 
-  // Auto-calculated planned calories from planning
+  const recentWeightLogsDesc = useMemo(
+    () => [...sortedWeightLogsAsc].reverse().slice(0, 10),
+    [sortedWeightLogsAsc]
+  );
+
+  const weightDiffByLogId = useMemo(() => {
+    const map: Record<string, number | null> = {};
+    sortedWeightLogsAsc.forEach((log, index) => {
+      const prev = sortedWeightLogsAsc[index - 1];
+      map[log.id] = prev ? log.weight - prev.weight : null;
+    });
+    return map;
+  }, [sortedWeightLogsAsc]);
+
   const plannedCalories = useMemo(() => {
     const todayMeals = mealPlan.filter(m => m.date === today);
     return todayMeals.reduce((sum, m) => {
@@ -39,15 +56,18 @@ export default function Tracking() {
     }, 0);
   }, [mealPlan, today, allRecipes]);
 
-  // List of today's planned meals for display
   const todayMealDetails = useMemo(() => {
     return mealPlan
       .filter(m => m.date === today)
       .map(m => {
         const recipe = allRecipes.find(r => r.id === m.recipeId);
-        return recipe ? { name: recipe.title, calories: recipe.calories * (m.portions || 1) } : null;
+        return recipe ? {
+          name: recipe.title,
+          calories: recipe.calories * (m.portions || 1),
+          mealType: m.mealType,
+        } : null;
       })
-      .filter(Boolean) as { name: string; calories: number }[];
+      .filter(Boolean) as { name: string; calories: number; mealType: MealPlanItem['mealType'] }[];
   }, [mealPlan, today, allRecipes]);
 
   const todayCalories = calorieLogs.find(l => l.date === today);
@@ -67,8 +87,8 @@ export default function Tracking() {
     const log: CalorieLog = {
       id: `c_${Date.now()}`,
       date: today,
-      caloriesConsumed: parseInt(newCalConsumed) || 0,
-      caloriesBurned: parseInt(newCalBurned) || 0,
+      caloriesConsumed: parseInt(newCalConsumed, 10) || 0,
+      caloriesBurned: parseInt(newCalBurned, 10) || 0,
     };
     setCalorieLogs(prev => [...prev.filter(l => l.date !== today), log]);
     setNewCalConsumed('');
@@ -76,50 +96,47 @@ export default function Tracking() {
     toast({ title: '✅ Calories enregistrées' });
   };
 
-  // Advice logic
   const advice = useMemo(() => {
-    if (!profile || weightLogs.length < 2) return null;
-    const sorted = [...weightLogs].sort((a, b) => a.date.localeCompare(b.date));
-    const recent = sorted.slice(-7);
+    if (!profile || sortedWeightLogsAsc.length < 2) return null;
+    const recent = sortedWeightLogsAsc.slice(-7);
     if (recent.length < 2) return null;
+
     const delta = recent[recent.length - 1].weight - recent[0].weight;
     const days = Math.max(1, recent.length - 1);
     const weeklyChange = (delta / days) * 7;
 
     if (profile.goal === 'lose') {
-      if (weeklyChange > 0.1) return { type: 'warning' as const, icon: '⚠️', text: 'Ton poids augmente malgré un objectif de perte. Vérifie ton apport calorique et essaie de rester proche de ta cible.' };
-      if (weeklyChange < -1) return { type: 'warning' as const, icon: '⚡', text: 'Ta perte est un peu rapide (> 1 kg/semaine). Pense à réduire légèrement le déficit pour préserver ta masse musculaire.' };
-      if (weeklyChange < -0.1) return { type: 'success' as const, icon: '✅', text: 'Tu es sur la bonne voie ! Ta perte de poids est régulière et raisonnable.' };
-      return { type: 'info' as const, icon: '💡', text: 'Ton poids est stable. Essaie de réduire légèrement tes calories (100-200 kcal) ou d\'augmenter ton activité.' };
+      if (weeklyChange > 0.1) return { type: 'warning' as const, icon: '⚠️', text: 'Ton poids augmente malgré un objectif de perte. Vérifie ton apport calorique et rapproche-toi de ta cible.' };
+      if (weeklyChange < -1) return { type: 'warning' as const, icon: '⚡', text: 'Perte rapide (> 1 kg/semaine). Réduis un peu le déficit pour une progression plus durable.' };
+      if (weeklyChange < -0.1) return { type: 'success' as const, icon: '✅', text: 'Bonne trajectoire : ta perte de poids est régulière.' };
+      return { type: 'info' as const, icon: '💡', text: 'Poids stable. Tu peux réduire légèrement les calories (100-200 kcal) ou augmenter l’activité.' };
     }
-    if (profile.goal === 'gain') {
-      if (weeklyChange < -0.1) return { type: 'warning' as const, icon: '⚠️', text: 'Ton poids baisse malgré un objectif de prise. Augmente tes apports de 200-300 kcal par jour.' };
-      if (weeklyChange > 1) return { type: 'warning' as const, icon: '⚡', text: 'Ta prise est rapide (> 1 kg/semaine). Ralentis un peu pour privilégier le muscle sur le gras.' };
-      if (weeklyChange > 0.1) return { type: 'success' as const, icon: '✅', text: 'Bonne progression ! Ta prise de poids est régulière.' };
-      return { type: 'info' as const, icon: '💡', text: 'Ton poids stagne. Ajoute 100-200 kcal par jour pour relancer la prise.' };
-    }
-    // maintain
-    if (Math.abs(weeklyChange) > 0.5) return { type: 'info' as const, icon: '💡', text: `Ton poids ${weeklyChange > 0 ? 'augmente' : 'diminue'} sensiblement. Ajuste tes apports pour te stabiliser.` };
-    return { type: 'success' as const, icon: '✅', text: 'Ton poids est stable. Continue comme ça !' };
-  }, [profile, weightLogs]);
 
-  // Trend
+    if (profile.goal === 'gain') {
+      if (weeklyChange < -0.1) return { type: 'warning' as const, icon: '⚠️', text: 'Le poids baisse malgré l’objectif de prise. Ajoute environ 200 kcal/jour.' };
+      if (weeklyChange > 1) return { type: 'warning' as const, icon: '⚡', text: 'Prise rapide (> 1 kg/semaine). Ralentis un peu les apports.' };
+      if (weeklyChange > 0.1) return { type: 'success' as const, icon: '✅', text: 'Progression cohérente pour une prise de poids.' };
+      return { type: 'info' as const, icon: '💡', text: 'Poids stable. Augmente légèrement les apports pour relancer la progression.' };
+    }
+
+    if (Math.abs(weeklyChange) > 0.5) return { type: 'info' as const, icon: '💡', text: `Variation notable (${weeklyChange > 0 ? '+' : ''}${weeklyChange.toFixed(1)} kg/semaine). Ajuste les apports pour te stabiliser.` };
+    return { type: 'success' as const, icon: '✅', text: 'Poids globalement stable, bon maintien.' };
+  }, [profile, sortedWeightLogsAsc]);
+
   const trend = useMemo(() => {
-    if (weightLogs.length < 2) return null;
-    const sorted = [...weightLogs].sort((a, b) => a.date.localeCompare(b.date));
-    const last = sorted[sorted.length - 1].weight;
-    const prev = sorted[sorted.length - 2].weight;
+    if (sortedWeightLogsAsc.length < 2) return null;
+    const last = sortedWeightLogsAsc[sortedWeightLogsAsc.length - 1].weight;
+    const prev = sortedWeightLogsAsc[sortedWeightLogsAsc.length - 2].weight;
     const diff = last - prev;
     if (Math.abs(diff) < 0.05) return { direction: 'stable' as const, diff: 0 };
     return { direction: diff > 0 ? 'up' as const : 'down' as const, diff };
-  }, [weightLogs]);
+  }, [sortedWeightLogsAsc]);
 
   const chartData = useMemo(() => {
-    return [...weightLogs]
-      .sort((a, b) => a.date.localeCompare(b.date))
+    return sortedWeightLogsAsc
       .slice(-30)
-      .map(l => ({ date: l.date.slice(5), poids: l.weight }));
-  }, [weightLogs]);
+      .map(log => ({ date: log.date.slice(5), poids: log.weight }));
+  }, [sortedWeightLogsAsc]);
 
   const cardVariants = {
     hidden: { opacity: 0, y: 12 },
@@ -131,7 +148,6 @@ export default function Tracking() {
       <div className="space-y-6">
         <h1 className="text-2xl font-display font-bold">Suivi</h1>
 
-        {/* Planned vs consumed calories */}
         <div className="grid grid-cols-3 gap-3">
           <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-2">
@@ -140,6 +156,7 @@ export default function Tracking() {
             <p className="font-display font-bold text-lg">{plannedCalories}</p>
             <p className="text-xs text-muted-foreground">Prévues</p>
           </motion.div>
+
           <motion.div custom={1} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
             <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mx-auto mb-2">
               <Flame className="w-4 h-4 text-accent" />
@@ -147,6 +164,7 @@ export default function Tracking() {
             <p className="font-display font-bold text-lg">{consumed}</p>
             <p className="text-xs text-muted-foreground">Consommées</p>
           </motion.div>
+
           <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2 ${ecart > 0 ? 'bg-destructive/10' : ecart < 0 ? 'bg-secondary/10' : 'bg-muted'}`}>
               <BarChart3 className={`w-4 h-4 ${ecart > 0 ? 'text-destructive' : ecart < 0 ? 'text-secondary' : 'text-muted-foreground'}`} />
@@ -158,13 +176,12 @@ export default function Tracking() {
           </motion.div>
         </div>
 
-        {/* Today's planned meals detail */}
         {todayMealDetails.length > 0 && (
           <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
             <h2 className="font-display font-semibold text-sm mb-2">Repas prévus aujourd'hui</h2>
             <div className="space-y-1">
               {todayMealDetails.map((meal, i) => (
-                <div key={i} className="flex justify-between text-sm py-1 border-b border-border last:border-0">
+                <div key={`${meal.name}-${i}`} className="flex justify-between text-sm py-1 border-b border-border last:border-0">
                   <span>{meal.name}</span>
                   <span className="text-muted-foreground">{meal.calories} kcal</span>
                 </div>
@@ -179,7 +196,6 @@ export default function Tracking() {
           </motion.div>
         )}
 
-        {/* Trend */}
         {trend && (
           <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 flex items-center gap-3">
             {trend.direction === 'up' && <TrendingUp className="w-5 h-5 text-accent" />}
@@ -196,7 +212,6 @@ export default function Tracking() {
           </motion.div>
         )}
 
-        {/* Advice */}
         {advice && (
           <motion.div
             custom={5}
@@ -219,7 +234,6 @@ export default function Tracking() {
           </motion.div>
         )}
 
-        {/* Weight entry */}
         <motion.div custom={6} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
           <h2 className="font-display font-semibold text-sm flex items-center gap-2">
             <Scale className="w-4 h-4 text-primary" /> Enregistrer le poids
@@ -239,7 +253,6 @@ export default function Tracking() {
           </div>
         </motion.div>
 
-        {/* Weight chart */}
         {chartData.length > 1 && (
           <motion.div custom={7} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
             <h2 className="font-display font-semibold text-sm mb-3">Évolution du poids</h2>
@@ -257,7 +270,6 @@ export default function Tracking() {
           </motion.div>
         )}
 
-        {/* Calories entry */}
         <motion.div custom={8} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
           <h2 className="font-display font-semibold text-sm flex items-center gap-2">
             <Flame className="w-4 h-4 text-accent" /> Calories du jour
@@ -282,20 +294,16 @@ export default function Tracking() {
           )}
         </motion.div>
 
-        {/* History */}
-        {weightLogs.length > 0 && (
+        {recentWeightLogsDesc.length > 0 && (
           <motion.div custom={9} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
             <h2 className="font-display font-semibold text-sm mb-3">Historique des pesées</h2>
             <div className="space-y-1">
-              {[...weightLogs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10).map((log, i) => {
-                const prevLog = weightLogs.sort((a, b) => a.date.localeCompare(b.date))[
-                  weightLogs.sort((a, b) => a.date.localeCompare(b.date)).findIndex(l => l.id === log.id) - 1
-                ];
-                const diff = prevLog ? log.weight - prevLog.weight : null;
+              {recentWeightLogsDesc.map(log => {
+                const diff = weightDiffByLogId[log.id];
                 return (
                   <div key={log.id} className="flex justify-between items-center text-sm py-2 border-b border-border last:border-0">
                     <span className="text-muted-foreground">
-                      {format(new Date(log.date + 'T12:00:00'), 'd MMM yyyy', { locale: fr })}
+                      {format(new Date(`${log.date}T12:00:00`), 'd MMM yyyy', { locale: fr })}
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{log.weight} kg</span>
