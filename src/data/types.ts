@@ -48,6 +48,7 @@ export interface WeightLog {
   id: string;
   date: string;
   weight: number;
+  updatedAt?: string; // ISO timestamp of last update
 }
 
 export interface CalorieLog {

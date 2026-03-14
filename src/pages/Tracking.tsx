@@ -91,12 +91,18 @@ export default function Tracking() {
   const ecartPlanifie = plannedCalories - dailyTarget;
   const ecartConsomme = consumed - dailyTarget;
 
+  const todayWeightLog = weightLogs.find(l => l.date === today);
+
   const addWeight = () => {
     if (!newWeight) return;
-    const log: WeightLog = { id: `w_${Date.now()}`, date: today, weight: parseFloat(newWeight) };
+    const isUpdate = !!todayWeightLog;
+    const log: WeightLog = { id: `w_${Date.now()}`, date: today, weight: parseFloat(newWeight), updatedAt: new Date().toISOString() };
     setWeightLogs(prev => [...prev.filter(l => l.date !== today), log]);
     setNewWeight('');
-    toast({ title: '✅ Poids enregistré', description: `${log.weight} kg` });
+    toast({
+      title: isUpdate ? '🔄 Pesée du jour mise à jour' : '✅ Poids enregistré',
+      description: `${log.weight} kg`,
+    });
   };
 
   const addCalories = () => {
@@ -304,16 +310,28 @@ export default function Tracking() {
           <div className="flex gap-2">
             <Input type="number" step="0.1" placeholder="Ex: 72.5" value={newWeight} onChange={e => setNewWeight(e.target.value)} className="flex-1" />
             <Button className="gap-1.5 tap-scale" onClick={addWeight}>
-              <Plus className="w-4 h-4" /> OK
+              <Plus className="w-4 h-4" /> {todayWeightLog ? 'Mettre à jour' : 'OK'}
             </Button>
           </div>
+          {todayWeightLog && (
+            <p className="text-xs text-muted-foreground">
+              Pesée du jour : <span className="font-medium text-foreground">{todayWeightLog.weight} kg</span>
+              {todayWeightLog.updatedAt && (
+                <span> — mise à jour à {format(new Date(todayWeightLog.updatedAt), 'HH:mm')}</span>
+              )}
+            </p>
+          )}
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            Une seule pesée est conservée par jour. Une nouvelle saisie remplacera la précédente.
+            Pour un suivi fiable, pèse-toi le matin à jeun, dans des conditions similaires.
+          </p>
         </motion.div>
 
         {chartData.length >= 1 && (
           <motion.div custom={9} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
             <h2 className="font-display font-semibold text-sm mb-3">📈 Évolution du poids</h2>
-            {chartData.length === 1 ? (
-              <p className="text-xs text-muted-foreground">Ajoute une deuxième pesée pour voir le graphique d'évolution.</p>
+            {chartData.length < 2 ? (
+              <p className="text-xs text-muted-foreground">Ajoute une pesée un autre jour pour voir le graphique d'évolution.</p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
