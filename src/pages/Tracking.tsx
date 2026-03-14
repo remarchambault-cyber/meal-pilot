@@ -52,7 +52,8 @@ export default function Tracking() {
     const todayMeals = mealPlan.filter(m => m.date === today);
     return todayMeals.reduce((sum, m) => {
       const recipe = allRecipes.find(r => r.id === m.recipeId);
-      return sum + (recipe ? recipe.calories * (m.portions || 1) : 0);
+      const sf = m.scaleFactor || 1;
+      return sum + (recipe ? Math.round(recipe.calories * sf) * (m.portions || 1) : 0);
     }, 0);
   }, [mealPlan, today, allRecipes]);
 
