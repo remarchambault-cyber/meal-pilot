@@ -379,24 +379,41 @@ export default function Tracking() {
             <h2 className="font-display font-semibold text-sm flex items-center gap-2">
               <Flame className="w-4 h-4 text-accent" /> Calories extra
             </h2>
+            {todayCalorieLog && (
+              <div className="p-2.5 rounded-lg bg-muted/40 space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Consommées manuelles</span>
+                  <span className="font-medium">{manualConsumed} kcal</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Dépensées extra</span>
+                  <span className="font-medium">{extraBurned} kcal</span>
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">Consommées</Label>
-                <Input type="number" placeholder="kcal" value={newCalConsumed} onChange={e => setNewCalConsumed(e.target.value)} />
+                <Input type="number" placeholder={todayCalorieLog ? String(manualConsumed) : 'kcal'} value={newCalConsumed} onChange={e => setNewCalConsumed(e.target.value)} />
               </div>
               <div>
                 <Label className="text-xs">Dépensées</Label>
-                <Input type="number" placeholder="kcal" value={newCalBurned} onChange={e => setNewCalBurned(e.target.value)} />
+                <Input type="number" placeholder={todayCalorieLog ? String(extraBurned) : 'kcal'} value={newCalBurned} onChange={e => setNewCalBurned(e.target.value)} />
               </div>
             </div>
-            <Button className="w-full gap-1.5 tap-scale" variant="outline" onClick={addCalories}>
-              <Plus className="w-4 h-4" /> Ajouter
-            </Button>
-            {(manualConsumed > 0 || extraBurned > 0) && (
-              <p className="text-[10px] text-muted-foreground text-center">
-                {manualConsumed > 0 && `+${manualConsumed} conso.`}{manualConsumed > 0 && extraBurned > 0 && ' · '}{extraBurned > 0 && `−${extraBurned} dép.`}
-              </p>
-            )}
+            <div className="flex gap-2">
+              <Button className="flex-1 gap-1.5 tap-scale" variant="outline" onClick={addCalories}>
+                {todayCalorieLog ? '🔄 Modifier' : <><Plus className="w-4 h-4" /> Enregistrer</>}
+              </Button>
+              {todayCalorieLog && (
+                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive shrink-0" onClick={resetCalories} title="Réinitialiser">
+                  🗑️
+                </Button>
+              )}
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              {todayCalorieLog ? 'Une saisie par jour. Modifie ou réinitialise la valeur.' : 'Une seule saisie par jour. Tu pourras la modifier ensuite.'}
+            </p>
           </motion.div>
         </div>
 
