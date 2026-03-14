@@ -40,7 +40,6 @@ export default function Onboarding() {
       extraCaloriesBurned: parseInt(form.extraCaloriesBurned) || 0,
     };
     setProfile(profile);
-    setAuth(true);
     navigate('/dashboard');
   };
 
