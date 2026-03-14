@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { MealPlanItem, Recipe } from '@/data/types';
+import { MealPlanItem, Recipe, UserProfile } from '@/data/types';
 import { mockRecipes } from '@/data/recipes';
+import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronLeft, ChevronRight, Copy, ChefHat, Trash2, Plus, Flame } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, ChefHat, Trash2, Plus, Flame, Target } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,15 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
@@ -44,6 +38,7 @@ const MEAL_TYPE_COLORS: Record<string, string> = {
 const MEAL_TYPE_ORDER = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 export default function Planning() {
+  const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
   const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
   const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
   const [weekOffset, setWeekOffset] = useState(0);
@@ -54,6 +49,8 @@ export default function Planning() {
   const [isBatchCooking, setIsBatchCooking] = useState(false);
 
   const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
+  const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
+  const mealSuggestions = useMemo(() => target ? getMealCalorieSuggestion(target.target) : null, [target]);
 
   const weekStart = useMemo(() => {
     const now = new Date();
@@ -62,22 +59,20 @@ export default function Planning() {
 
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
 
-  // Filter recipes by selected meal type (strict: breakfast only shows breakfast recipes, lunch/dinner show lunch+dinner)
   const filteredRecipes = useMemo(() => {
     if (selectedMealType === 'breakfast') {
       return allRecipes.filter(r => r.mealType === 'breakfast');
     }
     if (selectedMealType === 'snack') {
-      return allRecipes.filter(r => r.mealType === 'breakfast'); // snacks can use breakfast-type recipes
+      return allRecipes.filter(r => r.mealType === 'breakfast');
     }
-    // lunch and dinner can share recipes
     return allRecipes.filter(r => r.mealType === 'lunch' || r.mealType === 'dinner');
   }, [allRecipes, selectedMealType]);
 
   const getMealsForDay = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    const meals = mealPlan.filter(m => m.date === dateStr);
-    return meals.sort((a, b) => MEAL_TYPE_ORDER.indexOf(a.mealType) - MEAL_TYPE_ORDER.indexOf(b.mealType));
+    return mealPlan.filter(m => m.date === dateStr)
+      .sort((a, b) => MEAL_TYPE_ORDER.indexOf(a.mealType) - MEAL_TYPE_ORDER.indexOf(b.mealType));
   };
 
   const getRecipe = (id: string) => allRecipes.find(r => r.id === id);
@@ -91,10 +86,6 @@ export default function Planning() {
     const nextDay = format(addDays(new Date(item.date), 1), 'yyyy-MM-dd');
     setMealPlan(prev => [...prev, { ...item, id: `mp_${Date.now()}`, date: nextDay }]);
     toast({ title: '📋 Repas dupliqué', description: 'Copié au jour suivant' });
-  };
-
-  const toggleBatchCooking = (id: string) => {
-    setMealPlan(prev => prev.map(m => m.id === id ? { ...m, isBatchCooking: !m.isBatchCooking } : m));
   };
 
   const openAddDialog = (dateStr: string) => {
@@ -152,11 +143,30 @@ export default function Planning() {
           </div>
         </div>
 
+        {/* Calorie distribution guide */}
+        {mealSuggestions && target && (
+          <div className="card-elevated p-3">
+            <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
+              <Target className="w-3.5 h-3.5 text-primary" /> Répartition suggérée — {target.target} kcal/jour
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              {Object.entries(mealSuggestions).map(([type, kcal]) => (
+                <span key={type} className="text-xs bg-muted px-2 py-1 rounded-md">
+                  {MEAL_TYPE_LABELS[type]} {kcal} kcal
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="space-y-3">
           {days.map((day, i) => {
             const meals = getMealsForDay(day);
             const isToday = isSameDay(day, new Date());
             const dayCalories = getDayCalories(day);
+            const dailyTarget = target?.target || 0;
+            const ecart = dayCalories - dailyTarget;
+
             return (
               <motion.div
                 key={day.toISOString()}
@@ -170,11 +180,22 @@ export default function Planning() {
                     {format(day, 'EEEE d MMMM', { locale: fr })}
                     {isToday && <span className="ml-2 text-xs font-normal text-primary">(aujourd'hui)</span>}
                   </h3>
-                  {dayCalories > 0 && (
-                    <span className="text-xs font-medium text-accent flex items-center gap-1">
-                      <Flame className="w-3 h-3" /> {dayCalories} kcal
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {dayCalories > 0 && (
+                      <span className="text-xs font-medium text-accent flex items-center gap-1">
+                        <Flame className="w-3 h-3" /> {dayCalories} kcal
+                      </span>
+                    )}
+                    {dayCalories > 0 && dailyTarget > 0 && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                        ecart > 50 ? 'bg-destructive/10 text-destructive' :
+                        ecart < -200 ? 'bg-accent/10 text-accent' :
+                        'bg-secondary/10 text-secondary'
+                      }`}>
+                        {ecart > 0 ? '+' : ''}{ecart} kcal
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {meals.length === 0 ? (
@@ -203,14 +224,6 @@ export default function Planning() {
                               <span className="text-xs text-muted-foreground">{recipe.calories * (meal.portions || 1)} kcal</span>
                             </div>
                             <div className="flex gap-1 shrink-0">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleBatchCooking(meal.id)}>
-                                    <ChefHat className={`w-3.5 h-3.5 ${meal.isBatchCooking ? 'text-secondary' : 'text-muted-foreground'}`} />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Batch cooking</TooltipContent>
-                              </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => duplicateMeal(meal)}>
@@ -271,7 +284,6 @@ export default function Planning() {
             <DialogTitle className="font-display">Ajouter un repas</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            {/* Show selected date prominently */}
             <div className="card-elevated p-3 text-center">
               <p className="text-sm font-display font-semibold capitalize">{addDialogDateFormatted}</p>
             </div>
@@ -287,6 +299,11 @@ export default function Planning() {
                   <SelectItem value="snack">Collation</SelectItem>
                 </SelectContent>
               </Select>
+              {mealSuggestions && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Suggestion : ~{mealSuggestions[selectedMealType] || 0} kcal
+                </p>
+              )}
             </div>
 
             <div>

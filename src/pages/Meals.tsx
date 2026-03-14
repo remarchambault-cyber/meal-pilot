@@ -1,14 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { UserProfile, Recipe } from '@/data/types';
+import { UserProfile, Recipe, MealPlanItem } from '@/data/types';
 import { mockRecipes } from '@/data/recipes';
 import { calculateCalorieTarget } from '@/lib/calories';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Clock, Flame, RefreshCw, Plus, Eye } from 'lucide-react';
-import { MealPlanItem } from '@/data/types';
 import { motion } from 'framer-motion';
 import AddToPlanModal from '@/components/AddToPlanModal';
 
@@ -22,20 +21,14 @@ export default function Meals() {
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
 
   const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
-
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
 
   const filtered = useMemo(() => {
     let recipes = [...allRecipes];
-    // Strict meal type filtering
-    if (filter !== 'all') {
-      if (filter === 'breakfast') {
-        recipes = recipes.filter(r => r.mealType === 'breakfast');
-      } else {
-        // lunch and dinner share the same pool (non-breakfast recipes)
-        recipes = recipes.filter(r => r.mealType === 'lunch' || r.mealType === 'dinner');
-        // If user specifically picked lunch or dinner, prefer that but show all savory
-      }
+    if (filter === 'breakfast') {
+      recipes = recipes.filter(r => r.mealType === 'breakfast');
+    } else if (filter === 'lunch' || filter === 'dinner') {
+      recipes = recipes.filter(r => r.mealType === 'lunch' || r.mealType === 'dinner');
     }
     if (profile?.dietPreference && profile.dietPreference !== 'none') {
       recipes = recipes.filter(r => r.dietTags.includes(profile.dietPreference));
@@ -100,19 +93,10 @@ export default function Meals() {
                 <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{recipe.prepTime} min</span>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 tap-scale"
-                  onClick={() => navigate(`/recipe/${recipe.id}`)}
-                >
+                <Button variant="outline" size="sm" className="gap-1.5 tap-scale" onClick={() => navigate(`/recipe/${recipe.id}`)}>
                   <Eye className="w-4 h-4" /> Recette
                 </Button>
-                <Button
-                  size="sm"
-                  className="gap-1.5 tap-scale"
-                  onClick={() => setModalRecipe(recipe)}
-                >
+                <Button size="sm" className="gap-1.5 tap-scale" onClick={() => setModalRecipe(recipe)}>
                   <Plus className="w-4 h-4" /> Au planning
                 </Button>
               </div>
@@ -135,7 +119,7 @@ export default function Meals() {
           open={!!modalRecipe}
           onOpenChange={(open) => !open && setModalRecipe(null)}
           recipe={modalRecipe}
-          onAdd={(item) => setMealPlan(prev => [...prev, item])}
+          onAdd={(items) => setMealPlan(prev => [...prev, ...items])}
         />
       )}
     </AppLayout>
