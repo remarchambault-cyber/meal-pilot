@@ -82,14 +82,16 @@ export default function Tracking() {
       .filter(Boolean) as { name: string; calories: number; mealType: MealPlanItem['mealType']; consumed: boolean }[];
   }, [mealPlan, today, allRecipes]);
 
-  const todayCalories = calorieLogs.find(l => l.date === today);
-  const manualConsumed = todayCalories?.caloriesConsumed || 0;
+  const todayCalorieLogs = calorieLogs.filter(l => l.date === today);
+  const manualConsumed = todayCalorieLogs.reduce((sum, l) => sum + (l.caloriesConsumed || 0), 0);
+  const extraBurned = todayCalorieLogs.reduce((sum, l) => sum + (l.caloriesBurned || 0), 0);
   const consumed = consumedFromMeals + manualConsumed;
+  const netConsumed = consumed - extraBurned;
   const dailyTarget = target?.target || 0;
 
   // Two distinct gaps
   const ecartPlanifie = plannedCalories - dailyTarget;
-  const ecartConsomme = consumed - dailyTarget;
+  const ecartConsomme = netConsumed - dailyTarget;
 
   const todayWeightLog = weightLogs.find(l => l.date === today);
 
@@ -113,10 +115,10 @@ export default function Tracking() {
       caloriesConsumed: parseInt(newCalConsumed, 10) || 0,
       caloriesBurned: parseInt(newCalBurned, 10) || 0,
     };
-    setCalorieLogs(prev => [...prev.filter(l => l.date !== today), log]);
+    setCalorieLogs(prev => [...prev, log]);
     setNewCalConsumed('');
     setNewCalBurned('');
-    toast({ title: '✅ Calories enregistrées' });
+    toast({ title: '✅ Calories ajoutées au total du jour' });
   };
 
   const advice = useMemo(() => {
@@ -219,23 +221,48 @@ export default function Tracking() {
           </motion.div>
         </div>
 
-        {/* Row 3: Gap consumed vs target */}
-        <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${gapBg(ecartConsomme)}`}>
-                <Flame className={`w-4 h-4 ${gapColor(ecartConsomme)}`} />
-              </div>
-              <div>
-                <p className={`font-display font-bold text-lg ${gapColor(ecartConsomme)}`}>
-                  {ecartConsomme > 0 ? '+' : ''}{ecartConsomme} kcal
-                </p>
-                <p className="text-xs text-muted-foreground">Consommé vs cible</p>
-              </div>
+        {/* Row 3: Burned + Net consumed */}
+        <div className="grid grid-cols-2 gap-3">
+          <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
+            <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center mx-auto mb-2">
+              <Flame className="w-4 h-4 text-destructive" />
             </div>
-            <div className="text-right text-xs text-muted-foreground">
-              <p>{consumed} consommées</p>
-              <p>{dailyTarget} cible</p>
+            <p className="font-display font-bold text-lg">{extraBurned}</p>
+            <p className="text-xs text-muted-foreground">Dépensées extra</p>
+          </motion.div>
+
+          <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2 ${gapBg(ecartConsomme)}`}>
+              <Target className={`w-4 h-4 ${gapColor(ecartConsomme)}`} />
+            </div>
+            <p className={`font-display font-bold text-lg ${gapColor(ecartConsomme)}`}>
+              {ecartConsomme > 0 ? '+' : ''}{ecartConsomme}
+            </p>
+            <p className="text-xs text-muted-foreground">Net vs cible</p>
+          </motion.div>
+        </div>
+
+        {/* Recap detail card */}
+        <motion.div custom={6} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
+          <h2 className="font-display font-semibold text-sm mb-2">Récapitulatif du jour</h2>
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">Cible</span><span>{dailyTarget} kcal</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Prévues (planning)</span><span>{plannedCalories} kcal</span></div>
+            <div className="border-t border-border my-1" />
+            <div className="flex justify-between"><span className="text-muted-foreground">Consommées repas</span><span>{consumedFromMeals} kcal</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Consommées manuelles</span><span>{manualConsumed} kcal</span></div>
+            <div className="flex justify-between font-medium"><span>Total consommées</span><span>{consumed} kcal</span></div>
+            {extraBurned > 0 && (
+              <div className="flex justify-between text-destructive"><span>− Dépensées extra</span><span>−{extraBurned} kcal</span></div>
+            )}
+            <div className="border-t border-border my-1" />
+            <div className="flex justify-between font-semibold">
+              <span>Net consommé</span>
+              <span>{netConsumed} kcal</span>
+            </div>
+            <div className={`flex justify-between font-semibold ${gapColor(ecartConsomme)}`}>
+              <span>Écart vs cible</span>
+              <span>{ecartConsomme > 0 ? '+' : ''}{ecartConsomme} kcal</span>
             </div>
           </div>
         </motion.div>
@@ -356,24 +383,27 @@ export default function Tracking() {
 
         <motion.div custom={10} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
           <h2 className="font-display font-semibold text-sm flex items-center gap-2">
-            <Flame className="w-4 h-4 text-accent" /> Calories du jour
+            <Flame className="w-4 h-4 text-accent" /> Ajouter des calories
           </h2>
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            Chaque saisie s'ajoute au total du jour. Utilise ce formulaire pour les calories hors planning (snack, boisson…) ou les dépenses extra (sport…).
+          </p>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs">Consommées</Label>
+              <Label className="text-xs">Consommées (à ajouter)</Label>
               <Input type="number" placeholder="kcal" value={newCalConsumed} onChange={e => setNewCalConsumed(e.target.value)} />
             </div>
             <div>
-              <Label className="text-xs">Dépensées (extra)</Label>
+              <Label className="text-xs">Dépensées extra</Label>
               <Input type="number" placeholder="kcal" value={newCalBurned} onChange={e => setNewCalBurned(e.target.value)} />
             </div>
           </div>
           <Button className="w-full gap-1.5 tap-scale" variant="outline" onClick={addCalories}>
-            <Plus className="w-4 h-4" /> Enregistrer
+            <Plus className="w-4 h-4" /> Ajouter au total du jour
           </Button>
-          {target && (
+          {(manualConsumed > 0 || extraBurned > 0) && (
             <p className="text-xs text-muted-foreground text-center">
-              Cible : {target.target} kcal/jour
+              Aujourd'hui : {manualConsumed > 0 && `+${manualConsumed} kcal manuelles`}{manualConsumed > 0 && extraBurned > 0 && ' · '}{extraBurned > 0 && `−${extraBurned} kcal dépensées`}
             </p>
           )}
         </motion.div>
