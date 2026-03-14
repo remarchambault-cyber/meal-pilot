@@ -83,9 +83,9 @@ export default function Tracking() {
       .filter(Boolean) as { name: string; calories: number; mealType: MealPlanItem['mealType']; consumed: boolean }[];
   }, [mealPlan, today, allRecipes]);
 
-  const todayCalorieLogs = calorieLogs.filter(l => l.date === today);
-  const manualConsumed = todayCalorieLogs.reduce((sum, l) => sum + (l.caloriesConsumed || 0), 0);
-  const extraBurned = todayCalorieLogs.reduce((sum, l) => sum + (l.caloriesBurned || 0), 0);
+  const todayCalorieLog = calorieLogs.find(l => l.date === today);
+  const manualConsumed = todayCalorieLog?.caloriesConsumed || 0;
+  const extraBurned = todayCalorieLog?.caloriesBurned || 0;
   const consumed = consumedFromMeals + manualConsumed;
   const netConsumed = consumed - extraBurned;
   const dailyTarget = target?.target || 0;
