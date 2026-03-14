@@ -77,7 +77,7 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, onAdd }: Ad
     }
 
     const items: MealPlanItem[] = targetDays.map((day, index) => ({
-      id: `mp_${Date.now()}_${day.replaceAll('-', '')}_${index}`,
+      id: `mp_${Date.now()}_${day.split('-').join('')}_${index}`,
       date: day,
       mealType,
       recipeId: recipe.id,

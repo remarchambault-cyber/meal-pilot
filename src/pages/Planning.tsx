@@ -171,7 +171,7 @@ export default function Planning() {
 
     const duplicatedItems: MealPlanItem[] = duplicateDays.map((date, index) => ({
       ...duplicateSourceMeal,
-      id: `mp_${Date.now()}_dup_${date.replaceAll('-', '')}_${index}`,
+      id: `mp_${Date.now()}_dup_${date.split('-').join('')}_${index}`,
       date,
       isBatchCooking: false,
     }));
