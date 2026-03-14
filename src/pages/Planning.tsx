@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { MealPlanItem, Recipe, UserProfile } from '@/data/types';
 import { mockRecipes } from '@/data/recipes';
