@@ -193,7 +193,13 @@ export default function Tracking() {
             </div>
             <p className="font-display font-bold text-lg">{consumed}</p>
             <p className="text-xs text-muted-foreground">Consommées</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Saisie manuelle uniquement</p>
+            {(consumedFromMeals > 0 || manualConsumed > 0) && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {consumedFromMeals > 0 && `${consumedFromMeals} repas`}
+                {consumedFromMeals > 0 && manualConsumed > 0 && ' + '}
+                {manualConsumed > 0 && `${manualConsumed} manuel`}
+              </p>
+            )}
           </motion.div>
 
           <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
