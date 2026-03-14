@@ -408,7 +408,7 @@ export default function Planning() {
                     const isScaled = Math.abs(sf - 1) > 0.01;
                     return (
                       <SelectItem key={recipe.id} value={recipe.id}>
-                        {recipe.title} ({adjusted} kcal{isScaled ? ` · ×${sf.toFixed(2)}` : ''})
+                        {recipe.title} ({adjusted} kcal{isScaled ? ' · ajusté' : ''})
                       </SelectItem>
                     );
                   })}

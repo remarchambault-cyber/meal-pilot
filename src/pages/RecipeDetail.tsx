@@ -92,7 +92,7 @@ export default function RecipeDetail() {
 
         {scaled.isScaled && (
           <div className="text-xs text-muted-foreground bg-muted/60 rounded-lg p-3">
-            Recette de base : {recipe.calories} kcal · Quantités ajustées pour correspondre à la cible du créneau ({scaled.calories} kcal).
+            Les quantités ci-dessous sont ajustées pour correspondre à votre cible calorique ({scaled.calories} kcal au lieu de {recipe.calories} kcal en version standard).
           </div>
         )}
 

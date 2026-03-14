@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { format, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarIcon, ChefHat, ScaleIcon } from 'lucide-react';
+import { CalendarIcon, ChefHat } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';

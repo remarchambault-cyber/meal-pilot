@@ -13,7 +13,7 @@ import { Clock, Flame, RefreshCw, Plus, Eye, Target } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AddToPlanModal from '@/components/AddToPlanModal';
 
-type MealFilter = 'all' | Recipe['mealType'];
+type MealFilter = 'all' | Recipe['mealType'] | 'snack';
 
 const FILTER_LABELS: Record<MealFilter, string> = {
   all: 'Tous les repas',
