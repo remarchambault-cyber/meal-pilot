@@ -47,14 +47,19 @@ export default function Dashboard() {
         const recipe = allRecipes.find(r => r.id === m.recipeId);
         const sf = m.scaleFactor || 1;
         return recipe ? {
+          id: m.id,
           name: recipe.title,
           mealType: m.mealType,
           calories: Math.round(recipe.calories * sf) * (m.portions || 1),
           consumed: !!m.consumed,
         } : null;
       })
-      .filter(Boolean) as { name: string; mealType: MealPlanItem['mealType']; calories: number; consumed: boolean }[];
+      .filter(Boolean) as { id: string; name: string; mealType: MealPlanItem['mealType']; calories: number; consumed: boolean }[];
   }, [mealPlan, today, allRecipes]);
+
+  const toggleConsumed = (mealId: string) => {
+    setMealPlan(prev => prev.map(m => m.id === mealId ? { ...m, consumed: !m.consumed } : m));
+  };
 
   if (!profile || !target) {
     navigate('/onboarding');
