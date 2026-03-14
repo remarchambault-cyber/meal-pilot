@@ -62,13 +62,15 @@ export default function Tracking() {
       .filter(m => m.date === today)
       .map(m => {
         const recipe = allRecipes.find(r => r.id === m.recipeId);
+        const sf = m.scaleFactor || 1;
         return recipe ? {
           name: recipe.title,
-          calories: recipe.calories * (m.portions || 1),
+          calories: Math.round(recipe.calories * sf) * (m.portions || 1),
           mealType: m.mealType,
+          isScaled: Math.abs(sf - 1) > 0.01,
         } : null;
       })
-      .filter(Boolean) as { name: string; calories: number; mealType: MealPlanItem['mealType'] }[];
+      .filter(Boolean) as { name: string; calories: number; mealType: MealPlanItem['mealType']; isScaled: boolean }[];
   }, [mealPlan, today, allRecipes]);
 
   const todayCalories = calorieLogs.find(l => l.date === today);

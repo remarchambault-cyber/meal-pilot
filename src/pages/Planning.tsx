@@ -142,6 +142,9 @@ export default function Planning() {
     const recipe = getRecipe(selectedRecipeId);
     if (!recipe) return;
 
+    const mealTarget = mealSuggestions?.[selectedMealType] || 0;
+    const sf = mealTarget ? getScaleFactor(recipe.calories, mealTarget) : 1;
+
     const items: MealPlanItem[] = selectedDates.map((date, index) => ({
       id: `mp_${Date.now()}_${date.split('-').join('')}_${index}`,
       date,
@@ -149,6 +152,7 @@ export default function Planning() {
       recipeId: selectedRecipeId,
       isBatchCooking,
       portions,
+      scaleFactor: sf,
     }));
 
     setMealPlan(prev => [...prev, ...items]);
@@ -157,8 +161,8 @@ export default function Planning() {
     toast({
       title: isBatchCooking ? '✅ Batch cooking planifié' : '✅ Repas ajouté',
       description: isBatchCooking
-        ? `${recipe.title} ajouté sur ${selectedDates.length} jours · ${selectedDates.length * portions} portions au total`
-        : `${recipe.title} — ${format(new Date(`${addDialogDate}T12:00:00`), 'EEEE d MMMM', { locale: fr })}`,
+        ? `${recipe.title} ajouté sur ${selectedDates.length} jours · ${Math.round(recipe.calories * sf)} kcal/portion`
+        : `${recipe.title} — ${Math.round(recipe.calories * sf)} kcal · ${format(new Date(`${addDialogDate}T12:00:00`), 'EEEE d MMMM', { locale: fr })}`,
     });
   };
 

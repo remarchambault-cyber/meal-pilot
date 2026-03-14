@@ -33,7 +33,8 @@ export default function Dashboard() {
       .filter(m => m.date === today)
       .reduce((sum, meal) => {
         const recipe = allRecipes.find(r => r.id === meal.recipeId);
-        return sum + (recipe ? recipe.calories * (meal.portions || 1) : 0);
+        const sf = meal.scaleFactor || 1;
+        return sum + (recipe ? Math.round(recipe.calories * sf) * (meal.portions || 1) : 0);
       }, 0);
   }, [mealPlan, today, allRecipes]);
 
