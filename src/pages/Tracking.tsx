@@ -115,10 +115,10 @@ export default function Tracking() {
       caloriesConsumed: parseInt(newCalConsumed, 10) || 0,
       caloriesBurned: parseInt(newCalBurned, 10) || 0,
     };
-    setCalorieLogs(prev => [...prev.filter(l => l.date !== today), log]);
+    setCalorieLogs(prev => [...prev, log]);
     setNewCalConsumed('');
     setNewCalBurned('');
-    toast({ title: '✅ Calories enregistrées' });
+    toast({ title: '✅ Calories ajoutées au total du jour' });
   };
 
   const advice = useMemo(() => {
