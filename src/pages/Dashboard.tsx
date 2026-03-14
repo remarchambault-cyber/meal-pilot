@@ -16,7 +16,7 @@ export default function Dashboard() {
   const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
   const [weightLogs] = useLocalStorage<WeightLog[]>('mealpilot_weight', []);
   const [calorieLogs] = useLocalStorage<CalorieLog[]>('mealpilot_calories', []);
-  const [mealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
+  const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
   const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
 
   const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
@@ -47,14 +47,19 @@ export default function Dashboard() {
         const recipe = allRecipes.find(r => r.id === m.recipeId);
         const sf = m.scaleFactor || 1;
         return recipe ? {
+          id: m.id,
           name: recipe.title,
           mealType: m.mealType,
           calories: Math.round(recipe.calories * sf) * (m.portions || 1),
           consumed: !!m.consumed,
         } : null;
       })
-      .filter(Boolean) as { name: string; mealType: MealPlanItem['mealType']; calories: number; consumed: boolean }[];
+      .filter(Boolean) as { id: string; name: string; mealType: MealPlanItem['mealType']; calories: number; consumed: boolean }[];
   }, [mealPlan, today, allRecipes]);
+
+  const toggleConsumed = (mealId: string) => {
+    setMealPlan(prev => prev.map(m => m.id === mealId ? { ...m, consumed: !m.consumed } : m));
+  };
 
   if (!profile || !target) {
     navigate('/onboarding');
@@ -140,13 +145,17 @@ export default function Dashboard() {
               <span className="text-[10px] text-muted-foreground">{todayMeals.filter(m => m.consumed).length}/{todayMeals.length} consommés</span>
             </div>
             <div className="space-y-0.5">
-              {todayMeals.map((meal, i) => (
-                <div key={`${meal.name}-${i}`} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+              {todayMeals.map((meal) => (
+                <button
+                  key={meal.id}
+                  onClick={() => toggleConsumed(meal.id)}
+                  className="flex items-center justify-between py-1.5 border-b border-border last:border-0 w-full text-left hover:bg-muted/30 rounded-md px-1 -mx-1 transition-colors"
+                >
                   <div className="flex items-center gap-2 min-w-0">
                     {meal.consumed ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-secondary shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-secondary shrink-0" />
                     ) : (
-                      <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/30 shrink-0" />
+                      <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />
                     )}
                     <div className="min-w-0">
                       <p className={`text-sm truncate ${meal.consumed ? '' : 'text-muted-foreground'}`}>{meal.name}</p>
@@ -154,7 +163,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground shrink-0 ml-2">{meal.calories} kcal</span>
-                </div>
+                </button>
               ))}
             </div>
           </motion.div>
