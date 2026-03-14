@@ -4,9 +4,10 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { UserProfile, WeightLog, CalorieLog, MealPlanItem, Recipe } from '@/data/types';
 import { calculateCalorieTarget, getGoalLabel } from '@/lib/calories';
 import { mockRecipes } from '@/data/recipes';
+import { PLANNING_MEAL_TYPE_LABELS_SHORT, PLANNING_MEAL_TYPE_ORDER } from '@/lib/mealTypes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, ShoppingCart, TrendingUp, Target, Scale, Flame } from 'lucide-react';
+import { CalendarDays, ShoppingCart, TrendingUp, Target, Scale, Flame, CheckCircle2, Utensils } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 
@@ -36,6 +37,23 @@ export default function Dashboard() {
         const sf = meal.scaleFactor || 1;
         return sum + (recipe ? Math.round(recipe.calories * sf) * (meal.portions || 1) : 0);
       }, 0);
+  }, [mealPlan, today, allRecipes]);
+
+  const todayMeals = useMemo(() => {
+    const meals = mealPlan.filter(m => m.date === today);
+    return PLANNING_MEAL_TYPE_ORDER
+      .flatMap(type => meals.filter(m => m.mealType === type))
+      .map(m => {
+        const recipe = allRecipes.find(r => r.id === m.recipeId);
+        const sf = m.scaleFactor || 1;
+        return recipe ? {
+          name: recipe.title,
+          mealType: m.mealType,
+          calories: Math.round(recipe.calories * sf) * (m.portions || 1),
+          consumed: !!m.consumed,
+        } : null;
+      })
+      .filter(Boolean) as { name: string; mealType: MealPlanItem['mealType']; calories: number; consumed: boolean }[];
   }, [mealPlan, today, allRecipes]);
 
   if (!profile || !target) {
@@ -107,6 +125,52 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Repas du jour */}
+        {todayMeals.length > 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="card-elevated p-4"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display font-semibold text-sm flex items-center gap-2">
+                <Utensils className="w-4 h-4 text-primary" /> Repas du jour
+              </h2>
+              <span className="text-[10px] text-muted-foreground">{todayMeals.filter(m => m.consumed).length}/{todayMeals.length} consommés</span>
+            </div>
+            <div className="space-y-0.5">
+              {todayMeals.map((meal, i) => (
+                <div key={`${meal.name}-${i}`} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {meal.consumed ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-secondary shrink-0" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/30 shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <p className={`text-sm truncate ${meal.consumed ? '' : 'text-muted-foreground'}`}>{meal.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{PLANNING_MEAL_TYPE_LABELS_SHORT[meal.mealType]}</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0 ml-2">{meal.calories} kcal</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="card-elevated p-4 text-center"
+          >
+            <p className="text-sm text-muted-foreground">Aucun repas planifié aujourd'hui</p>
+            <Button variant="link" size="sm" className="mt-1" onClick={() => navigate('/planning')}>
+              Planifier mes repas →
+            </Button>
+          </motion.div>
+        )}
         <div className="space-y-2">
           <h2 className="text-lg font-display font-semibold">Actions rapides</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
