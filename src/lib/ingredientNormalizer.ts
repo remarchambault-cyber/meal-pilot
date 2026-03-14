@@ -31,13 +31,42 @@ const PLURAL_MAP: Record<string, string> = {
   'pièces': 'pièce',
 };
 
+const UNIT_PLURAL_MAP: Record<string, string> = {
+  'pièces': 'pièce',
+  'tranches': 'tranche',
+  'feuilles': 'feuille',
+  'gousses': 'gousse',
+  'pincées': 'pincée',
+  'cuillères': 'cuillère',
+  'tasses': 'tasse',
+};
+
+/** Normalize a unit: lowercase, trim, merge plural/singular */
+export function normalizeUnit(unit: string): string {
+  const lower = unit.trim().toLowerCase();
+  return UNIT_PLURAL_MAP[lower] || lower;
+}
+
 /** Normalize an ingredient name: lowercase, trim, merge plural/singular variants */
 export function normalizeIngredientName(name: string): string {
   const lower = name.trim().toLowerCase();
-  return PLURAL_MAP[lower] || lower;
+  // Try exact match first
+  if (PLURAL_MAP[lower]) return PLURAL_MAP[lower];
+  // Generic French plural: try removing trailing 's' or 'x'
+  if (lower.endsWith('s') && lower.length > 3) {
+    const singular = lower.slice(0, -1);
+    if (PLURAL_MAP[singular]) return PLURAL_MAP[singular];
+    return singular;
+  }
+  if (lower.endsWith('x') && lower.length > 3) {
+    const singular = lower.slice(0, -1);
+    if (PLURAL_MAP[singular]) return PLURAL_MAP[singular];
+    return singular;
+  }
+  return lower;
 }
 
 /** Create a stable key for deduplication */
 export function ingredientKey(name: string, unit: string): string {
-  return `${normalizeIngredientName(name)}__${unit.trim().toLowerCase()}`;
+  return `${normalizeIngredientName(name)}__${normalizeUnit(unit)}`;
 }
