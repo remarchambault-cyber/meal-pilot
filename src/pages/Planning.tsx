@@ -95,7 +95,8 @@ export default function Planning() {
     const meals = getMealsForDay(date);
     return meals.reduce((sum, m) => {
       const recipe = getRecipe(m.recipeId);
-      return sum + (recipe ? recipe.calories * (m.portions || 1) : 0);
+      const sf = m.scaleFactor || 1;
+      return sum + (recipe ? Math.round(recipe.calories * sf) * (m.portions || 1) : 0);
     }, 0);
   };
 
