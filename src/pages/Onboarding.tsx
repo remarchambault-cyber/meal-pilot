@@ -1,16 +1,24 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useProfile } from '@/hooks/useProfile';
+import { useAuth } from '@/contexts/AuthContext';
 import { UserProfile } from '@/data/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion } from 'framer-motion';
+import { toast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const [, setProfile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
+  const { user, loading: authLoading } = useAuth();
+  const { saveProfile } = useProfile();
+
+  useEffect(() => {
+    if (!authLoading && !user) navigate('/auth', { replace: true });
+  }, [authLoading, user, navigate]);
 
   const [form, setForm] = useState({
     firstName: '',
@@ -25,22 +33,33 @@ export default function Onboarding() {
     extraCaloriesBurned: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const profile: UserProfile = {
-      firstName: form.firstName,
-      age: parseInt(form.age) || 25,
-      sex: form.sex,
-      heightCm: parseInt(form.heightCm) || 170,
-      weightKg: parseFloat(form.weightKg) || 70,
-      activityLevel: form.activityLevel,
-      goal: form.goal,
-      targetRate: form.targetRate,
-      dietPreference: form.dietPreference,
-      extraCaloriesBurned: parseInt(form.extraCaloriesBurned) || 0,
-    };
-    setProfile(profile);
-    navigate('/dashboard');
+    setSaving(true);
+    try {
+      const profile: UserProfile = {
+        firstName: form.firstName,
+        age: parseInt(form.age) || 25,
+        sex: form.sex,
+        heightCm: parseInt(form.heightCm) || 170,
+        weightKg: parseFloat(form.weightKg) || 70,
+        activityLevel: form.activityLevel,
+        goal: form.goal,
+        targetRate: form.targetRate,
+        dietPreference: form.dietPreference,
+        extraCaloriesBurned: parseInt(form.extraCaloriesBurned) || 0,
+      };
+      await saveProfile(profile);
+      // Also keep localStorage for pages that still read it
+      window.localStorage.setItem('mealpilot_profile', JSON.stringify(profile));
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast({ title: '❌ Erreur', description: error.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -53,7 +72,7 @@ export default function Onboarding() {
       >
         <div className="text-center mb-8">
           <h1 className="text-3xl font-display font-extrabold text-primary">MealPilot</h1>
-          <p className="text-body-text mt-2">Configure ton profil pour commencer</p>
+          <p className="text-muted-foreground mt-2">Configure ton profil pour commencer</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card-elevated p-6 space-y-4">
@@ -149,8 +168,8 @@ export default function Onboarding() {
             <Input id="extra" type="number" value={form.extraCaloriesBurned} onChange={e => setForm(f => ({ ...f, extraCaloriesBurned: e.target.value }))} placeholder="0" />
           </div>
 
-          <Button type="submit" className="w-full tap-scale" size="lg">
-            C'est parti !
+          <Button type="submit" className="w-full tap-scale" size="lg" disabled={saving}>
+            {saving ? 'Enregistrement...' : "C'est parti !"}
           </Button>
         </form>
       </motion.div>

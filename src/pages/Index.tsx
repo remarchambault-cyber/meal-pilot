@@ -1,19 +1,24 @@
 import { useNavigate } from 'react-router-dom';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useEffect } from 'react';
-import { UserProfile } from '@/data/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 
 const Index = () => {
   const navigate = useNavigate();
-  const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
+  const { user, loading: authLoading } = useAuth();
+  const { isOnboarded, loading: profileLoading } = useProfile();
 
   useEffect(() => {
-    if (profile) {
+    if (authLoading || profileLoading) return;
+
+    if (!user) {
+      navigate('/auth', { replace: true });
+    } else if (isOnboarded) {
       navigate('/dashboard', { replace: true });
     } else {
       navigate('/onboarding', { replace: true });
     }
-  }, [profile, navigate]);
+  }, [user, authLoading, profileLoading, isOnboarded, navigate]);
 
   return null;
 };
