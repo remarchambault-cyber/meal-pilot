@@ -4,12 +4,10 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { UserProfile, WeightLog, CalorieLog, MealPlanItem, Recipe } from '@/data/types';
 import { calculateCalorieTarget, getGoalLabel } from '@/lib/calories';
 import { mockRecipes } from '@/data/recipes';
+import { PLANNING_MEAL_TYPE_LABELS_SHORT, PLANNING_MEAL_TYPE_ORDER } from '@/lib/mealTypes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { CalendarDays, ShoppingCart, TrendingUp, Target, Scale, Flame, CheckCircle2, Utensils } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { format } from 'date-fns';
-import { getMealTypeLabel } from '@/lib/mealTypes';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 
