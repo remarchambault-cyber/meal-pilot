@@ -6,7 +6,10 @@ import { calculateCalorieTarget, getGoalLabel } from '@/lib/calories';
 import { mockRecipes } from '@/data/recipes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, ShoppingCart, TrendingUp, Target, Scale, Flame } from 'lucide-react';
+import { CalendarDays, ShoppingCart, TrendingUp, Target, Scale, Flame, CheckCircle2, Utensils } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { format } from 'date-fns';
+import { getMealTypeLabel } from '@/lib/mealTypes';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 
