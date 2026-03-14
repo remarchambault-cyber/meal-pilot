@@ -171,6 +171,7 @@ export default function Dashboard() {
             </Button>
           </motion.div>
         )}
+        <div className="space-y-2">
           <h2 className="text-lg font-display font-semibold">Actions rapides</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {actions.map(action => (
