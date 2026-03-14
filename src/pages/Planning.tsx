@@ -385,6 +385,7 @@ export default function Planning() {
                 <SelectContent>
                   <SelectItem value="breakfast">Petit déjeuner</SelectItem>
                   <SelectItem value="lunch">Déjeuner</SelectItem>
+                  <SelectItem value="snack">Collation</SelectItem>
                   <SelectItem value="dinner">Dîner</SelectItem>
                 </SelectContent>
               </Select>
