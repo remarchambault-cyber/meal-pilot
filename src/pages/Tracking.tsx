@@ -330,8 +330,8 @@ export default function Tracking() {
         {chartData.length >= 1 && (
           <motion.div custom={9} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
             <h2 className="font-display font-semibold text-sm mb-3">📈 Évolution du poids</h2>
-            {chartData.length === 1 ? (
-              <p className="text-xs text-muted-foreground">Ajoute une deuxième pesée pour voir le graphique d'évolution.</p>
+            {chartData.length < 2 ? (
+              <p className="text-xs text-muted-foreground">Ajoute une pesée un autre jour pour voir le graphique d'évolution.</p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
