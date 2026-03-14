@@ -112,6 +112,10 @@ export default function Planning() {
     toast({ title: '🗑️ Repas supprimé' });
   };
 
+  const toggleConsumed = (id: string) => {
+    setMealPlan(prev => prev.map(m => m.id === id ? { ...m, consumed: !m.consumed } : m));
+  };
+
   const openAddDialog = (dateStr: string) => {
     setAddDialogDate(dateStr);
     setSelectedMealType('lunch');
