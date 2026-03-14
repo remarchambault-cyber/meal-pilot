@@ -9,7 +9,7 @@ import { getScaleFactorForMealType, scaleRecipe } from '@/lib/recipeScaling';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Flame, RefreshCw, Plus, Eye, Target, ScaleIcon } from 'lucide-react';
+import { Clock, Flame, RefreshCw, Plus, Eye, Target } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AddToPlanModal from '@/components/AddToPlanModal';
 
