@@ -41,6 +41,7 @@ export interface MealPlanItem {
   isBatchCooking: boolean;
   portions: number;
   scaleFactor?: number; // calorie-adjusted multiplier for ingredients/macros
+  consumed?: boolean; // true = marked as eaten
 }
 
 export interface WeightLog {
