@@ -57,6 +57,15 @@ export default function Tracking() {
     }, 0);
   }, [mealPlan, today, allRecipes]);
 
+  const consumedFromMeals = useMemo(() => {
+    const todayConsumed = mealPlan.filter(m => m.date === today && m.consumed);
+    return todayConsumed.reduce((sum, m) => {
+      const recipe = allRecipes.find(r => r.id === m.recipeId);
+      const sf = m.scaleFactor || 1;
+      return sum + (recipe ? Math.round(recipe.calories * sf) * (m.portions || 1) : 0);
+    }, 0);
+  }, [mealPlan, today, allRecipes]);
+
   const todayMealDetails = useMemo(() => {
     return mealPlan
       .filter(m => m.date === today)
@@ -67,13 +76,15 @@ export default function Tracking() {
           name: recipe.title,
           calories: Math.round(recipe.calories * sf) * (m.portions || 1),
           mealType: m.mealType,
+          consumed: !!m.consumed,
         } : null;
       })
-      .filter(Boolean) as { name: string; calories: number; mealType: MealPlanItem['mealType'] }[];
+      .filter(Boolean) as { name: string; calories: number; mealType: MealPlanItem['mealType']; consumed: boolean }[];
   }, [mealPlan, today, allRecipes]);
 
   const todayCalories = calorieLogs.find(l => l.date === today);
-  const consumed = todayCalories?.caloriesConsumed || 0;
+  const manualConsumed = todayCalories?.caloriesConsumed || 0;
+  const consumed = consumedFromMeals + manualConsumed;
   const dailyTarget = target?.target || 0;
 
   // Two distinct gaps
