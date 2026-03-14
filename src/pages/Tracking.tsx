@@ -238,11 +238,14 @@ export default function Tracking() {
         {todayMealDetails.length > 0 && (
           <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
             <h2 className="font-display font-semibold text-sm mb-2">Repas prévus aujourd'hui</h2>
-            <p className="text-[10px] text-muted-foreground mb-2">Ces repas sont planifiés mais pas encore comptés comme consommés.</p>
+            <p className="text-[10px] text-muted-foreground mb-2">Marque tes repas comme consommés depuis le planning pour mettre à jour le suivi.</p>
             <div className="space-y-1">
               {todayMealDetails.map((meal, i) => (
                 <div key={`${meal.name}-${i}`} className="flex justify-between text-sm py-1 border-b border-border last:border-0">
-                  <span>{meal.name}</span>
+                  <span className="flex items-center gap-1.5">
+                    {meal.consumed && <CheckCircle2 className="w-3.5 h-3.5 text-secondary" />}
+                    <span className={meal.consumed ? '' : 'text-muted-foreground'}>{meal.name}</span>
+                  </span>
                   <span className="text-muted-foreground">{meal.calories} kcal</span>
                 </div>
               ))}
