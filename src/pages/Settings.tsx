@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { UserProfile, WeightLog, CalorieLog, MealPlanItem, Recipe } from '@/data/types';
 import AppLayout from '@/components/AppLayout';
@@ -7,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Save, Trash2, RotateCcw } from 'lucide-react';
+import { Save, Trash2, RotateCcw, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -17,21 +19,38 @@ import {
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const [profile, setProfile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
+  const { user, signOut } = useAuth();
+  const { profile, saveProfile, loading: profileLoading } = useProfile();
   const [, setWeightLogs] = useLocalStorage<WeightLog[]>('mealpilot_weight', []);
   const [, setCalorieLogs] = useLocalStorage<CalorieLog[]>('mealpilot_calories', []);
   const [, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
   const [, setCustomRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
 
-  const [form, setForm] = useState<UserProfile>(profile || {
+  const [form, setForm] = useState<UserProfile>({
     firstName: '', age: 25, sex: 'male', heightCm: 170, weightKg: 70,
     activityLevel: 'moderate', goal: 'maintain', targetRate: 'moderate',
     dietPreference: 'none', extraCaloriesBurned: 0,
   });
 
-  const handleSave = () => {
-    setProfile(form);
-    toast({ title: '✅ Profil sauvegardé' });
+  // Populate form when profile loads from DB
+  useEffect(() => {
+    if (profile) setForm(profile);
+  }, [profile]);
+
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await saveProfile(form);
+      // Sync localStorage for pages that still use it
+      window.localStorage.setItem('mealpilot_profile', JSON.stringify(form));
+      toast({ title: '✅ Profil sauvegardé' });
+    } catch (error: any) {
+      toast({ title: '❌ Erreur', description: error.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleReset = () => {
@@ -43,14 +62,24 @@ export default function SettingsPage() {
   };
 
   const handleReOnboard = () => {
-    setProfile(null);
     navigate('/onboarding');
   };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth', { replace: true });
+  };
+
+  if (profileLoading) return <AppLayout><div className="flex items-center justify-center py-12 text-muted-foreground">Chargement…</div></AppLayout>;
 
   return (
     <AppLayout>
       <div className="space-y-6">
         <h1 className="text-2xl font-display font-bold">Paramètres</h1>
+
+        {user && (
+          <div className="text-sm text-muted-foreground">Connecté : {user.email}</div>
+        )}
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-elevated p-5 space-y-4">
           <h2 className="font-display font-semibold">Mon profil</h2>
@@ -133,8 +162,8 @@ export default function SettingsPage() {
             <Input type="number" value={form.extraCaloriesBurned} onChange={e => setForm(f => ({ ...f, extraCaloriesBurned: parseInt(e.target.value) || 0 }))} />
           </div>
 
-          <Button className="w-full gap-2 tap-scale" onClick={handleSave}>
-            <Save className="w-4 h-4" /> Sauvegarder
+          <Button className="w-full gap-2 tap-scale" onClick={handleSave} disabled={saving}>
+            <Save className="w-4 h-4" /> {saving ? 'Sauvegarde...' : 'Sauvegarder'}
           </Button>
         </motion.div>
 
@@ -162,6 +191,10 @@ export default function SettingsPage() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+
+          <Button variant="outline" className="w-full gap-2 tap-scale" onClick={handleSignOut}>
+            <LogOut className="w-4 h-4" /> Se déconnecter
+          </Button>
         </div>
       </div>
     </AppLayout>
