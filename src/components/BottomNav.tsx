@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, UtensilsCrossed, ShoppingCart, TrendingUp, BookOpen } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, UtensilsCrossed, ShoppingCart, TrendingUp, BookOpen, Settings } from 'lucide-react';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/my-recipes', icon: BookOpen, label: 'Recettes' },
   { to: '/shopping', icon: ShoppingCart, label: 'Courses' },
   { to: '/tracking', icon: TrendingUp, label: 'Suivi' },
+  { to: '/settings', icon: Settings, label: 'Réglages' },
 ];
 
 export default function BottomNav() {
