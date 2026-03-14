@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { mockRecipes } from '@/data/recipes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clock, Flame, Plus, ChevronDown, ChevronUp, ScaleIcon } from 'lucide-react';
+import { ArrowLeft, Clock, Flame, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { MealPlanItem, Recipe, UserProfile } from '@/data/types';
 import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories';
