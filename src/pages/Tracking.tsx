@@ -75,7 +75,8 @@ export default function Tracking() {
 
   const todayCalories = calorieLogs.find(l => l.date === today);
   const consumed = todayCalories?.caloriesConsumed || 0;
-  const ecart = consumed - plannedCalories;
+  const dailyTarget = target?.target || 0;
+  const ecart = consumed - dailyTarget;
 
   const addWeight = () => {
     if (!newWeight) return;
