@@ -110,16 +110,24 @@ export default function Tracking() {
 
   const addCalories = () => {
     if (!newCalConsumed && !newCalBurned) return;
+    const isUpdate = !!todayCalorieLog;
     const log: CalorieLog = {
-      id: `c_${Date.now()}`,
+      id: todayCalorieLog?.id || `c_${Date.now()}`,
       date: today,
       caloriesConsumed: parseInt(newCalConsumed, 10) || 0,
       caloriesBurned: parseInt(newCalBurned, 10) || 0,
     };
-    setCalorieLogs(prev => [...prev, log]);
+    setCalorieLogs(prev => [...prev.filter(l => l.date !== today), log]);
     setNewCalConsumed('');
     setNewCalBurned('');
-    toast({ title: '✅ Calories ajoutées au total du jour' });
+    toast({ title: isUpdate ? '🔄 Calories du jour mises à jour' : '✅ Calories enregistrées' });
+  };
+
+  const resetCalories = () => {
+    setCalorieLogs(prev => prev.filter(l => l.date !== today));
+    setNewCalConsumed('');
+    setNewCalBurned('');
+    toast({ title: '🗑️ Calories manuelles du jour réinitialisées' });
   };
 
   const advice = useMemo(() => {
