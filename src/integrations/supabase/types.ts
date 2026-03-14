@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          activity_level: string
+          age: number
+          created_at: string
+          current_weight_kg: number
+          diet_preference: string
+          extra_calories_burned: number
+          first_name: string
+          goal_type: string
+          height_cm: number
+          id: string
+          preferences_json: Json | null
+          sex: string
+          target_calories: number | null
+          target_rate: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_level?: string
+          age?: number
+          created_at?: string
+          current_weight_kg?: number
+          diet_preference?: string
+          extra_calories_burned?: number
+          first_name?: string
+          goal_type?: string
+          height_cm?: number
+          id?: string
+          preferences_json?: Json | null
+          sex?: string
+          target_calories?: number | null
+          target_rate?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_level?: string
+          age?: number
+          created_at?: string
+          current_weight_kg?: number
+          diet_preference?: string
+          extra_calories_burned?: number
+          first_name?: string
+          goal_type?: string
+          height_cm?: number
+          id?: string
+          preferences_json?: Json | null
+          sex?: string
+          target_calories?: number | null
+          target_rate?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
