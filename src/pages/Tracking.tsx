@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { Plus, Lightbulb, TrendingUp, TrendingDown, Minus, Flame, Target, Scale, CalendarCheck, Utensils } from 'lucide-react';
+import { Plus, Lightbulb, TrendingUp, TrendingDown, Minus, Flame, Target, Scale, CalendarCheck, Utensils, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
