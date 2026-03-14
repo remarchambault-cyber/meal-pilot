@@ -40,6 +40,7 @@ export interface MealPlanItem {
   recipeId: string;
   isBatchCooking: boolean;
   portions: number;
+  scaleFactor?: number; // calorie-adjusted multiplier for ingredients/macros
 }
 
 export interface WeightLog {
