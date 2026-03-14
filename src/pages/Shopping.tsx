@@ -19,13 +19,20 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: '📦 Autres',
 };
 
+interface ShoppingSource {
+  recipeName: string;
+  quantity: number;
+  unit: string;
+  portions: number;
+}
+
 interface ShoppingItem {
   key: string;
   name: string;
   quantity: number;
   unit: string;
   category: string;
-  sources: { recipeName: string; quantity: number; unit: string; portions: number }[];
+  sources: ShoppingSource[];
 }
 
 export default function Shopping() {
@@ -38,39 +45,47 @@ export default function Shopping() {
 
   const shoppingList = useMemo(() => {
     const map: Record<string, ShoppingItem> = {};
+
     mealPlan.forEach(item => {
       const recipe = allRecipes.find(r => r.id === item.recipeId);
       if (!recipe) return;
+
       const portions = item.portions || 1;
-      recipe.ingredients.forEach(ing => {
-        const key = `${ing.name}_${ing.unit}`;
-        const qty = ing.quantity * portions;
-        if (map[key]) {
-          map[key].quantity += qty;
-          map[key].sources.push({ recipeName: recipe.title, quantity: ing.quantity, unit: ing.unit, portions });
-        } else {
+      recipe.ingredients.forEach(ingredient => {
+        const key = `${ingredient.name}_${ingredient.unit}`;
+        const totalQtyForOccurrence = ingredient.quantity * portions;
+
+        if (!map[key]) {
           map[key] = {
             key,
-            name: ing.name,
-            quantity: qty,
-            unit: ing.unit,
-            category: ing.category,
-            sources: [{ recipeName: recipe.title, quantity: ing.quantity, unit: ing.unit, portions }],
+            name: ingredient.name,
+            quantity: 0,
+            unit: ingredient.unit,
+            category: ingredient.category,
+            sources: [],
           };
         }
+
+        map[key].quantity += totalQtyForOccurrence;
+        map[key].sources.push({
+          recipeName: recipe.title,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          portions,
+        });
       });
     });
+
     return Object.values(map);
   }, [mealPlan, allRecipes]);
 
   const grouped = useMemo(() => {
-    const g: Record<string, ShoppingItem[]> = {};
+    const groups: Record<string, ShoppingItem[]> = {};
     shoppingList.forEach(item => {
-      const cat = item.category;
-      if (!g[cat]) g[cat] = [];
-      g[cat].push(item);
+      if (!groups[item.category]) groups[item.category] = [];
+      groups[item.category].push(item);
     });
-    return g;
+    return groups;
   }, [shoppingList]);
 
   const toggle = (key: string) => {
@@ -112,6 +127,23 @@ export default function Shopping() {
                 <ul className="space-y-1">
                   {grouped[cat].map(item => {
                     const isExpanded = expanded.has(item.key);
+                    const aggregatedSources = item.sources.reduce<Record<string, { recipeName: string; quantity: number; unit: string; occurrences: number }>>((acc, source) => {
+                      if (!acc[source.recipeName]) {
+                        acc[source.recipeName] = {
+                          recipeName: source.recipeName,
+                          quantity: 0,
+                          unit: source.unit,
+                          occurrences: 0,
+                        };
+                      }
+
+                      acc[source.recipeName].quantity += source.quantity * source.portions;
+                      acc[source.recipeName].occurrences += 1;
+                      return acc;
+                    }, {});
+
+                    const detailedSources = Object.values(aggregatedSources).sort((a, b) => b.quantity - a.quantity);
+
                     return (
                       <li key={item.key}>
                         <div className="flex items-center gap-3 py-1.5">
@@ -119,24 +151,32 @@ export default function Shopping() {
                             checked={checked.has(item.key)}
                             onCheckedChange={() => toggle(item.key)}
                           />
+
                           <span className={`text-sm flex-1 ${checked.has(item.key) ? 'line-through text-muted-foreground' : ''}`}>
                             {item.name}
                           </span>
+
                           <span className="text-sm text-muted-foreground">
                             {formatQuantity(item.quantity, item.unit)} {formatUnit(item.quantity, item.unit)}
                           </span>
+
                           {item.sources.length > 0 && (
                             <button onClick={() => toggleExpand(item.key)} className="text-muted-foreground hover:text-foreground p-1">
                               {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                             </button>
                           )}
                         </div>
+
                         {isExpanded && (
-                          <div className="ml-9 mb-2 space-y-0.5">
-                            {item.sources.map((src, i) => (
-                              <p key={i} className="text-xs text-muted-foreground">
-                                • {formatQuantity(src.quantity * src.portions, src.unit)} {formatUnit(src.quantity * src.portions, src.unit)} pour {src.recipeName}
-                                {src.portions > 1 && ` (×${src.portions})`}
+                          <div className="ml-9 mb-2 space-y-1.5">
+                            <p className="text-xs text-muted-foreground">
+                              Total : {formatQuantity(item.quantity, item.unit)} {formatUnit(item.quantity, item.unit)} · {item.sources.length} occurrence{item.sources.length > 1 ? 's' : ''}
+                            </p>
+
+                            {detailedSources.map(source => (
+                              <p key={source.recipeName} className="text-xs text-muted-foreground">
+                                • {formatQuantity(source.quantity, source.unit)} {formatUnit(source.quantity, source.unit)} pour {source.recipeName}
+                                {source.occurrences > 1 && ` (${source.occurrences} fois)`}
                               </p>
                             ))}
                           </div>

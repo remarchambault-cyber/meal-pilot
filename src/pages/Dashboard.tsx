@@ -8,6 +8,7 @@ import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { CalendarDays, ShoppingCart, TrendingUp, Target, Scale, Flame } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { format } from 'date-fns';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -24,16 +25,15 @@ export default function Dashboard() {
     ? [...weightLogs].sort((a, b) => b.date.localeCompare(a.date))[0].weight
     : profile?.weightKg || 0;
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = format(new Date(), 'yyyy-MM-dd');
   const todayCalories = calorieLogs.find(l => l.date === today);
 
-  // Planned calories from planning
   const plannedCalories = useMemo(() => {
     return mealPlan
       .filter(m => m.date === today)
-      .reduce((sum, m) => {
-        const recipe = allRecipes.find(r => r.id === m.recipeId);
-        return sum + (recipe ? recipe.calories * (m.portions || 1) : 0);
+      .reduce((sum, meal) => {
+        const recipe = allRecipes.find(r => r.id === meal.recipeId);
+        return sum + (recipe ? recipe.calories * (meal.portions || 1) : 0);
       }, 0);
   }, [mealPlan, today, allRecipes]);
 
@@ -84,7 +84,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Today's planned calories */}
         {plannedCalories > 0 && (
           <div className="card-elevated p-4">
             <p className="text-xs text-muted-foreground mb-1">Calories prévues aujourd'hui</p>
