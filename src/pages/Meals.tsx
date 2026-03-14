@@ -137,17 +137,11 @@ export default function Meals() {
                     {scaledCalories} kcal
                   </span>
                   {scaled.isScaled && (
-                    <span className="flex items-center gap-1 text-xs text-primary">
-                      <ScaleIcon className="w-3.5 h-3.5" />
-                      Ajusté ×{scaleFactor.toFixed(2)}
+                    <span className="text-xs text-primary">
+                      Portion ajustée
                     </span>
                   )}
                   <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{recipe.prepTime} min</span>
-                  {calorieDelta !== null && (
-                    <span className={Math.abs(calorieDelta) > 120 ? (calorieDelta > 0 ? 'text-destructive' : 'text-secondary') : ''}>
-                      Écart : {calorieDelta > 0 ? '+' : ''}{calorieDelta} kcal
-                    </span>
-                  )}
                 </div>
 
                 {scaled.isScaled && (
