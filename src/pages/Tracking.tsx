@@ -242,23 +242,27 @@ export default function Tracking() {
           </motion.div>
         </div>
 
-        {/* Row 3: Gap consumed vs target */}
-        <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${gapBg(ecartConsomme)}`}>
-                <Flame className={`w-4 h-4 ${gapColor(ecartConsomme)}`} />
-              </div>
-              <div>
-                <p className={`font-display font-bold text-lg ${gapColor(ecartConsomme)}`}>
-                  {ecartConsomme > 0 ? '+' : ''}{ecartConsomme} kcal
-                </p>
-                <p className="text-xs text-muted-foreground">Consommé vs cible</p>
-              </div>
+        {/* Recap detail card */}
+        <motion.div custom={6} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
+          <h2 className="font-display font-semibold text-sm mb-2">Récapitulatif du jour</h2>
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">Cible</span><span>{dailyTarget} kcal</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Prévues (planning)</span><span>{plannedCalories} kcal</span></div>
+            <div className="border-t border-border my-1" />
+            <div className="flex justify-between"><span className="text-muted-foreground">Consommées repas</span><span>{consumedFromMeals} kcal</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Consommées manuelles</span><span>{manualConsumed} kcal</span></div>
+            <div className="flex justify-between font-medium"><span>Total consommées</span><span>{consumed} kcal</span></div>
+            {extraBurned > 0 && (
+              <div className="flex justify-between text-destructive"><span>− Dépensées extra</span><span>−{extraBurned} kcal</span></div>
+            )}
+            <div className="border-t border-border my-1" />
+            <div className="flex justify-between font-semibold">
+              <span>Net consommé</span>
+              <span>{netConsumed} kcal</span>
             </div>
-            <div className="text-right text-xs text-muted-foreground">
-              <p>{consumed} consommées</p>
-              <p>{dailyTarget} cible</p>
+            <div className={`flex justify-between font-semibold ${gapColor(ecartConsomme)}`}>
+              <span>Écart vs cible</span>
+              <span>{ecartConsomme > 0 ? '+' : ''}{ecartConsomme} kcal</span>
             </div>
           </div>
         </motion.div>
