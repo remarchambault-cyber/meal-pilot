@@ -93,7 +93,7 @@ export default function Shopping() {
   const toggle = (key: string) => {
     setChecked(prev => {
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) { next.delete(key); } else { next.add(key); }
       return next;
     });
   };
@@ -101,7 +101,7 @@ export default function Shopping() {
   const toggleExpand = (key: string) => {
     setExpanded(prev => {
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) { next.delete(key); } else { next.add(key); }
       return next;
     });
   };
@@ -131,27 +131,18 @@ export default function Shopping() {
                     const isExpanded = expanded.has(item.key);
                     const aggregatedSources = item.sources.reduce<Record<string, { recipeName: string; quantity: number; unit: string; occurrences: number }>>((acc, source) => {
                       if (!acc[source.recipeName]) {
-                        acc[source.recipeName] = {
-                          recipeName: source.recipeName,
-                          quantity: 0,
-                          unit: source.unit,
-                          occurrences: 0,
-                        };
+                        acc[source.recipeName] = { recipeName: source.recipeName, quantity: 0, unit: source.unit, occurrences: 0 };
                       }
                       acc[source.recipeName].quantity += source.quantity * source.portions;
                       acc[source.recipeName].occurrences += 1;
                       return acc;
                     }, {});
-
                     const detailedSources = Object.values(aggregatedSources).sort((a, b) => b.quantity - a.quantity);
 
                     return (
                       <li key={item.key}>
                         <div className="flex items-center gap-3 py-1.5">
-                          <Checkbox
-                            checked={checked.has(item.key)}
-                            onCheckedChange={() => toggle(item.key)}
-                          />
+                          <Checkbox checked={checked.has(item.key)} onCheckedChange={() => toggle(item.key)} />
                           <span className={`text-sm flex-1 ${checked.has(item.key) ? 'line-through text-muted-foreground' : ''}`}>
                             {item.name}
                           </span>
@@ -164,7 +155,6 @@ export default function Shopping() {
                             </button>
                           )}
                         </div>
-
                         {isExpanded && (
                           <div className="ml-9 mb-2 space-y-1.5">
                             <p className="text-xs text-muted-foreground">
@@ -173,9 +163,9 @@ export default function Shopping() {
                             {detailedSources.map(source => (
                               <p key={source.recipeName} className="text-xs text-muted-foreground">
                                 • {formatQuantity(source.quantity, source.unit)} {formatUnit(source.quantity, source.unit)} pour {source.recipeName}
-                                {source.occurrences > 1 && ` (${source.occurrences} fois)`}
+                                {source.occurrences > 1 ? ` (${source.occurrences} fois)` : ''}
                               </p>
-                            )))}
+                            ))}
                           </div>
                         )}
                       </li>
@@ -183,7 +173,7 @@ export default function Shopping() {
                   })}
                 </ul>
               </motion.div>
-            )))}
+            ))}
           </div>
         )}
       </div>
