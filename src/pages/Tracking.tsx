@@ -221,6 +221,27 @@ export default function Tracking() {
           </motion.div>
         </div>
 
+        {/* Row 3: Burned + Net consumed */}
+        <div className="grid grid-cols-2 gap-3">
+          <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
+            <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center mx-auto mb-2">
+              <Flame className="w-4 h-4 text-destructive" />
+            </div>
+            <p className="font-display font-bold text-lg">{extraBurned}</p>
+            <p className="text-xs text-muted-foreground">Dépensées extra</p>
+          </motion.div>
+
+          <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2 ${gapBg(ecartConsomme)}`}>
+              <Target className={`w-4 h-4 ${gapColor(ecartConsomme)}`} />
+            </div>
+            <p className={`font-display font-bold text-lg ${gapColor(ecartConsomme)}`}>
+              {ecartConsomme > 0 ? '+' : ''}{ecartConsomme}
+            </p>
+            <p className="text-xs text-muted-foreground">Net vs cible</p>
+          </motion.div>
+        </div>
+
         {/* Row 3: Gap consumed vs target */}
         <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
           <div className="flex items-center justify-between">
