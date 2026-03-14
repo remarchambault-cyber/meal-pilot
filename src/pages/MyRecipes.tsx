@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Recipe, RecipeIngredient, MealPlanItem } from '@/data/types';
@@ -14,38 +14,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import AddToPlanModal from '@/components/AddToPlanModal';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
 const EMPTY_INGREDIENT: RecipeIngredient = { name: '', quantity: 0, unit: 'g', category: 'other' };
 
 const EMPTY_RECIPE: Omit<Recipe, 'id'> = {
-  title: '',
-  description: '',
-  mealType: 'lunch',
-  calories: 0,
-  protein: 0,
-  carbs: 0,
-  fat: 0,
-  prepTime: 15,
-  ingredients: [],
-  steps: [],
-  dietTags: [],
+  title: '', description: '', mealType: 'lunch', calories: 0, protein: 0,
+  carbs: 0, fat: 0, prepTime: 15, ingredients: [], steps: [], dietTags: [],
 };
 
-const MEAL_BADGE: Record<string, string> = {
-  breakfast: 'Petit déj.',
-  lunch: 'Déjeuner',
-  dinner: 'Dîner',
-};
+const MEAL_BADGE: Record<string, string> = { breakfast: 'Petit déj.', lunch: 'Déjeuner', dinner: 'Dîner' };
 
 export default function MyRecipes() {
   const navigate = useNavigate();
@@ -57,64 +37,31 @@ export default function MyRecipes() {
   const [newStep, setNewStep] = useState('');
   const [planRecipe, setPlanRecipe] = useState<Recipe | null>(null);
 
-  const startCreate = () => {
-    setEditingId(null);
-    setForm({ ...EMPTY_RECIPE, ingredients: [], steps: [] });
-    setShowEditor(true);
-  };
+  const startCreate = () => { setEditingId(null); setForm({ ...EMPTY_RECIPE, ingredients: [], steps: [] }); setShowEditor(true); };
+  const startEdit = (recipe: Recipe) => { setEditingId(recipe.id); const { id, ...rest } = recipe; setForm({ ...rest }); setShowEditor(true); };
 
-  const startEdit = (recipe: Recipe) => {
-    setEditingId(recipe.id);
-    const { id, ...rest } = recipe;
-    setForm({ ...rest });
-    setShowEditor(true);
-  };
-
-  const addIngredient = () => {
-    setForm(f => ({ ...f, ingredients: [...f.ingredients, { ...EMPTY_INGREDIENT }] }));
-  };
-
+  const addIngredient = () => setForm(f => ({ ...f, ingredients: [...f.ingredients, { ...EMPTY_INGREDIENT }] }));
   const updateIngredient = (index: number, field: keyof RecipeIngredient, value: string | number) => {
-    setForm(f => ({
-      ...f,
-      ingredients: f.ingredients.map((ing, i) => i === index ? { ...ing, [field]: value } : ing),
-    }));
+    setForm(f => ({ ...f, ingredients: f.ingredients.map((ing, i) => i === index ? { ...ing, [field]: value } : ing) }));
   };
+  const removeIngredient = (index: number) => setForm(f => ({ ...f, ingredients: f.ingredients.filter((_, i) => i !== index) }));
 
-  const removeIngredient = (index: number) => {
-    setForm(f => ({ ...f, ingredients: f.ingredients.filter((_, i) => i !== index) }));
-  };
-
-  const addStep = () => {
-    if (!newStep.trim()) return;
-    setForm(f => ({ ...f, steps: [...f.steps, newStep.trim()] }));
-    setNewStep('');
-  };
-
-  const removeStep = (index: number) => {
-    setForm(f => ({ ...f, steps: f.steps.filter((_, i) => i !== index) }));
-  };
+  const addStep = () => { if (!newStep.trim()) return; setForm(f => ({ ...f, steps: [...f.steps, newStep.trim()] })); setNewStep(''); };
+  const removeStep = (index: number) => setForm(f => ({ ...f, steps: f.steps.filter((_, i) => i !== index) }));
 
   const handleSave = () => {
-    if (!form.title.trim()) {
-      toast({ title: '⚠️ Titre requis', variant: 'destructive' });
-      return;
-    }
+    if (!form.title.trim()) { toast({ title: '⚠️ Titre requis', variant: 'destructive' }); return; }
     if (editingId) {
       setRecipes(prev => prev.map(r => r.id === editingId ? { ...form, id: editingId } : r));
       toast({ title: '✅ Recette modifiée' });
     } else {
-      const newRecipe: Recipe = { ...form, id: `custom_${Date.now()}` };
-      setRecipes(prev => [...prev, newRecipe]);
+      setRecipes(prev => [...prev, { ...form, id: `custom_${Date.now()}` }]);
       toast({ title: '✅ Recette créée' });
     }
     setShowEditor(false);
   };
 
-  const handleDelete = (id: string) => {
-    setRecipes(prev => prev.filter(r => r.id !== id));
-    toast({ title: '🗑️ Recette supprimée' });
-  };
+  const handleDelete = (id: string) => { setRecipes(prev => prev.filter(r => r.id !== id)); toast({ title: '🗑️ Recette supprimée' }); };
 
   return (
     <AppLayout>
@@ -144,18 +91,16 @@ export default function MyRecipes() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ delay: i * 0.03, duration: 0.3 }}
-                  className="card-elevated p-4 space-y-3 transition-shadow duration-200 hover:shadow-md"
+                  className="card-elevated p-4 space-y-3"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-display font-semibold text-base">{recipe.title}</h3>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-                          {MEAL_BADGE[recipe.mealType] || recipe.mealType}
-                        </span>
-                      </div>
-                      {recipe.description && <p className="text-sm text-body-text mt-0.5">{recipe.description}</p>}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-display font-semibold text-base">{recipe.title}</h3>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                        {MEAL_BADGE[recipe.mealType] || recipe.mealType}
+                      </span>
                     </div>
+                    {recipe.description && <p className="text-sm text-body-text mt-0.5">{recipe.description}</p>}
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1"><Flame className="w-4 h-4 text-accent" />{recipe.calories} kcal</span>
@@ -181,9 +126,7 @@ export default function MyRecipes() {
                       <AlertDialogContent>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Supprimer cette recette ?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            « {recipe.title} » sera définitivement supprimée.
-                          </AlertDialogDescription>
+                          <AlertDialogDescription>« {recipe.title} » sera définitivement supprimée.</AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Annuler</AlertDialogCancel>
@@ -199,7 +142,7 @@ export default function MyRecipes() {
         )}
       </div>
 
-      {/* Recipe Editor Dialog */}
+      {/* Recipe Editor */}
       <Dialog open={showEditor} onOpenChange={setShowEditor}>
         <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
@@ -232,33 +175,16 @@ export default function MyRecipes() {
               </div>
             </div>
             <div className="grid grid-cols-4 gap-2">
-              <div>
-                <Label className="text-xs font-medium">Calories</Label>
-                <Input type="number" value={form.calories} onChange={e => setForm(f => ({ ...f, calories: parseInt(e.target.value) || 0 }))} className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs font-medium">Prot. (g)</Label>
-                <Input type="number" value={form.protein} onChange={e => setForm(f => ({ ...f, protein: parseInt(e.target.value) || 0 }))} className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs font-medium">Gluc. (g)</Label>
-                <Input type="number" value={form.carbs} onChange={e => setForm(f => ({ ...f, carbs: parseInt(e.target.value) || 0 }))} className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs font-medium">Lip. (g)</Label>
-                <Input type="number" value={form.fat} onChange={e => setForm(f => ({ ...f, fat: parseInt(e.target.value) || 0 }))} className="mt-1" />
-              </div>
+              <div><Label className="text-xs font-medium">Calories</Label><Input type="number" value={form.calories} onChange={e => setForm(f => ({ ...f, calories: parseInt(e.target.value) || 0 }))} className="mt-1" /></div>
+              <div><Label className="text-xs font-medium">Prot. (g)</Label><Input type="number" value={form.protein} onChange={e => setForm(f => ({ ...f, protein: parseInt(e.target.value) || 0 }))} className="mt-1" /></div>
+              <div><Label className="text-xs font-medium">Gluc. (g)</Label><Input type="number" value={form.carbs} onChange={e => setForm(f => ({ ...f, carbs: parseInt(e.target.value) || 0 }))} className="mt-1" /></div>
+              <div><Label className="text-xs font-medium">Lip. (g)</Label><Input type="number" value={form.fat} onChange={e => setForm(f => ({ ...f, fat: parseInt(e.target.value) || 0 }))} className="mt-1" /></div>
             </div>
 
             {/* Ingredients */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label className="text-xs font-semibold">Ingrédients</Label>
-                <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={addIngredient}>
-                  <Plus className="w-3 h-3" /> Ajouter un ingrédient
-                </Button>
-              </div>
-              <div className="space-y-2">
+              <Label className="text-xs font-semibold">Ingrédients</Label>
+              <div className="space-y-2 mt-2">
                 {form.ingredients.map((ing, i) => (
                   <div key={i} className="flex gap-2 items-end">
                     <Input placeholder="Nom" value={ing.name} onChange={e => updateIngredient(i, 'name', e.target.value)} className="flex-1" />
@@ -281,10 +207,11 @@ export default function MyRecipes() {
                     </Button>
                   </div>
                 ))}
-                {form.ingredients.length === 0 && (
-                  <p className="text-xs text-muted-foreground text-center py-2">Aucun ingrédient ajouté</p>
-                )}
+                {form.ingredients.length === 0 && <p className="text-xs text-muted-foreground text-center py-2">Aucun ingrédient ajouté</p>}
               </div>
+              <Button variant="outline" size="sm" className="gap-1 h-7 text-xs mt-2" onClick={addIngredient}>
+                <Plus className="w-3 h-3" /> Ajouter un ingrédient
+              </Button>
             </div>
 
             {/* Steps */}
@@ -307,20 +234,20 @@ export default function MyRecipes() {
               </div>
             </div>
 
-            <Button className="w-full tap-scale font-semibold" onClick={handleSave}>
-              {editingId ? 'Enregistrer les modifications' : '✅ Créer la recette'}
+            {/* Primary save action */}
+            <Button className="w-full tap-scale font-semibold" size="lg" onClick={handleSave}>
+              {editingId ? '✅ Enregistrer les modifications' : '✅ Créer la recette'}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Add to Plan Modal */}
       {planRecipe && (
         <AddToPlanModal
           open={!!planRecipe}
           onOpenChange={(open) => !open && setPlanRecipe(null)}
           recipe={planRecipe}
-          onAdd={(item) => setMealPlan(prev => [...prev, item])}
+          onAdd={(items) => setMealPlan(prev => [...prev, ...items])}
         />
       )}
     </AppLayout>

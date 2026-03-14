@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { mockRecipes } from '@/data/recipes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clock, Flame, Plus } from 'lucide-react';
+import { ArrowLeft, Clock, Flame, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { MealPlanItem, Recipe } from '@/data/types';
 import { motion } from 'framer-motion';
@@ -25,6 +25,7 @@ export default function RecipeDetail() {
   const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
   const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
   const [showModal, setShowModal] = useState(false);
+  const [detailedMode, setDetailedMode] = useState(false);
 
   const allRecipes = [...mockRecipes, ...customRecipes];
   const recipe = allRecipes.find(r => r.id === id);
@@ -106,17 +107,47 @@ export default function RecipeDetail() {
         </div>
 
         <div className="card-elevated p-4">
-          <h2 className="font-display font-semibold text-sm mb-3">Préparation</h2>
-          <ol className="space-y-3">
-            {recipe.steps.map((step, i) => (
-              <li key={i} className="flex gap-3 text-sm">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary font-display font-bold text-xs flex items-center justify-center">
-                  {i + 1}
-                </span>
-                <span className="text-body-text pt-0.5">{step}</span>
-              </li>
-            ))}
-          </ol>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-display font-semibold text-sm">Préparation</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1 text-xs text-muted-foreground h-7"
+              onClick={() => setDetailedMode(!detailedMode)}
+            >
+              {detailedMode ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              {detailedMode ? 'Vue rapide' : 'Vue détaillée'}
+            </Button>
+          </div>
+
+          {!detailedMode ? (
+            /* Simple / quick view */
+            <ol className="space-y-2">
+              {recipe.steps.map((step, i) => (
+                <li key={i} className="flex gap-3 text-sm">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary font-display font-bold text-xs flex items-center justify-center">
+                    {i + 1}
+                  </span>
+                  <span className="text-body-text pt-0.5">{step}</span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            /* Detailed / beginner-friendly view */
+            <div className="space-y-4">
+              {recipe.steps.map((step, i) => (
+                <div key={i} className="bg-muted/50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground font-display font-bold text-xs flex items-center justify-center">
+                      {i + 1}
+                    </span>
+                    <span className="text-xs font-medium text-muted-foreground">Étape {i + 1} sur {recipe.steps.length}</span>
+                  </div>
+                  <p className="text-sm text-body-text leading-relaxed">{step}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <Button className="w-full gap-2 tap-scale" size="lg" onClick={() => setShowModal(true)}>
@@ -128,7 +159,7 @@ export default function RecipeDetail() {
         open={showModal}
         onOpenChange={setShowModal}
         recipe={recipe}
-        onAdd={(item) => setMealPlan(prev => [...prev, item])}
+        onAdd={(items) => setMealPlan(prev => [...prev, ...items])}
       />
     </AppLayout>
   );

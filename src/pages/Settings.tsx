@@ -7,25 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Save, Trash2, LogOut } from 'lucide-react';
+import { Save, Trash2, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
-  const [, setAuth] = useLocalStorage('mealpilot_auth', false);
   const [, setWeightLogs] = useLocalStorage<WeightLog[]>('mealpilot_weight', []);
   const [, setCalorieLogs] = useLocalStorage<CalorieLog[]>('mealpilot_calories', []);
   const [, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
@@ -50,10 +42,9 @@ export default function SettingsPage() {
     toast({ title: '🗑️ Données réinitialisées' });
   };
 
-  const handleLogout = () => {
-    setAuth(false);
+  const handleReOnboard = () => {
     setProfile(null);
-    navigate('/');
+    navigate('/onboarding');
   };
 
   return (
@@ -148,6 +139,10 @@ export default function SettingsPage() {
         </motion.div>
 
         <div className="space-y-2">
+          <Button variant="outline" className="w-full gap-2 tap-scale" onClick={handleReOnboard}>
+            <RotateCcw className="w-4 h-4" /> Relancer l'onboarding
+          </Button>
+
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="w-full gap-2 tap-scale text-destructive">
@@ -167,9 +162,6 @@ export default function SettingsPage() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          <Button variant="outline" className="w-full gap-2 tap-scale" onClick={handleLogout}>
-            <LogOut className="w-4 h-4" /> Se déconnecter
-          </Button>
         </div>
       </div>
     </AppLayout>

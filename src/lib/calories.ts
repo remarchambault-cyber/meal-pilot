@@ -9,7 +9,6 @@ const ACTIVITY_MULTIPLIERS = {
 };
 
 export function calculateCalorieTarget(profile: UserProfile): CalorieTarget {
-  // Mifflin-St Jeor
   let bmr: number;
   if (profile.sex === 'male') {
     bmr = 10 * profile.weightKg + 6.25 * profile.heightCm - 5 * profile.age + 5;
@@ -30,6 +29,24 @@ export function calculateCalorieTarget(profile: UserProfile): CalorieTarget {
   }
 
   return { bmr: Math.round(bmr), tdee, target: Math.round(target) };
+}
+
+/** Default calorie distribution percentages by meal type */
+export const CALORIE_DISTRIBUTION: Record<string, number> = {
+  breakfast: 0.25,
+  lunch: 0.35,
+  snack: 0.10,
+  dinner: 0.30,
+};
+
+/** Get suggested calories per meal type for a given daily target */
+export function getMealCalorieSuggestion(dailyTarget: number): Record<string, number> {
+  return {
+    breakfast: Math.round(dailyTarget * CALORIE_DISTRIBUTION.breakfast),
+    lunch: Math.round(dailyTarget * CALORIE_DISTRIBUTION.lunch),
+    snack: Math.round(dailyTarget * CALORIE_DISTRIBUTION.snack),
+    dinner: Math.round(dailyTarget * CALORIE_DISTRIBUTION.dinner),
+  };
 }
 
 export function getGoalLabel(goal: string): string {

@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { UserProfile, WeightLog, CalorieLog } from '@/data/types';
+import { UserProfile, WeightLog, CalorieLog, MealPlanItem, Recipe } from '@/data/types';
 import { calculateCalorieTarget, getGoalLabel } from '@/lib/calories';
+import { mockRecipes } from '@/data/recipes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { CalendarDays, ShoppingCart, TrendingUp, Target, Scale, Flame } from 'lucide-react';
@@ -13,15 +14,28 @@ export default function Dashboard() {
   const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
   const [weightLogs] = useLocalStorage<WeightLog[]>('mealpilot_weight', []);
   const [calorieLogs] = useLocalStorage<CalorieLog[]>('mealpilot_calories', []);
+  const [mealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
+  const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
 
+  const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
 
   const currentWeight = weightLogs.length > 0
-    ? weightLogs[weightLogs.length - 1].weight
+    ? [...weightLogs].sort((a, b) => b.date.localeCompare(a.date))[0].weight
     : profile?.weightKg || 0;
 
   const today = new Date().toISOString().slice(0, 10);
   const todayCalories = calorieLogs.find(l => l.date === today);
+
+  // Planned calories from planning
+  const plannedCalories = useMemo(() => {
+    return mealPlan
+      .filter(m => m.date === today)
+      .reduce((sum, m) => {
+        const recipe = allRecipes.find(r => r.id === m.recipeId);
+        return sum + (recipe ? recipe.calories * (m.portions || 1) : 0);
+      }, 0);
+  }, [mealPlan, today, allRecipes]);
 
   if (!profile || !target) {
     navigate('/onboarding');
@@ -29,27 +43,9 @@ export default function Dashboard() {
   }
 
   const cards = [
-    {
-      icon: Target,
-      label: 'Objectif',
-      value: getGoalLabel(profile.goal),
-      color: 'text-primary',
-      bg: 'bg-primary/10',
-    },
-    {
-      icon: Flame,
-      label: 'Cible du jour',
-      value: `${target.target} kcal`,
-      color: 'text-accent',
-      bg: 'bg-accent/10',
-    },
-    {
-      icon: Scale,
-      label: 'Poids actuel',
-      value: `${currentWeight} kg`,
-      color: 'text-secondary',
-      bg: 'bg-secondary/10',
-    },
+    { icon: Target, label: 'Objectif', value: getGoalLabel(profile.goal), color: 'text-primary', bg: 'bg-primary/10' },
+    { icon: Flame, label: 'Cible du jour', value: `${target.target} kcal`, color: 'text-accent', bg: 'bg-accent/10' },
+    { icon: Scale, label: 'Poids actuel', value: `${currentWeight} kg`, color: 'text-secondary', bg: 'bg-secondary/10' },
   ];
 
   const actions = [
@@ -88,12 +84,19 @@ export default function Dashboard() {
           ))}
         </div>
 
+        {/* Today's planned calories */}
+        {plannedCalories > 0 && (
+          <div className="card-elevated p-4">
+            <p className="text-xs text-muted-foreground mb-1">Calories prévues aujourd'hui</p>
+            <p className="font-display font-bold text-xl">{plannedCalories} kcal</p>
+          </div>
+        )}
+
         {todayCalories && (
           <div className="card-elevated p-4">
-            <p className="text-xs text-muted-foreground mb-1">Calories aujourd'hui</p>
+            <p className="text-xs text-muted-foreground mb-1">Calories consommées aujourd'hui</p>
             <div className="flex items-center gap-4">
               <span className="font-display font-bold text-xl">{todayCalories.caloriesConsumed} kcal</span>
-              <span className="text-sm text-muted-foreground">consommées</span>
               {todayCalories.caloriesBurned > 0 && (
                 <>
                   <span className="font-display font-bold text-xl text-secondary">{todayCalories.caloriesBurned} kcal</span>
