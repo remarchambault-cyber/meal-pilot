@@ -11,7 +11,6 @@ import { motion } from 'framer-motion';
 export default function Onboarding() {
   const navigate = useNavigate();
   const [, setProfile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
-  const [, setAuth] = useLocalStorage('mealpilot_auth', false);
 
   const [form, setForm] = useState({
     firstName: '',
