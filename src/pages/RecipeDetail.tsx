@@ -85,7 +85,7 @@ export default function RecipeDetail() {
           </span>
           {scaled.isScaled && (
             <span className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium">
-              <ScaleIcon className="w-3.5 h-3.5" /> Portion ajustée ×{scaleFactor.toFixed(2)}
+              Portion ajustée à votre objectif
             </span>
           )}
         </div>
