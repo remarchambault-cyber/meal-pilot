@@ -310,9 +310,21 @@ export default function Tracking() {
           <div className="flex gap-2">
             <Input type="number" step="0.1" placeholder="Ex: 72.5" value={newWeight} onChange={e => setNewWeight(e.target.value)} className="flex-1" />
             <Button className="gap-1.5 tap-scale" onClick={addWeight}>
-              <Plus className="w-4 h-4" /> OK
+              <Plus className="w-4 h-4" /> {todayWeightLog ? 'Mettre à jour' : 'OK'}
             </Button>
           </div>
+          {todayWeightLog && (
+            <p className="text-xs text-muted-foreground">
+              Pesée du jour : <span className="font-medium text-foreground">{todayWeightLog.weight} kg</span>
+              {todayWeightLog.updatedAt && (
+                <span> — mise à jour à {format(new Date(todayWeightLog.updatedAt), 'HH:mm')}</span>
+              )}
+            </p>
+          )}
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            Une seule pesée est conservée par jour. Une nouvelle saisie remplacera la précédente.
+            Pour un suivi fiable, pèse-toi le matin à jeun, dans des conditions similaires.
+          </p>
         </motion.div>
 
         {chartData.length >= 1 && (
