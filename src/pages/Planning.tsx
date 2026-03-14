@@ -396,15 +396,21 @@ export default function Planning() {
             </div>
 
             <div>
-              <Label className="text-xs font-medium">Recette (filtrée strictement par type)</Label>
+              <Label className="text-xs font-medium">Recette (filtrée par type · calories ajustées)</Label>
               <Select value={selectedRecipeId} onValueChange={setSelectedRecipeId}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Choisir une recette" /></SelectTrigger>
                 <SelectContent>
-                  {filteredRecipes.map(recipe => (
-                    <SelectItem key={recipe.id} value={recipe.id}>
-                      {recipe.title} ({recipe.calories} kcal)
-                    </SelectItem>
-                  ))}
+                  {filteredRecipes.map(recipe => {
+                    const mealTarget = mealSuggestions?.[selectedMealType] || 0;
+                    const sf = mealTarget ? getScaleFactor(recipe.calories, mealTarget) : 1;
+                    const adjusted = Math.round(recipe.calories * sf);
+                    const isScaled = Math.abs(sf - 1) > 0.01;
+                    return (
+                      <SelectItem key={recipe.id} value={recipe.id}>
+                        {recipe.title} ({adjusted} kcal{isScaled ? ` · ×${sf.toFixed(2)}` : ''})
+                      </SelectItem>
+                    );
+                  })}
                   {filteredRecipes.length === 0 && (
                     <div className="px-3 py-2 text-sm text-muted-foreground">Aucune recette pour ce type</div>
                   )}
