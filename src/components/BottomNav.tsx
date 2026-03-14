@@ -8,6 +8,7 @@ const navItems = [
   { to: '/my-recipes', icon: BookOpen, label: 'Recettes' },
   { to: '/shopping', icon: ShoppingCart, label: 'Courses' },
   { to: '/tracking', icon: TrendingUp, label: 'Suivi' },
+  { to: '/settings', icon: Settings, label: 'Réglages' },
 ];
 
 export default function BottomNav() {
