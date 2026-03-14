@@ -83,9 +83,9 @@ export default function Tracking() {
       .filter(Boolean) as { name: string; calories: number; mealType: MealPlanItem['mealType']; consumed: boolean }[];
   }, [mealPlan, today, allRecipes]);
 
-  const todayCalorieLogs = calorieLogs.filter(l => l.date === today);
-  const manualConsumed = todayCalorieLogs.reduce((sum, l) => sum + (l.caloriesConsumed || 0), 0);
-  const extraBurned = todayCalorieLogs.reduce((sum, l) => sum + (l.caloriesBurned || 0), 0);
+  const todayCalorieLog = calorieLogs.find(l => l.date === today);
+  const manualConsumed = todayCalorieLog?.caloriesConsumed || 0;
+  const extraBurned = todayCalorieLog?.caloriesBurned || 0;
   const consumed = consumedFromMeals + manualConsumed;
   const netConsumed = consumed - extraBurned;
   const dailyTarget = target?.target || 0;
@@ -110,16 +110,24 @@ export default function Tracking() {
 
   const addCalories = () => {
     if (!newCalConsumed && !newCalBurned) return;
+    const isUpdate = !!todayCalorieLog;
     const log: CalorieLog = {
-      id: `c_${Date.now()}`,
+      id: todayCalorieLog?.id || `c_${Date.now()}`,
       date: today,
       caloriesConsumed: parseInt(newCalConsumed, 10) || 0,
       caloriesBurned: parseInt(newCalBurned, 10) || 0,
     };
-    setCalorieLogs(prev => [...prev, log]);
+    setCalorieLogs(prev => [...prev.filter(l => l.date !== today), log]);
     setNewCalConsumed('');
     setNewCalBurned('');
-    toast({ title: '✅ Calories ajoutées au total du jour' });
+    toast({ title: isUpdate ? '🔄 Calories du jour mises à jour' : '✅ Calories enregistrées' });
+  };
+
+  const resetCalories = () => {
+    setCalorieLogs(prev => prev.filter(l => l.date !== today));
+    setNewCalConsumed('');
+    setNewCalBurned('');
+    toast({ title: '🗑️ Calories manuelles du jour réinitialisées' });
   };
 
   const advice = useMemo(() => {
@@ -371,24 +379,41 @@ export default function Tracking() {
             <h2 className="font-display font-semibold text-sm flex items-center gap-2">
               <Flame className="w-4 h-4 text-accent" /> Calories extra
             </h2>
+            {todayCalorieLog && (
+              <div className="p-2.5 rounded-lg bg-muted/40 space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Consommées manuelles</span>
+                  <span className="font-medium">{manualConsumed} kcal</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Dépensées extra</span>
+                  <span className="font-medium">{extraBurned} kcal</span>
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">Consommées</Label>
-                <Input type="number" placeholder="kcal" value={newCalConsumed} onChange={e => setNewCalConsumed(e.target.value)} />
+                <Input type="number" placeholder={todayCalorieLog ? String(manualConsumed) : 'kcal'} value={newCalConsumed} onChange={e => setNewCalConsumed(e.target.value)} />
               </div>
               <div>
                 <Label className="text-xs">Dépensées</Label>
-                <Input type="number" placeholder="kcal" value={newCalBurned} onChange={e => setNewCalBurned(e.target.value)} />
+                <Input type="number" placeholder={todayCalorieLog ? String(extraBurned) : 'kcal'} value={newCalBurned} onChange={e => setNewCalBurned(e.target.value)} />
               </div>
             </div>
-            <Button className="w-full gap-1.5 tap-scale" variant="outline" onClick={addCalories}>
-              <Plus className="w-4 h-4" /> Ajouter
-            </Button>
-            {(manualConsumed > 0 || extraBurned > 0) && (
-              <p className="text-[10px] text-muted-foreground text-center">
-                {manualConsumed > 0 && `+${manualConsumed} conso.`}{manualConsumed > 0 && extraBurned > 0 && ' · '}{extraBurned > 0 && `−${extraBurned} dép.`}
-              </p>
-            )}
+            <div className="flex gap-2">
+              <Button className="flex-1 gap-1.5 tap-scale" variant="outline" onClick={addCalories}>
+                {todayCalorieLog ? '🔄 Modifier' : <><Plus className="w-4 h-4" /> Enregistrer</>}
+              </Button>
+              {todayCalorieLog && (
+                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive shrink-0" onClick={resetCalories} title="Réinitialiser">
+                  🗑️
+                </Button>
+              )}
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              {todayCalorieLog ? 'Une saisie par jour. Modifie ou réinitialise la valeur.' : 'Une seule saisie par jour. Tu pourras la modifier ensuite.'}
+            </p>
           </motion.div>
         </div>
 
