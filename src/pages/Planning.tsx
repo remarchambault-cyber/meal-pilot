@@ -3,6 +3,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { MealPlanItem, Recipe, UserProfile } from '@/data/types';
 import { mockRecipes } from '@/data/recipes';
 import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories';
+import { getScaleFactor } from '@/lib/recipeScaling';
 import {
   filterRecipesByMealType,
   PLANNING_MEAL_TYPE_LABELS,
@@ -95,7 +96,8 @@ export default function Planning() {
     const meals = getMealsForDay(date);
     return meals.reduce((sum, m) => {
       const recipe = getRecipe(m.recipeId);
-      return sum + (recipe ? recipe.calories * (m.portions || 1) : 0);
+      const sf = m.scaleFactor || 1;
+      return sum + (recipe ? Math.round(recipe.calories * sf) * (m.portions || 1) : 0);
     }, 0);
   };
 
@@ -140,6 +142,9 @@ export default function Planning() {
     const recipe = getRecipe(selectedRecipeId);
     if (!recipe) return;
 
+    const mealTarget = mealSuggestions?.[selectedMealType] || 0;
+    const sf = mealTarget ? getScaleFactor(recipe.calories, mealTarget) : 1;
+
     const items: MealPlanItem[] = selectedDates.map((date, index) => ({
       id: `mp_${Date.now()}_${date.split('-').join('')}_${index}`,
       date,
@@ -147,6 +152,7 @@ export default function Planning() {
       recipeId: selectedRecipeId,
       isBatchCooking,
       portions,
+      scaleFactor: sf,
     }));
 
     setMealPlan(prev => [...prev, ...items]);
@@ -155,8 +161,8 @@ export default function Planning() {
     toast({
       title: isBatchCooking ? '✅ Batch cooking planifié' : '✅ Repas ajouté',
       description: isBatchCooking
-        ? `${recipe.title} ajouté sur ${selectedDates.length} jours · ${selectedDates.length * portions} portions au total`
-        : `${recipe.title} — ${format(new Date(`${addDialogDate}T12:00:00`), 'EEEE d MMMM', { locale: fr })}`,
+        ? `${recipe.title} ajouté sur ${selectedDates.length} jours · ${Math.round(recipe.calories * sf)} kcal/portion`
+        : `${recipe.title} — ${Math.round(recipe.calories * sf)} kcal · ${format(new Date(`${addDialogDate}T12:00:00`), 'EEEE d MMMM', { locale: fr })}`,
     });
   };
 
@@ -296,7 +302,8 @@ export default function Planning() {
                                 </div>
                                 <p className="text-sm font-medium truncate">{recipe.title}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {meal.portions || 1} portion{(meal.portions || 1) > 1 ? 's' : ''} · {recipe.calories * (meal.portions || 1)} kcal
+                                  {meal.portions || 1} portion{(meal.portions || 1) > 1 ? 's' : ''} · {Math.round(recipe.calories * (meal.scaleFactor || 1)) * (meal.portions || 1)} kcal
+                                  {meal.scaleFactor && Math.abs(meal.scaleFactor - 1) > 0.01 ? ` · ajusté ×${meal.scaleFactor.toFixed(2)}` : ''}
                                 </p>
                               </div>
 
@@ -389,15 +396,21 @@ export default function Planning() {
             </div>
 
             <div>
-              <Label className="text-xs font-medium">Recette (filtrée strictement par type)</Label>
+              <Label className="text-xs font-medium">Recette (filtrée par type · calories ajustées)</Label>
               <Select value={selectedRecipeId} onValueChange={setSelectedRecipeId}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Choisir une recette" /></SelectTrigger>
                 <SelectContent>
-                  {filteredRecipes.map(recipe => (
-                    <SelectItem key={recipe.id} value={recipe.id}>
-                      {recipe.title} ({recipe.calories} kcal)
-                    </SelectItem>
-                  ))}
+                  {filteredRecipes.map(recipe => {
+                    const mealTarget = mealSuggestions?.[selectedMealType] || 0;
+                    const sf = mealTarget ? getScaleFactor(recipe.calories, mealTarget) : 1;
+                    const adjusted = Math.round(recipe.calories * sf);
+                    const isScaled = Math.abs(sf - 1) > 0.01;
+                    return (
+                      <SelectItem key={recipe.id} value={recipe.id}>
+                        {recipe.title} ({adjusted} kcal{isScaled ? ` · ×${sf.toFixed(2)}` : ''})
+                      </SelectItem>
+                    );
+                  })}
                   {filteredRecipes.length === 0 && (
                     <div className="px-3 py-2 text-sm text-muted-foreground">Aucune recette pour ce type</div>
                   )}

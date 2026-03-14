@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useMemo } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { mockRecipes } from '@/data/recipes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clock, Flame, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Clock, Flame, Plus, ChevronDown, ChevronUp, ScaleIcon } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { MealPlanItem, Recipe } from '@/data/types';
+import { MealPlanItem, Recipe, UserProfile } from '@/data/types';
+import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories';
+import { scaleRecipe, getScaleFactorForMealType } from '@/lib/recipeScaling';
 import { motion } from 'framer-motion';
 import AddToPlanModal from '@/components/AddToPlanModal';
 
@@ -22,13 +24,25 @@ const CATEGORY_LABELS: Record<string, string> = {
 export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
   const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
+  const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
   const [showModal, setShowModal] = useState(false);
   const [detailedMode, setDetailedMode] = useState(false);
 
   const allRecipes = [...mockRecipes, ...customRecipes];
   const recipe = allRecipes.find(r => r.id === id);
+
+  const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
+  const mealTargets = useMemo(() => target ? getMealCalorieSuggestion(target.target) : null, [target]);
+
+  const scaleFactor = useMemo(() => {
+    const paramScale = parseFloat(searchParams.get('scale') || '');
+    if (paramScale && paramScale > 0) return paramScale;
+    if (!recipe) return 1;
+    return getScaleFactorForMealType(recipe, mealTargets);
+  }, [searchParams, recipe, mealTargets]);
 
   if (!recipe) {
     return (
@@ -41,12 +55,14 @@ export default function RecipeDetail() {
     );
   }
 
-  const grouped = recipe.ingredients.reduce((acc, ing) => {
+  const scaled = scaleRecipe(recipe, scaleFactor);
+
+  const grouped = scaled.ingredients.reduce((acc, ing) => {
     const cat = ing.category;
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(ing);
     return acc;
-  }, {} as Record<string, typeof recipe.ingredients>);
+  }, {} as Record<string, typeof scaled.ingredients>);
 
   return (
     <AppLayout>
@@ -60,28 +76,39 @@ export default function RecipeDetail() {
           <p className="text-body-text mt-1">{recipe.description}</p>
         </div>
 
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-3 text-sm flex-wrap">
           <span className="flex items-center gap-1.5 bg-accent/10 text-accent px-3 py-1 rounded-full font-medium">
-            <Flame className="w-4 h-4" /> {recipe.calories} kcal
+            <Flame className="w-4 h-4" /> {scaled.calories} kcal
           </span>
           <span className="flex items-center gap-1.5 bg-muted px-3 py-1 rounded-full">
             <Clock className="w-4 h-4" /> {recipe.prepTime} min
           </span>
+          {scaled.isScaled && (
+            <span className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium">
+              <ScaleIcon className="w-3.5 h-3.5" /> Portion ajustée ×{scaleFactor.toFixed(2)}
+            </span>
+          )}
         </div>
+
+        {scaled.isScaled && (
+          <div className="text-xs text-muted-foreground bg-muted/60 rounded-lg p-3">
+            Recette de base : {recipe.calories} kcal · Quantités ajustées pour correspondre à la cible du créneau ({scaled.calories} kcal).
+          </div>
+        )}
 
         <div className="card-elevated p-4">
           <h2 className="font-display font-semibold text-sm mb-3">Macronutriments estimés</h2>
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="bg-primary/5 rounded-lg p-3">
-              <p className="font-display font-bold text-lg">{recipe.protein}g</p>
+              <p className="font-display font-bold text-lg">{scaled.protein}g</p>
               <p className="text-xs text-muted-foreground">Protéines</p>
             </div>
             <div className="bg-accent/5 rounded-lg p-3">
-              <p className="font-display font-bold text-lg">{recipe.carbs}g</p>
+              <p className="font-display font-bold text-lg">{scaled.carbs}g</p>
               <p className="text-xs text-muted-foreground">Glucides</p>
             </div>
             <div className="bg-secondary/5 rounded-lg p-3">
-              <p className="font-display font-bold text-lg">{recipe.fat}g</p>
+              <p className="font-display font-bold text-lg">{scaled.fat}g</p>
               <p className="text-xs text-muted-foreground">Lipides</p>
             </div>
           </div>
@@ -97,7 +124,7 @@ export default function RecipeDetail() {
                   {items.map((ing, i) => (
                     <li key={i} className="text-sm flex justify-between">
                       <span>{ing.name}</span>
-                      <span className="text-muted-foreground">{ing.quantity} {ing.unit}</span>
+                      <span className="text-muted-foreground">{ing.scaledQuantity} {ing.unit}</span>
                     </li>
                   ))}
                 </ul>
@@ -121,7 +148,6 @@ export default function RecipeDetail() {
           </div>
 
           {!detailedMode ? (
-            /* Simple / quick view */
             <ol className="space-y-2">
               {recipe.steps.map((step, i) => (
                 <li key={i} className="flex gap-3 text-sm">
@@ -133,7 +159,6 @@ export default function RecipeDetail() {
               ))}
             </ol>
           ) : (
-            /* Detailed / beginner-friendly view */
             <div className="space-y-4">
               {recipe.steps.map((step, i) => (
                 <div key={i} className="bg-muted/50 rounded-lg p-3">
@@ -159,6 +184,7 @@ export default function RecipeDetail() {
         open={showModal}
         onOpenChange={setShowModal}
         recipe={recipe}
+        mealTargets={mealTargets}
         onAdd={(items) => setMealPlan(prev => [...prev, ...items])}
       />
     </AppLayout>
