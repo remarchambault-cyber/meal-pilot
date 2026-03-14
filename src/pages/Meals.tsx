@@ -5,10 +5,11 @@ import { UserProfile, Recipe, MealPlanItem } from '@/data/types';
 import { mockRecipes } from '@/data/recipes';
 import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories';
 import { PLANNING_MEAL_TYPE_LABELS_SHORT } from '@/lib/mealTypes';
+import { getScaleFactorForMealType, scaleRecipe } from '@/lib/recipeScaling';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Flame, RefreshCw, Plus, Eye, Target } from 'lucide-react';
+import { Clock, Flame, RefreshCw, Plus, Eye, Target, ScaleIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AddToPlanModal from '@/components/AddToPlanModal';
 
@@ -51,13 +52,14 @@ export default function Meals() {
 
     return typeFiltered
       .map(recipe => {
-        const mealTarget = mealTargets?.[recipe.mealType];
-        const calorieGap = mealTarget ? Math.abs(recipe.calories - mealTarget) : 0;
+        const sf = getScaleFactorForMealType(recipe, mealTargets);
+        const scaledCal = Math.round(recipe.calories * sf);
+        const mealTarget = mealTargets?.[recipe.mealType] || 0;
+        const calorieGap = mealTarget ? Math.abs(scaledCal - mealTarget) : 0;
         const jitter = getSeededJitter(seed, recipe.id);
-        return { recipe, score: calorieGap + jitter };
+        return { recipe, scaleFactor: sf, scaledCalories: scaledCal, score: calorieGap + jitter };
       })
-      .sort((a, b) => a.score - b.score)
-      .map(item => item.recipe);
+      .sort((a, b) => a.score - b.score);
   }, [allRecipes, filter, mealTargets, seed]);
 
   const selectedFilterTarget = useMemo(() => {
@@ -102,9 +104,10 @@ export default function Meals() {
         </div>
 
         <div className="space-y-3">
-          {filtered.map((recipe, i) => {
-            const mealTarget = mealTargets?.[recipe.mealType];
-            const calorieDelta = mealTarget ? recipe.calories - mealTarget : null;
+          {filtered.map(({ recipe, scaleFactor, scaledCalories }, i) => {
+            const mealTarget = mealTargets?.[recipe.mealType] || 0;
+            const calorieDelta = mealTarget ? scaledCalories - mealTarget : null;
+            const scaled = scaleRecipe(recipe, scaleFactor);
 
             return (
               <motion.div
@@ -127,17 +130,34 @@ export default function Meals() {
                 </div>
 
                 <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                  <span className="flex items-center gap-1"><Flame className="w-4 h-4 text-accent" />{recipe.calories} kcal</span>
+                  <span className="flex items-center gap-1">
+                    <Flame className="w-4 h-4 text-accent" />
+                    {scaledCalories} kcal
+                  </span>
+                  {scaled.isScaled && (
+                    <span className="flex items-center gap-1 text-xs text-primary">
+                      <ScaleIcon className="w-3.5 h-3.5" />
+                      Ajusté ×{scaleFactor.toFixed(2)}
+                    </span>
+                  )}
                   <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{recipe.prepTime} min</span>
                   {calorieDelta !== null && (
-                    <span className={calorieDelta > 120 ? 'text-destructive' : calorieDelta < -120 ? 'text-secondary' : ''}>
-                      Écart cible: {calorieDelta > 0 ? '+' : ''}{calorieDelta} kcal
+                    <span className={Math.abs(calorieDelta) > 120 ? (calorieDelta > 0 ? 'text-destructive' : 'text-secondary') : ''}>
+                      Écart : {calorieDelta > 0 ? '+' : ''}{calorieDelta} kcal
                     </span>
                   )}
                 </div>
 
+                {scaled.isScaled && (
+                  <div className="flex gap-3 text-xs text-muted-foreground">
+                    <span>P {scaled.protein}g</span>
+                    <span>G {scaled.carbs}g</span>
+                    <span>L {scaled.fat}g</span>
+                  </div>
+                )}
+
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="gap-1.5 tap-scale" onClick={() => navigate(`/recipe/${recipe.id}`)}>
+                  <Button variant="outline" size="sm" className="gap-1.5 tap-scale" onClick={() => navigate(`/recipe/${recipe.id}?scale=${scaleFactor}`)}>
                     <Eye className="w-4 h-4" /> Recette
                   </Button>
                   <Button size="sm" className="gap-1.5 tap-scale" onClick={() => setModalRecipe(recipe)}>
@@ -164,6 +184,7 @@ export default function Meals() {
           open={!!modalRecipe}
           onOpenChange={(open) => !open && setModalRecipe(null)}
           recipe={modalRecipe}
+          mealTargets={mealTargets}
           onAdd={(items) => setMealPlan(prev => [...prev, ...items])}
         />
       )}

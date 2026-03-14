@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { format, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarIcon, ChefHat } from 'lucide-react';
+import { CalendarIcon, ChefHat, ScaleIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -14,15 +14,17 @@ import { cn } from '@/lib/utils';
 import { MealPlanItem, Recipe } from '@/data/types';
 import { toast } from '@/hooks/use-toast';
 import { getCompatibleMealTypesForRecipe, PLANNING_MEAL_TYPE_LABELS } from '@/lib/mealTypes';
+import { getScaleFactor, scaleRecipe } from '@/lib/recipeScaling';
 
 interface AddToPlanModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   recipe: Recipe;
+  mealTargets?: Record<string, number> | null;
   onAdd: (items: MealPlanItem[]) => void;
 }
 
-export default function AddToPlanModal({ open, onOpenChange, recipe, onAdd }: AddToPlanModalProps) {
+export default function AddToPlanModal({ open, onOpenChange, recipe, mealTargets, onAdd }: AddToPlanModalProps) {
   const compatibleTypes = getCompatibleMealTypesForRecipe(recipe);
   const [date, setDate] = useState<Date>(new Date());
   const [mealType, setMealType] = useState<MealPlanItem['mealType']>(compatibleTypes[0]);
@@ -42,6 +44,15 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, onAdd }: Ad
     setIsBatchCooking(false);
     setBatchDays([defaultDay]);
   }, [open, recipe]);
+
+  const scaleFactor = useMemo(() => {
+    if (!mealTargets) return 1;
+    const target = mealTargets[mealType];
+    if (!target) return 1;
+    return getScaleFactor(recipe.calories, target);
+  }, [mealTargets, mealType, recipe.calories]);
+
+  const scaled = useMemo(() => scaleRecipe(recipe, scaleFactor), [recipe, scaleFactor]);
 
   const nextDays = useMemo(() => {
     return Array.from({ length: 14 }, (_, i) => format(addDays(date, i), 'yyyy-MM-dd'));
@@ -83,6 +94,7 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, onAdd }: Ad
       recipeId: recipe.id,
       isBatchCooking,
       portions,
+      scaleFactor,
     }));
 
     onAdd(items);
@@ -91,8 +103,8 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, onAdd }: Ad
     toast({
       title: isBatchCooking ? '✅ Batch cooking planifié' : '✅ Repas ajouté au planning',
       description: isBatchCooking
-        ? `${recipe.title} ajouté sur ${targetDays.length} jours · ${targetDays.length * portions} portions au total`
-        : `${recipe.title} — ${format(date, 'EEEE d MMMM', { locale: fr })}`,
+        ? `${recipe.title} ajouté sur ${targetDays.length} jours · ${scaled.calories} kcal/portion`
+        : `${recipe.title} — ${scaled.calories} kcal · ${format(date, 'EEEE d MMMM', { locale: fr })}`,
     });
   };
 
@@ -106,7 +118,19 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, onAdd }: Ad
         <div className="space-y-4 pt-2">
           <div className="card-elevated p-3">
             <p className="font-display font-semibold text-sm">{recipe.title}</p>
-            <p className="text-xs text-muted-foreground">{recipe.calories} kcal · {recipe.prepTime} min</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-muted-foreground">{scaled.calories} kcal · {recipe.prepTime} min</span>
+              {scaled.isScaled && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium inline-flex items-center gap-1">
+                  <ScaleIcon className="w-3 h-3" /> Ajusté ×{scaleFactor.toFixed(2)}
+                </span>
+              )}
+            </div>
+            {scaled.isScaled && (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Base : {recipe.calories} kcal → Ajusté : {scaled.calories} kcal · P {scaled.protein}g · G {scaled.carbs}g · L {scaled.fat}g
+              </p>
+            )}
           </div>
 
           <div className="card-elevated p-3 space-y-1">
@@ -159,9 +183,9 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, onAdd }: Ad
                 ))}
               </SelectContent>
             </Select>
-            {compatibleTypes.length === 1 && (
+            {mealTargets && mealTargets[mealType] && (
               <p className="text-xs text-muted-foreground mt-1">
-                Cette recette est strictement catégorisée pour ce type de repas.
+                Cible pour ce créneau : ~{mealTargets[mealType]} kcal
               </p>
             )}
           </div>

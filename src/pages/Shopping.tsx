@@ -51,9 +51,11 @@ export default function Shopping() {
       if (!recipe) return;
 
       const portions = item.portions || 1;
+      const sf = item.scaleFactor || 1;
+
       recipe.ingredients.forEach(ingredient => {
         const key = `${ingredient.name}_${ingredient.unit}`;
-        const totalQtyForOccurrence = ingredient.quantity * portions;
+        const totalQty = Math.round(ingredient.quantity * sf * portions * 10) / 10;
 
         if (!map[key]) {
           map[key] = {
@@ -66,10 +68,10 @@ export default function Shopping() {
           };
         }
 
-        map[key].quantity += totalQtyForOccurrence;
+        map[key].quantity += totalQty;
         map[key].sources.push({
           recipeName: recipe.title,
-          quantity: ingredient.quantity,
+          quantity: Math.round(ingredient.quantity * sf * 10) / 10,
           unit: ingredient.unit,
           portions,
         });
@@ -136,7 +138,6 @@ export default function Shopping() {
                           occurrences: 0,
                         };
                       }
-
                       acc[source.recipeName].quantity += source.quantity * source.portions;
                       acc[source.recipeName].occurrences += 1;
                       return acc;
@@ -151,15 +152,12 @@ export default function Shopping() {
                             checked={checked.has(item.key)}
                             onCheckedChange={() => toggle(item.key)}
                           />
-
                           <span className={`text-sm flex-1 ${checked.has(item.key) ? 'line-through text-muted-foreground' : ''}`}>
                             {item.name}
                           </span>
-
                           <span className="text-sm text-muted-foreground">
                             {formatQuantity(item.quantity, item.unit)} {formatUnit(item.quantity, item.unit)}
                           </span>
-
                           {item.sources.length > 0 && (
                             <button onClick={() => toggleExpand(item.key)} className="text-muted-foreground hover:text-foreground p-1">
                               {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
@@ -172,13 +170,12 @@ export default function Shopping() {
                             <p className="text-xs text-muted-foreground">
                               Total : {formatQuantity(item.quantity, item.unit)} {formatUnit(item.quantity, item.unit)} · {item.sources.length} occurrence{item.sources.length > 1 ? 's' : ''}
                             </p>
-
                             {detailedSources.map(source => (
                               <p key={source.recipeName} className="text-xs text-muted-foreground">
                                 • {formatQuantity(source.quantity, source.unit)} {formatUnit(source.quantity, source.unit)} pour {source.recipeName}
                                 {source.occurrences > 1 && ` (${source.occurrences} fois)`}
                               </p>
-                            ))}
+                            )))}
                           </div>
                         )}
                       </li>
@@ -186,7 +183,7 @@ export default function Shopping() {
                   })}
                 </ul>
               </motion.div>
-            ))}
+            )))}
           </div>
         )}
       </div>
