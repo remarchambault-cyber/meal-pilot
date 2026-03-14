@@ -6,7 +6,6 @@ import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories
 import { getScaleFactor } from '@/lib/recipeScaling';
 import {
   filterRecipesByMealType,
-  PLANNING_MEAL_TYPE_LABELS,
   PLANNING_MEAL_TYPE_LABELS_SHORT,
   PLANNING_MEAL_TYPE_ORDER,
 } from '@/lib/mealTypes';
@@ -15,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronLeft, ChevronRight, Copy, ChefHat, Trash2, Plus, Target } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, ChefHat, Trash2, Plus, Target, MoreVertical } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,6 +25,10 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 const MEAL_TYPE_COLORS: Record<string, string> = {
@@ -43,6 +46,7 @@ export default function Planning() {
   const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
   const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
   const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
+  const isMobile = useIsMobile();
 
   const [weekOffset, setWeekOffset] = useState(0);
   const [addDialogDate, setAddDialogDate] = useState<string | null>(null);
@@ -125,17 +129,12 @@ export default function Planning() {
 
   const handleQuickAdd = () => {
     if (!addDialogDate || !selectedRecipeId) return;
-
     const selectedDates = isBatchCooking
       ? [...batchDays].sort((a, b) => a.localeCompare(b))
       : [addDialogDate];
 
     if (selectedDates.length === 0) {
-      toast({
-        title: '⚠️ Aucun jour sélectionné',
-        description: 'Sélectionne au moins un jour pour le batch cooking.',
-        variant: 'destructive',
-      });
+      toast({ title: '⚠️ Aucun jour sélectionné', variant: 'destructive' });
       return;
     }
 
@@ -161,8 +160,8 @@ export default function Planning() {
     toast({
       title: isBatchCooking ? '✅ Batch cooking planifié' : '✅ Repas ajouté',
       description: isBatchCooking
-        ? `${recipe.title} ajouté sur ${selectedDates.length} jours · ${Math.round(recipe.calories * sf)} kcal/portion`
-        : `${recipe.title} — ${Math.round(recipe.calories * sf)} kcal · ${format(new Date(`${addDialogDate}T12:00:00`), 'EEEE d MMMM', { locale: fr })}`,
+        ? `${recipe.title} sur ${selectedDates.length} jours`
+        : `${recipe.title} — ${Math.round(recipe.calories * sf)} kcal`,
     });
   };
 
@@ -174,22 +173,16 @@ export default function Planning() {
 
   const confirmDuplicate = () => {
     if (!duplicateSourceMeal || duplicateDays.length === 0) return;
-
     const duplicatedItems: MealPlanItem[] = duplicateDays.map((date, index) => ({
       ...duplicateSourceMeal,
       id: `mp_${Date.now()}_dup_${date.split('-').join('')}_${index}`,
       date,
       isBatchCooking: false,
     }));
-
     setMealPlan(prev => [...prev, ...duplicatedItems]);
     setDuplicateSourceMeal(null);
     setDuplicateDays([]);
-
-    toast({
-      title: '📋 Repas dupliqué',
-      description: `${duplicatedItems.length} occurrence${duplicatedItems.length > 1 ? 's' : ''} ajoutée${duplicatedItems.length > 1 ? 's' : ''}`,
-    });
+    toast({ title: '📋 Repas dupliqué', description: `${duplicatedItems.length} occurrence(s) ajoutée(s)` });
   };
 
   const addDialogDateFormatted = addDialogDate
@@ -198,19 +191,25 @@ export default function Planning() {
 
   const duplicateRecipe = duplicateSourceMeal ? getRecipe(duplicateSourceMeal.recipeId) : null;
 
+  // Gap color: negative=red, positive=green, zero=neutral
+  const gapColor = (gap: number) =>
+    gap > 0 ? 'text-secondary' : gap < 0 ? 'text-destructive' : 'text-muted-foreground';
+  const gapBg = (gap: number) =>
+    gap > 0 ? 'bg-secondary/10 text-secondary' : gap < 0 ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground';
+
   return (
     <AppLayout>
       <div className="space-y-5">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-display font-bold">Planning</h1>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" className="tap-scale" onClick={() => setWeekOffset(w => w - 1)}>
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="icon" className="tap-scale h-8 w-8" onClick={() => setWeekOffset(w => w - 1)}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setWeekOffset(0)}>
-              Cette semaine
+            <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setWeekOffset(0)}>
+              Semaine
             </Button>
-            <Button variant="outline" size="icon" className="tap-scale" onClick={() => setWeekOffset(w => w + 1)}>
+            <Button variant="outline" size="icon" className="tap-scale h-8 w-8" onClick={() => setWeekOffset(w => w + 1)}>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
@@ -219,13 +218,13 @@ export default function Planning() {
         {mealSuggestions && target && (
           <div className="card-elevated p-3">
             <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5 text-primary" /> Répartition suggérée — {target.target} kcal/jour
+              <Target className="w-3.5 h-3.5 text-primary" /> Répartition — {target.target} kcal/jour
             </p>
-            <div className="flex gap-2 flex-wrap">
-              <span className="text-xs bg-muted px-2 py-1 rounded-md">Petit déjeuner {mealSuggestions.breakfast} kcal</span>
-              <span className="text-xs bg-muted px-2 py-1 rounded-md">Déjeuner {mealSuggestions.lunch} kcal</span>
-              <span className="text-xs bg-muted px-2 py-1 rounded-md">Collation {mealSuggestions.snack} kcal</span>
-              <span className="text-xs bg-muted px-2 py-1 rounded-md">Dîner {mealSuggestions.dinner} kcal</span>
+            <div className="flex gap-1.5 flex-wrap">
+              <span className="text-[11px] bg-muted px-2 py-0.5 rounded-md">Pdj {mealSuggestions.breakfast}</span>
+              <span className="text-[11px] bg-muted px-2 py-0.5 rounded-md">Déj {mealSuggestions.lunch}</span>
+              <span className="text-[11px] bg-muted px-2 py-0.5 rounded-md">Coll {mealSuggestions.snack}</span>
+              <span className="text-[11px] bg-muted px-2 py-0.5 rounded-md">Dîner {mealSuggestions.dinner}</span>
             </div>
           </div>
         )}
@@ -238,47 +237,45 @@ export default function Planning() {
             const dailyTarget = target?.target || 0;
             const gap = plannedCalories - dailyTarget;
 
-            const gapStyle = gap < -250
-              ? 'bg-destructive/10 text-destructive'
-              : gap > 250
-                ? 'bg-accent/10 text-accent'
-                : 'bg-secondary/10 text-secondary';
-
             return (
               <motion.div
                 key={day.toISOString()}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03, duration: 0.3 }}
-                className={cn('card-elevated p-4', isToday && 'ring-2 ring-primary/30')}
+                className={cn('card-elevated p-3 sm:p-4', isToday && 'ring-2 ring-primary/30')}
               >
                 <div className="flex items-center justify-between mb-2">
                   <h3 className={cn('font-display font-semibold text-sm capitalize', isToday && 'text-primary')}>
-                    {format(day, 'EEEE d MMMM', { locale: fr })}
-                    {isToday && <span className="ml-2 text-xs font-normal text-primary">(aujourd'hui)</span>}
+                    {isMobile
+                      ? format(day, 'EEE d MMM', { locale: fr })
+                      : format(day, 'EEEE d MMMM', { locale: fr })
+                    }
+                    {isToday && <span className="ml-1.5 text-[10px] font-normal text-primary">(auj.)</span>}
                   </h3>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  <span className="text-[11px] px-2 py-1 rounded-md bg-muted text-muted-foreground">
-                    Planifié : {plannedCalories} kcal
+                {/* Day summary badges */}
+                <div className="flex flex-wrap gap-1 mb-2">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                    {plannedCalories} kcal
                   </span>
-                  <span className="text-[11px] px-2 py-1 rounded-md bg-muted text-muted-foreground">
-                    Objectif : {dailyTarget || '—'} kcal
-                  </span>
-                  <span className={cn('text-[11px] px-2 py-1 rounded-md font-medium', gapStyle)}>
-                    Écart : {gap > 0 ? '+' : ''}{gap} kcal
-                  </span>
+                  {dailyTarget > 0 && (
+                    <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-medium', gapBg(gap))}>
+                      {gap > 0 ? '+' : ''}{gap}
+                    </span>
+                  )}
                 </div>
 
                 {meals.length === 0 ? (
-                  <p className="text-sm text-muted-foreground mb-2">Aucun repas planifié</p>
+                  <p className="text-xs text-muted-foreground mb-2">Aucun repas</p>
                 ) : (
-                  <div className="space-y-2 mb-2">
+                  <div className="space-y-1.5 mb-2">
                     <AnimatePresence>
                       {meals.map(meal => {
                         const recipe = getRecipe(meal.recipeId);
                         if (!recipe) return null;
+                        const mealCal = Math.round(recipe.calories * (meal.scaleFactor || 1)) * (meal.portions || 1);
 
                         return (
                           <motion.div
@@ -286,59 +283,75 @@ export default function Planning() {
                             initial={{ opacity: 0, x: -8 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 8 }}
-                            className={cn('bg-muted/50 rounded-lg px-3 py-2 border-l-4', MEAL_TYPE_COLORS[meal.mealType] || '')}
+                            className={cn('bg-muted/50 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 border-l-4', MEAL_TYPE_COLORS[meal.mealType] || '')}
                           >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-1.5">
-                                  <span className="text-xs text-muted-foreground">
+                            <div className="flex items-center justify-between gap-1.5">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[10px] text-muted-foreground">
                                     {PLANNING_MEAL_TYPE_LABELS_SHORT[meal.mealType]}
                                   </span>
                                   {meal.isBatchCooking && (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-medium inline-flex items-center gap-1">
-                                      <ChefHat className="w-3 h-3" /> Batch
-                                    </span>
+                                    <ChefHat className="w-3 h-3 text-secondary" />
                                   )}
                                 </div>
                                 <p className="text-sm font-medium truncate">{recipe.title}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {meal.portions || 1} portion{(meal.portions || 1) > 1 ? 's' : ''} · {Math.round(recipe.calories * (meal.scaleFactor || 1)) * (meal.portions || 1)} kcal
-                                  {meal.scaleFactor && Math.abs(meal.scaleFactor - 1) > 0.01 ? ' · portion ajustée' : ''}
+                                <p className="text-[11px] text-muted-foreground">
+                                  {mealCal} kcal
+                                  {(meal.portions || 1) > 1 ? ` · ${meal.portions}p` : ''}
+                                  {meal.scaleFactor && Math.abs(meal.scaleFactor - 1) > 0.01 ? ' · ajusté' : ''}
                                 </p>
                               </div>
 
-                              <div className="flex gap-1 shrink-0">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 px-2 gap-1 text-xs"
-                                  onClick={() => openDuplicateDialog(meal)}
-                                >
-                                  <Copy className="w-3.5 h-3.5" />
-                                  Dupliquer
-                                </Button>
-
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-7 px-2 gap-1 text-xs text-destructive">
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                      Supprimer
+                              {/* Desktop: inline buttons. Mobile: dropdown menu */}
+                              {isMobile ? (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0">
+                                      <MoreVertical className="w-4 h-4" />
                                     </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Supprimer ce repas ?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        {recipe.title} sera retiré du planning.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => removeMeal(meal.id)}>Supprimer</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </div>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => openDuplicateDialog(meal)}>
+                                      <Copy className="w-3.5 h-3.5 mr-2" /> Dupliquer
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="text-destructive"
+                                      onClick={() => removeMeal(meal.id)}
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5 mr-2" /> Supprimer
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              ) : (
+                                <div className="flex gap-1 shrink-0">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2 gap-1 text-xs"
+                                    onClick={() => openDuplicateDialog(meal)}
+                                  >
+                                    <Copy className="w-3.5 h-3.5" /> Dupliquer
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="outline" size="sm" className="h-7 px-2 gap-1 text-xs text-destructive">
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Supprimer ce repas ?</AlertDialogTitle>
+                                        <AlertDialogDescription>{recipe.title} sera retiré du planning.</AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => removeMeal(meal.id)}>Supprimer</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              )}
                             </div>
                           </motion.div>
                         );
@@ -350,10 +363,10 @@ export default function Planning() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="gap-1.5 text-muted-foreground hover:text-primary tap-scale w-full justify-center"
+                  className="gap-1.5 text-muted-foreground hover:text-primary tap-scale w-full justify-center text-xs"
                   onClick={() => openAddDialog(toDateKey(day))}
                 >
-                  <Plus className="w-4 h-4" /> Ajouter un repas
+                  <Plus className="w-3.5 h-3.5" /> Ajouter
                 </Button>
               </motion.div>
             );
@@ -361,6 +374,7 @@ export default function Planning() {
         </div>
       </div>
 
+      {/* Add meal dialog */}
       <Dialog open={!!addDialogDate} onOpenChange={(open) => !open && setAddDialogDate(null)}>
         <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
@@ -391,13 +405,13 @@ export default function Planning() {
               </Select>
               {mealSuggestions && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Cible suggérée : ~{mealSuggestions[selectedMealType]} kcal
+                  Cible : ~{mealSuggestions[selectedMealType]} kcal
                 </p>
               )}
             </div>
 
             <div>
-              <Label className="text-xs font-medium">Recette (filtrée par type · calories ajustées)</Label>
+              <Label className="text-xs font-medium">Recette</Label>
               <Select value={selectedRecipeId} onValueChange={setSelectedRecipeId}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Choisir une recette" /></SelectTrigger>
                 <SelectContent>
@@ -420,7 +434,7 @@ export default function Planning() {
             </div>
 
             <div>
-              <Label className="text-xs font-medium">Portions (pour chaque jour sélectionné)</Label>
+              <Label className="text-xs font-medium">Portions</Label>
               <Input
                 type="number"
                 min={1}
@@ -437,19 +451,14 @@ export default function Planning() {
                 onCheckedChange={(checked) => {
                   const enabled = !!checked;
                   setIsBatchCooking(enabled);
-                  if (!enabled) {
-                    setBatchDays([]);
-                    return;
-                  }
-                  if (addDialogDate) {
-                    setBatchDays(prev => (prev.length > 0 ? prev : [addDialogDate]));
-                  }
+                  if (!enabled) { setBatchDays([]); return; }
+                  if (addDialogDate) setBatchDays(prev => (prev.length > 0 ? prev : [addDialogDate]));
                 }}
                 id="batch-planning"
               />
               <label htmlFor="batch-planning" className="text-sm flex items-center gap-1.5 cursor-pointer">
                 <ChefHat className="w-4 h-4 text-secondary" />
-                Batch cooking (planification multi-jours)
+                Batch cooking (multi-jours)
               </label>
             </div>
 
@@ -476,19 +485,16 @@ export default function Planning() {
                     );
                   })}
                 </div>
-
                 <p className="text-xs text-muted-foreground mt-2">
-                  {batchDays.length} jour{batchDays.length > 1 ? 's' : ''} sélectionné{batchDays.length > 1 ? 's' : ''}
-                  {' · '}
-                  {batchDays.length * portions} portion{batchDays.length * portions > 1 ? 's' : ''} au total
+                  {batchDays.length} jour(s) · {batchDays.length * portions} portion(s) au total
                 </p>
               </div>
             )}
 
             <div className="text-xs text-muted-foreground bg-muted/60 rounded-md p-2 space-y-1">
               <p><strong>Portions</strong> = quantité pour un jour.</p>
-              <p><strong>Dupliquer</strong> = copier un repas existant vers d'autres jours.</p>
-              <p><strong>Batch cooking</strong> = planifier en une action sur plusieurs jours.</p>
+              <p><strong>Dupliquer</strong> = copier un repas existant.</p>
+              <p><strong>Batch cooking</strong> = planifier sur plusieurs jours.</p>
             </div>
 
             <Button
@@ -497,7 +503,7 @@ export default function Planning() {
               disabled={!selectedRecipeId || (isBatchCooking && batchDays.length === 0)}
             >
               {isBatchCooking
-                ? `Ajouter sur ${batchDays.length} jour${batchDays.length > 1 ? 's' : ''}`
+                ? `Ajouter sur ${batchDays.length} jour(s)`
                 : 'Ajouter au planning'
               }
             </Button>
@@ -505,6 +511,7 @@ export default function Planning() {
         </DialogContent>
       </Dialog>
 
+      {/* Duplicate dialog */}
       <Dialog open={!!duplicateSourceMeal} onOpenChange={(open) => !open && setDuplicateSourceMeal(null)}>
         <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
@@ -520,7 +527,7 @@ export default function Planning() {
             </div>
 
             <div>
-              <Label className="text-xs font-medium mb-2 block">Sélectionner les jours de duplication</Label>
+              <Label className="text-xs font-medium mb-2 block">Jours de duplication</Label>
               <div className="grid grid-cols-2 gap-1.5 max-h-52 overflow-y-auto">
                 {duplicateSelectableDays.map(day => {
                   const selected = duplicateDays.includes(day);
@@ -541,9 +548,8 @@ export default function Planning() {
                   );
                 })}
               </div>
-
               <p className="text-xs text-muted-foreground mt-2">
-                {duplicateDays.length} jour{duplicateDays.length > 1 ? 's' : ''} sélectionné{duplicateDays.length > 1 ? 's' : ''}
+                {duplicateDays.length} jour(s) sélectionné(s)
               </p>
             </div>
 

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { Plus, Lightbulb, TrendingUp, TrendingDown, Minus, Flame, Target, BarChart3, Scale } from 'lucide-react';
+import { Plus, Lightbulb, TrendingUp, TrendingDown, Minus, Flame, Target, Scale, CalendarCheck, Utensils } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -67,16 +67,18 @@ export default function Tracking() {
           name: recipe.title,
           calories: Math.round(recipe.calories * sf) * (m.portions || 1),
           mealType: m.mealType,
-          isScaled: Math.abs(sf - 1) > 0.01,
         } : null;
       })
-      .filter(Boolean) as { name: string; calories: number; mealType: MealPlanItem['mealType']; isScaled: boolean }[];
+      .filter(Boolean) as { name: string; calories: number; mealType: MealPlanItem['mealType'] }[];
   }, [mealPlan, today, allRecipes]);
 
   const todayCalories = calorieLogs.find(l => l.date === today);
   const consumed = todayCalories?.caloriesConsumed || 0;
   const dailyTarget = target?.target || 0;
-  const ecart = consumed - dailyTarget;
+
+  // Two distinct gaps
+  const ecartPlanifie = plannedCalories - dailyTarget;
+  const ecartConsomme = consumed - dailyTarget;
 
   const addWeight = () => {
     if (!newWeight) return;
@@ -104,26 +106,23 @@ export default function Tracking() {
     if (!profile || sortedWeightLogsAsc.length < 2) return null;
     const recent = sortedWeightLogsAsc.slice(-7);
     if (recent.length < 2) return null;
-
     const delta = recent[recent.length - 1].weight - recent[0].weight;
     const days = Math.max(1, recent.length - 1);
     const weeklyChange = (delta / days) * 7;
 
     if (profile.goal === 'lose') {
-      if (weeklyChange > 0.1) return { type: 'warning' as const, icon: '⚠️', text: 'Ton poids augmente malgré un objectif de perte. Vérifie ton apport calorique et rapproche-toi de ta cible.' };
-      if (weeklyChange < -1) return { type: 'warning' as const, icon: '⚡', text: 'Perte rapide (> 1 kg/semaine). Réduis un peu le déficit pour une progression plus durable.' };
-      if (weeklyChange < -0.1) return { type: 'success' as const, icon: '✅', text: 'Bonne trajectoire : ta perte de poids est régulière.' };
-      return { type: 'info' as const, icon: '💡', text: 'Poids stable. Tu peux réduire légèrement les calories (100-200 kcal) ou augmenter l’activité.' };
+      if (weeklyChange > 0.1) return { type: 'warning' as const, icon: '⚠️', text: 'Ton poids augmente malgré un objectif de perte. Vérifie ton apport calorique.' };
+      if (weeklyChange < -1) return { type: 'warning' as const, icon: '⚡', text: 'Perte rapide (> 1 kg/semaine). Réduis le déficit pour plus de durabilité.' };
+      if (weeklyChange < -0.1) return { type: 'success' as const, icon: '✅', text: 'Bonne trajectoire : perte de poids régulière.' };
+      return { type: 'info' as const, icon: '💡', text: 'Poids stable. Réduis légèrement les calories ou augmente l\'activité.' };
     }
-
     if (profile.goal === 'gain') {
-      if (weeklyChange < -0.1) return { type: 'warning' as const, icon: '⚠️', text: 'Le poids baisse malgré l’objectif de prise. Ajoute environ 200 kcal/jour.' };
-      if (weeklyChange > 1) return { type: 'warning' as const, icon: '⚡', text: 'Prise rapide (> 1 kg/semaine). Ralentis un peu les apports.' };
-      if (weeklyChange > 0.1) return { type: 'success' as const, icon: '✅', text: 'Progression cohérente pour une prise de poids.' };
-      return { type: 'info' as const, icon: '💡', text: 'Poids stable. Augmente légèrement les apports pour relancer la progression.' };
+      if (weeklyChange < -0.1) return { type: 'warning' as const, icon: '⚠️', text: 'Le poids baisse malgré l\'objectif de prise. Ajoute ~200 kcal/jour.' };
+      if (weeklyChange > 1) return { type: 'warning' as const, icon: '⚡', text: 'Prise rapide (> 1 kg/semaine). Ralentis les apports.' };
+      if (weeklyChange > 0.1) return { type: 'success' as const, icon: '✅', text: 'Progression cohérente pour la prise de poids.' };
+      return { type: 'info' as const, icon: '💡', text: 'Poids stable. Augmente légèrement les apports.' };
     }
-
-    if (Math.abs(weeklyChange) > 0.5) return { type: 'info' as const, icon: '💡', text: `Variation notable (${weeklyChange > 0 ? '+' : ''}${weeklyChange.toFixed(1)} kg/semaine). Ajuste les apports pour te stabiliser.` };
+    if (Math.abs(weeklyChange) > 0.5) return { type: 'info' as const, icon: '💡', text: `Variation notable (${weeklyChange > 0 ? '+' : ''}${weeklyChange.toFixed(1)} kg/sem). Ajuste les apports.` };
     return { type: 'success' as const, icon: '✅', text: 'Poids globalement stable, bon maintien.' };
   }, [profile, sortedWeightLogsAsc]);
 
@@ -137,9 +136,7 @@ export default function Tracking() {
   }, [sortedWeightLogsAsc]);
 
   const chartData = useMemo(() => {
-    return sortedWeightLogsAsc
-      .slice(-30)
-      .map(log => ({ date: log.date.slice(5), poids: log.weight }));
+    return sortedWeightLogsAsc.slice(-30).map(log => ({ date: log.date.slice(5), poids: log.weight }));
   }, [sortedWeightLogsAsc]);
 
   const cardVariants = {
@@ -147,11 +144,18 @@ export default function Tracking() {
     visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.35 } }),
   };
 
+  // Color helper: negative = red (destructive), positive = green (secondary), zero = neutral
+  const gapColor = (val: number) =>
+    val > 0 ? 'text-secondary' : val < 0 ? 'text-destructive' : 'text-muted-foreground';
+  const gapBg = (val: number) =>
+    val > 0 ? 'bg-secondary/10' : val < 0 ? 'bg-destructive/10' : 'bg-muted';
+
   return (
     <AppLayout>
       <div className="space-y-6">
         <h1 className="text-2xl font-display font-bold">Suivi</h1>
 
+        {/* Row 1: Target + Planned */}
         <div className="grid grid-cols-2 gap-3">
           <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-2">
@@ -162,37 +166,62 @@ export default function Tracking() {
           </motion.div>
 
           <motion.div custom={1} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
-            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mx-auto mb-2">
-              <Flame className="w-4 h-4 text-accent" />
-            </div>
-            <p className="font-display font-bold text-lg">{consumed}</p>
-            <p className="text-xs text-muted-foreground">Consommées</p>
-          </motion.div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
             <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center mx-auto mb-2">
-              <Target className="w-4 h-4 text-muted-foreground" />
+              <CalendarCheck className="w-4 h-4 text-muted-foreground" />
             </div>
             <p className="font-display font-bold text-lg">{plannedCalories}</p>
             <p className="text-xs text-muted-foreground">Prévues (planning)</p>
           </motion.div>
+        </div>
+
+        {/* Row 2: Consumed + Gap planned vs target */}
+        <div className="grid grid-cols-2 gap-3">
+          <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mx-auto mb-2">
+              <Utensils className="w-4 h-4 text-accent" />
+            </div>
+            <p className="font-display font-bold text-lg">{consumed}</p>
+            <p className="text-xs text-muted-foreground">Consommées</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Saisie manuelle uniquement</p>
+          </motion.div>
 
           <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2 ${ecart > 0 ? 'bg-destructive/10' : ecart < 0 ? 'bg-secondary/10' : 'bg-muted'}`}>
-              <BarChart3 className={`w-4 h-4 ${ecart > 0 ? 'text-destructive' : ecart < 0 ? 'text-secondary' : 'text-muted-foreground'}`} />
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2 ${gapBg(ecartPlanifie)}`}>
+              <CalendarCheck className={`w-4 h-4 ${gapColor(ecartPlanifie)}`} />
             </div>
-            <p className={`font-display font-bold text-lg ${ecart > 0 ? 'text-destructive' : ecart < 0 ? 'text-secondary' : ''}`}>
-              {ecart > 0 ? '+' : ''}{ecart}
+            <p className={`font-display font-bold text-lg ${gapColor(ecartPlanifie)}`}>
+              {ecartPlanifie > 0 ? '+' : ''}{ecartPlanifie}
             </p>
-            <p className="text-xs text-muted-foreground">Consommé vs cible</p>
+            <p className="text-xs text-muted-foreground">Planifié vs cible</p>
           </motion.div>
         </div>
 
+        {/* Row 3: Gap consumed vs target */}
+        <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${gapBg(ecartConsomme)}`}>
+                <Flame className={`w-4 h-4 ${gapColor(ecartConsomme)}`} />
+              </div>
+              <div>
+                <p className={`font-display font-bold text-lg ${gapColor(ecartConsomme)}`}>
+                  {ecartConsomme > 0 ? '+' : ''}{ecartConsomme} kcal
+                </p>
+                <p className="text-xs text-muted-foreground">Consommé vs cible</p>
+              </div>
+            </div>
+            <div className="text-right text-xs text-muted-foreground">
+              <p>{consumed} consommées</p>
+              <p>{dailyTarget} cible</p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Today's planned meals */}
         {todayMealDetails.length > 0 && (
-          <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
+          <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
             <h2 className="font-display font-semibold text-sm mb-2">Repas prévus aujourd'hui</h2>
+            <p className="text-[10px] text-muted-foreground mb-2">Ces repas sont planifiés mais pas encore comptés comme consommés.</p>
             <div className="space-y-1">
               {todayMealDetails.map((meal, i) => (
                 <div key={`${meal.name}-${i}`} className="flex justify-between text-sm py-1 border-b border-border last:border-0">
@@ -205,13 +234,13 @@ export default function Tracking() {
         )}
 
         {plannedCalories === 0 && (
-          <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center text-sm text-muted-foreground">
-            Aucun repas planifié aujourd'hui. Ajoute des repas au planning pour voir tes calories prévues.
+          <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center text-sm text-muted-foreground">
+            Aucun repas planifié aujourd'hui.
           </motion.div>
         )}
 
         {trend && (
-          <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 flex items-center gap-3">
+          <motion.div custom={6} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 flex items-center gap-3">
             {trend.direction === 'up' && <TrendingUp className="w-5 h-5 text-accent" />}
             {trend.direction === 'down' && <TrendingDown className="w-5 h-5 text-secondary" />}
             {trend.direction === 'stable' && <Minus className="w-5 h-5 text-muted-foreground" />}
@@ -228,7 +257,7 @@ export default function Tracking() {
 
         {advice && (
           <motion.div
-            custom={5}
+            custom={7}
             variants={cardVariants}
             initial="hidden"
             animate="visible"
@@ -242,49 +271,40 @@ export default function Tracking() {
               }`} />
               <div>
                 <h3 className="font-display font-semibold text-sm">Conseil {advice.icon}</h3>
-                <p className="text-sm text-body-text mt-1">{advice.text}</p>
+                <p className="text-sm text-muted-foreground mt-1">{advice.text}</p>
               </div>
             </div>
           </motion.div>
         )}
 
-        <motion.div custom={6} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
+        <motion.div custom={8} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
           <h2 className="font-display font-semibold text-sm flex items-center gap-2">
             <Scale className="w-4 h-4 text-primary" /> Enregistrer le poids
           </h2>
           <div className="flex gap-2">
-            <Input
-              type="number"
-              step="0.1"
-              placeholder="Ex: 72.5"
-              value={newWeight}
-              onChange={e => setNewWeight(e.target.value)}
-              className="flex-1"
-            />
+            <Input type="number" step="0.1" placeholder="Ex: 72.5" value={newWeight} onChange={e => setNewWeight(e.target.value)} className="flex-1" />
             <Button className="gap-1.5 tap-scale" onClick={addWeight}>
-              <Plus className="w-4 h-4" /> Enregistrer
+              <Plus className="w-4 h-4" /> OK
             </Button>
           </div>
         </motion.div>
 
         {chartData.length > 1 && (
-          <motion.div custom={7} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
+          <motion.div custom={9} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
             <h2 className="font-display font-semibold text-sm mb-3">Évolution du poids</h2>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                 <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                <RechartsTooltip
-                  contentStyle={{ borderRadius: '0.75rem', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}
-                />
+                <RechartsTooltip contentStyle={{ borderRadius: '0.75rem', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
                 <Line type="monotone" dataKey="poids" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3, fill: 'hsl(var(--primary))' }} activeDot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
           </motion.div>
         )}
 
-        <motion.div custom={8} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
+        <motion.div custom={10} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
           <h2 className="font-display font-semibold text-sm flex items-center gap-2">
             <Flame className="w-4 h-4 text-accent" /> Calories du jour
           </h2>
@@ -309,7 +329,7 @@ export default function Tracking() {
         </motion.div>
 
         {recentWeightLogsDesc.length > 0 && (
-          <motion.div custom={9} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
+          <motion.div custom={11} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
             <h2 className="font-display font-semibold text-sm mb-3">Historique des pesées</h2>
             <div className="space-y-1">
               {recentWeightLogsDesc.map(log => {
@@ -322,7 +342,7 @@ export default function Tracking() {
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{log.weight} kg</span>
                       {diff !== null && Math.abs(diff) >= 0.05 && (
-                        <span className={`text-xs ${diff > 0 ? 'text-accent' : 'text-secondary'}`}>
+                        <span className={`text-xs ${diff > 0 ? 'text-destructive' : 'text-secondary'}`}>
                           {diff > 0 ? '+' : ''}{diff.toFixed(1)}
                         </span>
                       )}
