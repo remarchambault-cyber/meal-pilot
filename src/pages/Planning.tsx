@@ -321,6 +321,10 @@ export default function Planning() {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => toggleConsumed(meal.id)}>
+                                      {meal.consumed ? <Circle className="w-3.5 h-3.5 mr-2" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-2" />}
+                                      {meal.consumed ? 'Non consommé' : 'Marquer consommé'}
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => navigate(`/recipe/${meal.recipeId}${meal.scaleFactor ? `?scale=${meal.scaleFactor}` : ''}`)}>
                                       <Eye className="w-3.5 h-3.5 mr-2" /> Voir la recette
                                     </DropdownMenuItem>
