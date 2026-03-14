@@ -383,24 +383,27 @@ export default function Tracking() {
 
         <motion.div custom={10} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
           <h2 className="font-display font-semibold text-sm flex items-center gap-2">
-            <Flame className="w-4 h-4 text-accent" /> Calories du jour
+            <Flame className="w-4 h-4 text-accent" /> Ajouter des calories
           </h2>
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            Chaque saisie s'ajoute au total du jour. Utilise ce formulaire pour les calories hors planning (snack, boisson…) ou les dépenses extra (sport…).
+          </p>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs">Consommées</Label>
+              <Label className="text-xs">Consommées (à ajouter)</Label>
               <Input type="number" placeholder="kcal" value={newCalConsumed} onChange={e => setNewCalConsumed(e.target.value)} />
             </div>
             <div>
-              <Label className="text-xs">Dépensées (extra)</Label>
+              <Label className="text-xs">Dépensées extra</Label>
               <Input type="number" placeholder="kcal" value={newCalBurned} onChange={e => setNewCalBurned(e.target.value)} />
             </div>
           </div>
           <Button className="w-full gap-1.5 tap-scale" variant="outline" onClick={addCalories}>
-            <Plus className="w-4 h-4" /> Enregistrer
+            <Plus className="w-4 h-4" /> Ajouter au total du jour
           </Button>
-          {target && (
+          {(manualConsumed > 0 || extraBurned > 0) && (
             <p className="text-xs text-muted-foreground text-center">
-              Cible : {target.target} kcal/jour
+              Aujourd'hui : {manualConsumed > 0 && `+${manualConsumed} kcal manuelles`}{manualConsumed > 0 && extraBurned > 0 && ' · '}{extraBurned > 0 && `−${extraBurned} kcal dépensées`}
             </p>
           )}
         </motion.div>
