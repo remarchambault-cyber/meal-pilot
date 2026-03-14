@@ -141,7 +141,7 @@ export default function Planning() {
     if (!recipe) return;
 
     const items: MealPlanItem[] = selectedDates.map((date, index) => ({
-      id: `mp_${Date.now()}_${date.replaceAll('-', '')}_${index}`,
+      id: `mp_${Date.now()}_${date.split('-').join('')}_${index}`,
       date,
       mealType: selectedMealType,
       recipeId: selectedRecipeId,
