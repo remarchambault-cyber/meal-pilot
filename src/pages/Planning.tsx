@@ -303,7 +303,7 @@ export default function Planning() {
                                 <p className="text-sm font-medium truncate">{recipe.title}</p>
                                 <p className="text-xs text-muted-foreground">
                                   {meal.portions || 1} portion{(meal.portions || 1) > 1 ? 's' : ''} · {Math.round(recipe.calories * (meal.scaleFactor || 1)) * (meal.portions || 1)} kcal
-                                  {meal.scaleFactor && Math.abs(meal.scaleFactor - 1) > 0.01 ? ` · ajusté ×${meal.scaleFactor.toFixed(2)}` : ''}
+                                  {meal.scaleFactor && Math.abs(meal.scaleFactor - 1) > 0.01 ? ' · portion ajustée' : ''}
                                 </p>
                               </div>
 
@@ -385,6 +385,7 @@ export default function Planning() {
                 <SelectContent>
                   <SelectItem value="breakfast">Petit déjeuner</SelectItem>
                   <SelectItem value="lunch">Déjeuner</SelectItem>
+                  <SelectItem value="snack">Collation</SelectItem>
                   <SelectItem value="dinner">Dîner</SelectItem>
                 </SelectContent>
               </Select>
@@ -407,7 +408,7 @@ export default function Planning() {
                     const isScaled = Math.abs(sf - 1) > 0.01;
                     return (
                       <SelectItem key={recipe.id} value={recipe.id}>
-                        {recipe.title} ({adjusted} kcal{isScaled ? ` · ×${sf.toFixed(2)}` : ''})
+                        {recipe.title} ({adjusted} kcal{isScaled ? ' · ajusté' : ''})
                       </SelectItem>
                     );
                   })}

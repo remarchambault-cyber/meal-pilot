@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { mockRecipes } from '@/data/recipes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clock, Flame, Plus, ChevronDown, ChevronUp, ScaleIcon } from 'lucide-react';
+import { ArrowLeft, Clock, Flame, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { MealPlanItem, Recipe, UserProfile } from '@/data/types';
 import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories';
@@ -85,14 +85,14 @@ export default function RecipeDetail() {
           </span>
           {scaled.isScaled && (
             <span className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium">
-              <ScaleIcon className="w-3.5 h-3.5" /> Portion ajustée ×{scaleFactor.toFixed(2)}
+              Portion ajustée à votre objectif
             </span>
           )}
         </div>
 
         {scaled.isScaled && (
           <div className="text-xs text-muted-foreground bg-muted/60 rounded-lg p-3">
-            Recette de base : {recipe.calories} kcal · Quantités ajustées pour correspondre à la cible du créneau ({scaled.calories} kcal).
+            Les quantités ci-dessous sont ajustées pour correspondre à votre cible calorique ({scaled.calories} kcal au lieu de {recipe.calories} kcal en version standard).
           </div>
         )}
 

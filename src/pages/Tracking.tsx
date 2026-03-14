@@ -75,7 +75,8 @@ export default function Tracking() {
 
   const todayCalories = calorieLogs.find(l => l.date === today);
   const consumed = todayCalories?.caloriesConsumed || 0;
-  const ecart = consumed - plannedCalories;
+  const dailyTarget = target?.target || 0;
+  const ecart = consumed - dailyTarget;
 
   const addWeight = () => {
     if (!newWeight) return;
@@ -151,13 +152,13 @@ export default function Tracking() {
       <div className="space-y-6">
         <h1 className="text-2xl font-display font-bold">Suivi</h1>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-2">
               <Target className="w-4 h-4 text-primary" />
             </div>
-            <p className="font-display font-bold text-lg">{plannedCalories}</p>
-            <p className="text-xs text-muted-foreground">Prévues</p>
+            <p className="font-display font-bold text-lg">{dailyTarget || '—'}</p>
+            <p className="text-xs text-muted-foreground">Cible du jour</p>
           </motion.div>
 
           <motion.div custom={1} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
@@ -167,15 +168,25 @@ export default function Tracking() {
             <p className="font-display font-bold text-lg">{consumed}</p>
             <p className="text-xs text-muted-foreground">Consommées</p>
           </motion.div>
+        </div>
 
+        <div className="grid grid-cols-2 gap-3">
           <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center mx-auto mb-2">
+              <Target className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <p className="font-display font-bold text-lg">{plannedCalories}</p>
+            <p className="text-xs text-muted-foreground">Prévues (planning)</p>
+          </motion.div>
+
+          <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2 ${ecart > 0 ? 'bg-destructive/10' : ecart < 0 ? 'bg-secondary/10' : 'bg-muted'}`}>
               <BarChart3 className={`w-4 h-4 ${ecart > 0 ? 'text-destructive' : ecart < 0 ? 'text-secondary' : 'text-muted-foreground'}`} />
             </div>
             <p className={`font-display font-bold text-lg ${ecart > 0 ? 'text-destructive' : ecart < 0 ? 'text-secondary' : ''}`}>
               {ecart > 0 ? '+' : ''}{ecart}
             </p>
-            <p className="text-xs text-muted-foreground">Écart</p>
+            <p className="text-xs text-muted-foreground">Consommé vs cible</p>
           </motion.div>
         </div>
 

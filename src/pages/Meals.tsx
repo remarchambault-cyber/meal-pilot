@@ -9,17 +9,18 @@ import { getScaleFactorForMealType, scaleRecipe } from '@/lib/recipeScaling';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Flame, RefreshCw, Plus, Eye, Target, ScaleIcon } from 'lucide-react';
+import { Clock, Flame, RefreshCw, Plus, Eye, Target } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AddToPlanModal from '@/components/AddToPlanModal';
 
-type MealFilter = 'all' | Recipe['mealType'];
+type MealFilter = 'all' | Recipe['mealType'] | 'snack';
 
 const FILTER_LABELS: Record<MealFilter, string> = {
   all: 'Tous les repas',
   breakfast: 'Petit déjeuner',
   lunch: 'Déjeuner',
   dinner: 'Dîner',
+  snack: 'Collation',
 };
 
 function getSeededJitter(seed: number, recipeId: string) {
@@ -92,6 +93,7 @@ export default function Meals() {
               <SelectItem value="breakfast">Petit déjeuner</SelectItem>
               <SelectItem value="lunch">Déjeuner</SelectItem>
               <SelectItem value="dinner">Dîner</SelectItem>
+              <SelectItem value="snack">Collation</SelectItem>
             </SelectContent>
           </Select>
 
@@ -135,17 +137,11 @@ export default function Meals() {
                     {scaledCalories} kcal
                   </span>
                   {scaled.isScaled && (
-                    <span className="flex items-center gap-1 text-xs text-primary">
-                      <ScaleIcon className="w-3.5 h-3.5" />
-                      Ajusté ×{scaleFactor.toFixed(2)}
+                    <span className="text-xs text-primary">
+                      Portion ajustée
                     </span>
                   )}
                   <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{recipe.prepTime} min</span>
-                  {calorieDelta !== null && (
-                    <span className={Math.abs(calorieDelta) > 120 ? (calorieDelta > 0 ? 'text-destructive' : 'text-secondary') : ''}>
-                      Écart : {calorieDelta > 0 ? '+' : ''}{calorieDelta} kcal
-                    </span>
-                  )}
                 </div>
 
                 {scaled.isScaled && (

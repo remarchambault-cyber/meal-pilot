@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { format, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CalendarIcon, ChefHat, ScaleIcon } from 'lucide-react';
+import { CalendarIcon, ChefHat } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -121,8 +121,8 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, mealTargets
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs text-muted-foreground">{scaled.calories} kcal · {recipe.prepTime} min</span>
               {scaled.isScaled && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium inline-flex items-center gap-1">
-                  <ScaleIcon className="w-3 h-3" /> Ajusté ×{scaleFactor.toFixed(2)}
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                  Portion ajustée
                 </span>
               )}
             </div>
