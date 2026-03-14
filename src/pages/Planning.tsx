@@ -44,6 +44,7 @@ function toDateKey(date: Date) {
 }
 
 export default function Planning() {
+  const navigate = useNavigate();
   const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
   const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
   const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
