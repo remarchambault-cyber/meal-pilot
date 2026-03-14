@@ -16,7 +16,7 @@ export default function Dashboard() {
   const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
   const [weightLogs] = useLocalStorage<WeightLog[]>('mealpilot_weight', []);
   const [calorieLogs] = useLocalStorage<CalorieLog[]>('mealpilot_calories', []);
-  const [mealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
+  const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
   const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
 
   const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
