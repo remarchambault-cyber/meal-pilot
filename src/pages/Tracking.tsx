@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { Plus, Lightbulb, TrendingUp, TrendingDown, Minus, Flame, Target, Scale, CalendarCheck, Utensils } from 'lucide-react';
+import { Plus, Lightbulb, TrendingUp, TrendingDown, Minus, Flame, Target, Scale, CalendarCheck, Utensils, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -57,6 +57,15 @@ export default function Tracking() {
     }, 0);
   }, [mealPlan, today, allRecipes]);
 
+  const consumedFromMeals = useMemo(() => {
+    const todayConsumed = mealPlan.filter(m => m.date === today && m.consumed);
+    return todayConsumed.reduce((sum, m) => {
+      const recipe = allRecipes.find(r => r.id === m.recipeId);
+      const sf = m.scaleFactor || 1;
+      return sum + (recipe ? Math.round(recipe.calories * sf) * (m.portions || 1) : 0);
+    }, 0);
+  }, [mealPlan, today, allRecipes]);
+
   const todayMealDetails = useMemo(() => {
     return mealPlan
       .filter(m => m.date === today)
@@ -67,13 +76,15 @@ export default function Tracking() {
           name: recipe.title,
           calories: Math.round(recipe.calories * sf) * (m.portions || 1),
           mealType: m.mealType,
+          consumed: !!m.consumed,
         } : null;
       })
-      .filter(Boolean) as { name: string; calories: number; mealType: MealPlanItem['mealType'] }[];
+      .filter(Boolean) as { name: string; calories: number; mealType: MealPlanItem['mealType']; consumed: boolean }[];
   }, [mealPlan, today, allRecipes]);
 
   const todayCalories = calorieLogs.find(l => l.date === today);
-  const consumed = todayCalories?.caloriesConsumed || 0;
+  const manualConsumed = todayCalories?.caloriesConsumed || 0;
+  const consumed = consumedFromMeals + manualConsumed;
   const dailyTarget = target?.target || 0;
 
   // Two distinct gaps
@@ -182,7 +193,13 @@ export default function Tracking() {
             </div>
             <p className="font-display font-bold text-lg">{consumed}</p>
             <p className="text-xs text-muted-foreground">Consommées</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Saisie manuelle uniquement</p>
+            {(consumedFromMeals > 0 || manualConsumed > 0) && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {consumedFromMeals > 0 && `${consumedFromMeals} repas`}
+                {consumedFromMeals > 0 && manualConsumed > 0 && ' + '}
+                {manualConsumed > 0 && `${manualConsumed} manuel`}
+              </p>
+            )}
           </motion.div>
 
           <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
@@ -221,11 +238,14 @@ export default function Tracking() {
         {todayMealDetails.length > 0 && (
           <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
             <h2 className="font-display font-semibold text-sm mb-2">Repas prévus aujourd'hui</h2>
-            <p className="text-[10px] text-muted-foreground mb-2">Ces repas sont planifiés mais pas encore comptés comme consommés.</p>
+            <p className="text-[10px] text-muted-foreground mb-2">Marque tes repas comme consommés depuis le planning pour mettre à jour le suivi.</p>
             <div className="space-y-1">
               {todayMealDetails.map((meal, i) => (
                 <div key={`${meal.name}-${i}`} className="flex justify-between text-sm py-1 border-b border-border last:border-0">
-                  <span>{meal.name}</span>
+                  <span className="flex items-center gap-1.5">
+                    {meal.consumed && <CheckCircle2 className="w-3.5 h-3.5 text-secondary" />}
+                    <span className={meal.consumed ? '' : 'text-muted-foreground'}>{meal.name}</span>
+                  </span>
                   <span className="text-muted-foreground">{meal.calories} kcal</span>
                 </div>
               ))}

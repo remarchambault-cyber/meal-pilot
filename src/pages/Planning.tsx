@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronLeft, ChevronRight, Copy, ChefHat, Trash2, Plus, Target, MoreVertical, Eye } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, ChefHat, Trash2, Plus, Target, MoreVertical, Eye, CheckCircle2, Circle } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -110,6 +110,10 @@ export default function Planning() {
   const removeMeal = (id: string) => {
     setMealPlan(prev => prev.filter(m => m.id !== id));
     toast({ title: '🗑️ Repas supprimé' });
+  };
+
+  const toggleConsumed = (id: string) => {
+    setMealPlan(prev => prev.map(m => m.id === id ? { ...m, consumed: !m.consumed } : m));
   };
 
   const openAddDialog = (dateStr: string) => {
@@ -285,7 +289,7 @@ export default function Planning() {
                             initial={{ opacity: 0, x: -8 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 8 }}
-                            className={cn('bg-muted/50 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 border-l-4', MEAL_TYPE_COLORS[meal.mealType] || '')}
+                            className={cn('bg-muted/50 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 border-l-4', MEAL_TYPE_COLORS[meal.mealType] || '', meal.consumed && 'ring-1 ring-secondary/40')}
                           >
                             <div className="flex items-center justify-between gap-1.5">
                               <div className="min-w-0 flex-1">
@@ -295,6 +299,9 @@ export default function Planning() {
                                   </span>
                                   {meal.isBatchCooking && (
                                     <ChefHat className="w-3 h-3 text-secondary" />
+                                  )}
+                                  {meal.consumed && (
+                                    <span className="text-[9px] bg-secondary/15 text-secondary px-1.5 rounded-full font-medium">✓ consommé</span>
                                   )}
                                 </div>
                                 <p className="text-sm font-medium truncate">{recipe.title}</p>
@@ -314,6 +321,10 @@ export default function Planning() {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => toggleConsumed(meal.id)}>
+                                      {meal.consumed ? <Circle className="w-3.5 h-3.5 mr-2" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-2" />}
+                                      {meal.consumed ? 'Non consommé' : 'Marquer consommé'}
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => navigate(`/recipe/${meal.recipeId}${meal.scaleFactor ? `?scale=${meal.scaleFactor}` : ''}`)}>
                                       <Eye className="w-3.5 h-3.5 mr-2" /> Voir la recette
                                     </DropdownMenuItem>
@@ -330,6 +341,15 @@ export default function Planning() {
                                 </DropdownMenu>
                               ) : (
                                 <div className="flex gap-1 shrink-0">
+                                  <Button
+                                    variant={meal.consumed ? 'default' : 'outline'}
+                                    size="sm"
+                                    className={cn('h-7 px-2 gap-1 text-xs', meal.consumed && 'bg-secondary hover:bg-secondary/80 text-secondary-foreground')}
+                                    onClick={() => toggleConsumed(meal.id)}
+                                  >
+                                    {meal.consumed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+                                    {meal.consumed ? 'Consommé' : 'Consommer'}
+                                  </Button>
                                   <Button
                                     variant="outline"
                                     size="sm"
