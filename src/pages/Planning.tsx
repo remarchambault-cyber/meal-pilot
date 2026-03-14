@@ -314,6 +314,9 @@ export default function Planning() {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => navigate(`/recipe/${meal.recipeId}${meal.scaleFactor ? `?scale=${meal.scaleFactor}` : ''}`)}>
+                                      <Eye className="w-3.5 h-3.5 mr-2" /> Voir la recette
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => openDuplicateDialog(meal)}>
                                       <Copy className="w-3.5 h-3.5 mr-2" /> Dupliquer
                                     </DropdownMenuItem>
