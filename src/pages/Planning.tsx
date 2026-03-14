@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { MealPlanItem, Recipe, UserProfile } from '@/data/types';
 import { mockRecipes } from '@/data/recipes';
@@ -14,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronLeft, ChevronRight, Copy, ChefHat, Trash2, Plus, Target, MoreVertical } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, ChefHat, Trash2, Plus, Target, MoreVertical, Eye } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,6 +44,7 @@ function toDateKey(date: Date) {
 }
 
 export default function Planning() {
+  const navigate = useNavigate();
   const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
   const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
   const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
@@ -312,6 +314,9 @@ export default function Planning() {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => navigate(`/recipe/${meal.recipeId}${meal.scaleFactor ? `?scale=${meal.scaleFactor}` : ''}`)}>
+                                      <Eye className="w-3.5 h-3.5 mr-2" /> Voir la recette
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => openDuplicateDialog(meal)}>
                                       <Copy className="w-3.5 h-3.5 mr-2" /> Dupliquer
                                     </DropdownMenuItem>
@@ -325,6 +330,14 @@ export default function Planning() {
                                 </DropdownMenu>
                               ) : (
                                 <div className="flex gap-1 shrink-0">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2 gap-1 text-xs"
+                                    onClick={() => navigate(`/recipe/${meal.recipeId}${meal.scaleFactor ? `?scale=${meal.scaleFactor}` : ''}`)}
+                                  >
+                                    <Eye className="w-3.5 h-3.5" /> Voir
+                                  </Button>
                                   <Button
                                     variant="outline"
                                     size="sm"
