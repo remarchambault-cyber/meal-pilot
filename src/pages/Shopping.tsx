@@ -6,6 +6,7 @@ import AppLayout from '@/components/AppLayout';
 import { Checkbox } from '@/components/ui/checkbox';
 import { motion } from 'framer-motion';
 import { formatQuantity, formatUnit } from '@/lib/units';
+import { normalizeIngredientName, ingredientKey } from '@/lib/ingredientNormalizer';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 const CATEGORY_ORDER = ['protein', 'carbs', 'vegetables', 'dairy', 'fruits', 'condiments', 'other'];
@@ -35,6 +36,11 @@ interface ShoppingItem {
   sources: ShoppingSource[];
 }
 
+/** Capitalize first letter */
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export default function Shopping() {
   const [mealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
   const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
@@ -54,13 +60,13 @@ export default function Shopping() {
       const sf = item.scaleFactor || 1;
 
       recipe.ingredients.forEach(ingredient => {
-        const key = `${ingredient.name}_${ingredient.unit}`;
+        const key = ingredientKey(ingredient.name, ingredient.unit);
         const totalQty = Math.round(ingredient.quantity * sf * portions * 10) / 10;
 
         if (!map[key]) {
           map[key] = {
             key,
-            name: ingredient.name,
+            name: capitalize(normalizeIngredientName(ingredient.name)),
             quantity: 0,
             unit: ingredient.unit,
             category: ingredient.category,
