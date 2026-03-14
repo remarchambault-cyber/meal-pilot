@@ -91,12 +91,18 @@ export default function Tracking() {
   const ecartPlanifie = plannedCalories - dailyTarget;
   const ecartConsomme = consumed - dailyTarget;
 
+  const todayWeightLog = weightLogs.find(l => l.date === today);
+
   const addWeight = () => {
     if (!newWeight) return;
-    const log: WeightLog = { id: `w_${Date.now()}`, date: today, weight: parseFloat(newWeight) };
+    const isUpdate = !!todayWeightLog;
+    const log: WeightLog = { id: `w_${Date.now()}`, date: today, weight: parseFloat(newWeight), updatedAt: new Date().toISOString() };
     setWeightLogs(prev => [...prev.filter(l => l.date !== today), log]);
     setNewWeight('');
-    toast({ title: '✅ Poids enregistré', description: `${log.weight} kg` });
+    toast({
+      title: isUpdate ? '🔄 Pesée du jour mise à jour' : '✅ Poids enregistré',
+      description: `${log.weight} kg`,
+    });
   };
 
   const addCalories = () => {
