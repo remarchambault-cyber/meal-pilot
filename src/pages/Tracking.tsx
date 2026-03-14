@@ -289,18 +289,30 @@ export default function Tracking() {
           </div>
         </motion.div>
 
-        {chartData.length > 1 && (
+        {chartData.length >= 1 && (
           <motion.div custom={9} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
-            <h2 className="font-display font-semibold text-sm mb-3">Évolution du poids</h2>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                <RechartsTooltip contentStyle={{ borderRadius: '0.75rem', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
-                <Line type="monotone" dataKey="poids" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3, fill: 'hsl(var(--primary))' }} activeDot={{ r: 5 }} />
-              </LineChart>
-            </ResponsiveContainer>
+            <h2 className="font-display font-semibold text-sm mb-3">📈 Évolution du poids</h2>
+            {chartData.length === 1 ? (
+              <p className="text-xs text-muted-foreground">Ajoute une deuxième pesée pour voir le graphique d'évolution.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis
+                    domain={[(min: number) => Math.floor(min - 1), (max: number) => Math.ceil(max + 1)]}
+                    tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                    unit=" kg"
+                  />
+                  <RechartsTooltip
+                    contentStyle={{ borderRadius: '0.75rem', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}
+                    formatter={(value: number) => [`${value} kg`, 'Poids']}
+                    labelFormatter={(label) => `Date : ${label}`}
+                  />
+                  <Line type="monotone" dataKey="poids" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4, fill: 'hsl(var(--primary))' }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </motion.div>
         )}
 
