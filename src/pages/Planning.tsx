@@ -297,7 +297,8 @@ export default function Planning() {
                                 </div>
                                 <p className="text-sm font-medium truncate">{recipe.title}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {meal.portions || 1} portion{(meal.portions || 1) > 1 ? 's' : ''} · {recipe.calories * (meal.portions || 1)} kcal
+                                  {meal.portions || 1} portion{(meal.portions || 1) > 1 ? 's' : ''} · {Math.round(recipe.calories * (meal.scaleFactor || 1)) * (meal.portions || 1)} kcal
+                                  {meal.scaleFactor && Math.abs(meal.scaleFactor - 1) > 0.01 ? ` · ajusté ×${meal.scaleFactor.toFixed(2)}` : ''}
                                 </p>
                               </div>
 
