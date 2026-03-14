@@ -3,6 +3,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { MealPlanItem, Recipe, UserProfile } from '@/data/types';
 import { mockRecipes } from '@/data/recipes';
 import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories';
+import { getScaleFactor } from '@/lib/recipeScaling';
 import {
   filterRecipesByMealType,
   PLANNING_MEAL_TYPE_LABELS,
