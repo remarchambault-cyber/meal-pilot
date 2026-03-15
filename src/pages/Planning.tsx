@@ -175,7 +175,7 @@ export default function Planning() {
         return;
       }
       if (batchSelectedMealTypes.length === 0) {
-        toast({ title: '⚠️ Aucun créneau sélectionné', variant: 'destructive' });
+        toast({ title: '⚠️ Aucun repas sélectionné', variant: 'destructive' });
         return;
       }
 
