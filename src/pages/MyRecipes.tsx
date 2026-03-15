@@ -285,7 +285,7 @@ export default function MyRecipes() {
 
             {/* Primary save action */}
             <Button className="w-full tap-scale font-semibold" size="lg" onClick={handleSave} disabled={saving}>
-              {saving ? 'Enregistrement…' : editingId ? '✅ Enregistrer les modifications' : '✅ Créer la recette'}
+              {saving ? 'Enregistrement…' : editingId ? 'Enregistrer les modifications' : 'Créer la recette'}
             </Button>
           </div>
         </DialogContent>
