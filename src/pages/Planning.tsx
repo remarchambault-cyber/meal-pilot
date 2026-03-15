@@ -535,7 +535,7 @@ export default function Planning() {
                     );
                   })}
                   {filteredRecipes.length === 0 && (
-                    <div className="px-3 py-2 text-sm text-muted-foreground">Aucune recette pour ce type</div>
+                    <div className="px-3 py-2 text-sm text-muted-foreground">Aucune recette trouvée</div>
                   )}
                 </SelectContent>
               </Select>
