@@ -408,7 +408,9 @@ export default function Planning() {
                           <div
                             className={cn(
                               'h-full rounded-full transition-all duration-500',
-                              progress >= 100 ? 'bg-destructive/60' : 'bg-primary/60'
+                              progress >= 100
+                                ? (profile?.goal === 'gain' ? 'bg-primary/60' : 'bg-destructive/60')
+                                : 'bg-primary/60'
                             )}
                             style={{ width: `${progress}%` }}
                           />

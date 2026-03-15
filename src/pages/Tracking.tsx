@@ -199,10 +199,9 @@ export default function Tracking() {
     visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.35 } }),
   };
 
-  const gapColor = (val: number) =>
-    val > 0 ? 'text-primary' : val < 0 ? 'text-destructive' : 'text-muted-foreground';
-  const gapBg = (val: number) =>
-    val > 0 ? 'bg-primary/8' : val < 0 ? 'bg-destructive/10' : 'bg-muted';
+  const userGoal = profile?.goal || 'maintain';
+  const gapColor = (val: number) => gapTextColor(val, userGoal);
+  const gapBg = (val: number) => gapBgColor(val, userGoal);
 
   return (
     <AppLayout>
