@@ -6,6 +6,7 @@ import { useMealPlan } from '@/hooks/useMealPlan';
 import { MealPlanItem, Recipe } from '@/data/types';
 import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories';
 import { getScaleFactor } from '@/lib/recipeScaling';
+import { gapTextColor } from '@/lib/gapColor';
 import {
   filterRecipesByMealType,
   PLANNING_MEAL_TYPE_LABELS,
@@ -398,7 +399,7 @@ export default function Planning() {
                       <>
                         <p className={cn(
                           'text-[10px] font-medium mt-0.5',
-                          gap === 0 ? 'text-muted-foreground' : gap > 0 ? 'text-destructive' : 'text-primary'
+                          gapTextColor(gap, profile?.goal || 'maintain')
                         )}>
                           {gap === 0 ? 'Objectif atteint' : gap > 0 ? `+${gap} kcal` : `${gap} kcal`}
                         </p>
@@ -407,7 +408,9 @@ export default function Planning() {
                           <div
                             className={cn(
                               'h-full rounded-full transition-all duration-500',
-                              progress >= 100 ? 'bg-destructive/60' : 'bg-primary/60'
+                              progress >= 100
+                                ? (profile?.goal === 'gain' ? 'bg-primary/60' : 'bg-destructive/60')
+                                : 'bg-primary/60'
                             )}
                             style={{ width: `${progress}%` }}
                           />
