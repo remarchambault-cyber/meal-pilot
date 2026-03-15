@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      manual_calorie_logs: {
+        Row: {
+          burned_extra_kcal: number
+          consumed_manual_kcal: number
+          date: string
+          id: string
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          burned_extra_kcal?: number
+          consumed_manual_kcal?: number
+          date: string
+          id?: string
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          burned_extra_kcal?: number
+          consumed_manual_kcal?: number
+          date?: string
+          id?: string
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_calorie_logs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       planned_meals: {
         Row: {
           adjusted_calories: number | null
@@ -263,6 +298,38 @@ export type Database = {
           {
             foreignKeyName: "recipes_owner_profile_id_fkey"
             columns: ["owner_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weight_logs: {
+        Row: {
+          date: string
+          id: string
+          profile_id: string
+          updated_at: string
+          weight_kg: number
+        }
+        Insert: {
+          date: string
+          id?: string
+          profile_id: string
+          updated_at?: string
+          weight_kg: number
+        }
+        Update: {
+          date?: string
+          id?: string
+          profile_id?: string
+          updated_at?: string
+          weight_kg?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weight_logs_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
