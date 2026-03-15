@@ -42,6 +42,7 @@ export default function Meals() {
   const [filter, setFilter] = useState<MealFilter>('all');
   const [seed, setSeed] = useState(0);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
+  const [search, setSearch] = useState('');
 
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
   const mealTargets = useMemo(() => target ? getMealCalorieSuggestion(target.target) : null, [target]);
