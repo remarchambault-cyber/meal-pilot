@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronLeft, ChevronRight, Copy, ChefHat, Trash2, Plus, Target, MoreVertical, Eye, CheckCircle2, Circle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, ChefHat, Trash2, Plus, Target, MoreVertical, Eye, CheckCircle2, Circle, Search, X } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -63,6 +63,7 @@ export default function Planning() {
 
   const [duplicateSourceMeal, setDuplicateSourceMeal] = useState<MealPlanItem | null>(null);
   const [duplicateDays, setDuplicateDays] = useState<string[]>([]);
+  const [recipeSearch, setRecipeSearch] = useState('');
 
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
   const mealSuggestions = useMemo(() => target ? getMealCalorieSuggestion(target.target) : null, [target]);
@@ -74,10 +75,12 @@ export default function Planning() {
 
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
 
-  const filteredRecipes = useMemo(
-    () => filterRecipesByMealType(allRecipes, selectedMealType),
-    [allRecipes, selectedMealType]
-  );
+  const filteredRecipes = useMemo(() => {
+    const byType = filterRecipesByMealType(allRecipes, selectedMealType);
+    if (!recipeSearch.trim()) return byType;
+    const q = recipeSearch.trim().toLowerCase();
+    return byType.filter(r => r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q));
+  }, [allRecipes, selectedMealType, recipeSearch]);
 
   const batchSelectableDays = useMemo(() => {
     if (!addDialogDate) return [];
@@ -130,6 +133,7 @@ export default function Planning() {
     setAddDialogDate(dateStr);
     setSelectedMealType('lunch');
     setSelectedRecipeId('');
+    setRecipeSearch('');
     setPortions(1);
     setIsBatchCooking(false);
     setBatchDays([dateStr]);
@@ -502,8 +506,22 @@ export default function Planning() {
 
             <div>
               <Label className="text-xs font-medium">Recette</Label>
+              <div className="relative mt-1">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher une recette..."
+                  value={recipeSearch}
+                  onChange={e => setRecipeSearch(e.target.value)}
+                  className="pl-8 pr-8 h-9 text-sm"
+                />
+                {recipeSearch && (
+                  <button type="button" onClick={() => setRecipeSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
               <Select value={selectedRecipeId} onValueChange={setSelectedRecipeId}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Choisir une recette" /></SelectTrigger>
+                <SelectTrigger className="mt-1.5"><SelectValue placeholder="Choisir une recette" /></SelectTrigger>
                 <SelectContent>
                   {filteredRecipes.map(recipe => {
                     const mealTarget = mealSuggestions?.[selectedMealType] || 0;
