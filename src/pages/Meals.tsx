@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
 import { useRecipes } from '@/hooks/useRecipes';
 import { useMealPlan } from '@/hooks/useMealPlan';
 import { useProfile } from '@/hooks/useProfile';
