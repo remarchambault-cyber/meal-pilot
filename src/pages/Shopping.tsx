@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { motion } from 'framer-motion';
 import { formatQuantity, formatUnit } from '@/lib/units';
 import { normalizeIngredientName, ingredientKey } from '@/lib/ingredientNormalizer';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, CheckCheck } from 'lucide-react';
 
 const CATEGORY_ORDER = ['protein', 'carbs', 'vegetables', 'dairy', 'fruits', 'condiments', 'other'];
 const CATEGORY_LABELS: Record<string, string> = {
