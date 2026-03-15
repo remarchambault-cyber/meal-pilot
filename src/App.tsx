@@ -16,6 +16,7 @@ import Shopping from "./pages/Shopping";
 import Tracking from "./pages/Tracking";
 import SettingsPage from "./pages/Settings";
 import MyRecipes from "./pages/MyRecipes";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
