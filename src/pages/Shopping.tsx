@@ -132,7 +132,7 @@ export default function Shopping() {
           {checkedCount > 0 && (
             <Button size="sm" onClick={handleDone} className="gap-1.5">
               <CheckCheck className="w-4 h-4" />
-              Courses faites ({checkedCount})
+              Retirer les cochés ({checkedCount})
             </Button>
           )}
         </div>
