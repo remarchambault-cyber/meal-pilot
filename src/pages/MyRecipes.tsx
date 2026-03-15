@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Trash2, Edit, Eye, Flame, Clock, CalendarPlus } from 'lucide-react';
+import { Plus, Trash2, Edit, Eye, Flame, Clock, CalendarPlus, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import AddToPlanModal from '@/components/AddToPlanModal';
