@@ -68,6 +68,52 @@ export default function Auth() {
     }
   };
 
+  if (isForgotPassword) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="w-full max-w-md"
+        >
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-display font-extrabold text-primary">MealPilot</h1>
+            <p className="text-muted-foreground mt-2">Réinitialise ton mot de passe</p>
+          </div>
+
+          <form onSubmit={handleForgotPassword} className="card-elevated p-6 space-y-4">
+            <div>
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="ton@email.com"
+                required
+              />
+            </div>
+
+            <Button type="submit" className="w-full tap-scale" size="lg" disabled={loading}>
+              {loading ? '...' : 'Envoyer le lien de réinitialisation'}
+            </Button>
+
+            <p className="text-center text-sm text-muted-foreground">
+              <button
+                type="button"
+                className="text-primary font-medium hover:underline"
+                onClick={() => setIsForgotPassword(false)}
+              >
+                Retour à la connexion
+              </button>
+            </p>
+          </form>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <motion.div
@@ -108,6 +154,18 @@ export default function Auth() {
               required
             />
           </div>
+
+          {isLogin && (
+            <div className="text-right">
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-primary hover:underline transition-colors"
+                onClick={() => setIsForgotPassword(true)}
+              >
+                Mot de passe oublié ?
+              </button>
+            </div>
+          )}
 
           <Button type="submit" className="w-full tap-scale" size="lg" disabled={loading}>
             {loading ? '...' : isLogin ? 'Se connecter' : 'Créer mon compte'}
