@@ -8,6 +8,7 @@ import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories
 import { getScaleFactor } from '@/lib/recipeScaling';
 import {
   filterRecipesByMealType,
+  PLANNING_MEAL_TYPE_LABELS,
   PLANNING_MEAL_TYPE_LABELS_SHORT,
   PLANNING_MEAL_TYPE_ORDER,
 } from '@/lib/mealTypes';
