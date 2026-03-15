@@ -115,7 +115,7 @@ export default function Planning() {
   const removeMeal = async (id: string) => {
     try {
       await removeMealFromDb(id);
-      toast({ title: '🗑️ Repas supprimé' });
+      toast({ title: '🗑️ Repas retiré du planning' });
     } catch {
       toast({ title: '❌ Erreur', variant: 'destructive' });
     }
