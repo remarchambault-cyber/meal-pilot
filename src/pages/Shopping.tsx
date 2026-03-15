@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
 import { useMealPlan } from '@/hooks/useMealPlan';
 import { useRecipes } from '@/hooks/useRecipes';
 import AppLayout from '@/components/AppLayout';
@@ -6,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { motion } from 'framer-motion';
 import { formatQuantity, formatUnit } from '@/lib/units';
 import { normalizeIngredientName, ingredientKey } from '@/lib/ingredientNormalizer';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, CheckCheck } from 'lucide-react';
 
 const CATEGORY_ORDER = ['protein', 'carbs', 'vegetables', 'dairy', 'fruits', 'condiments', 'other'];
 const CATEGORY_LABELS: Record<string, string> = {
@@ -44,6 +45,7 @@ export default function Shopping() {
   const { mealPlan } = useMealPlan();
   const { allRecipes } = useRecipes();
   const [checked, setChecked] = useState<Set<string>>(new Set());
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const shoppingList = useMemo(() => {
@@ -84,14 +86,27 @@ export default function Shopping() {
     return Object.values(map);
   }, [mealPlan, allRecipes]);
 
+  const visibleList = useMemo(() => shoppingList.filter(item => !hidden.has(item.key)), [shoppingList, hidden]);
+
   const grouped = useMemo(() => {
     const groups: Record<string, ShoppingItem[]> = {};
-    shoppingList.forEach(item => {
+    visibleList.forEach(item => {
       if (!groups[item.category]) groups[item.category] = [];
       groups[item.category].push(item);
     });
     return groups;
-  }, [shoppingList]);
+  }, [visibleList]);
+
+  const checkedCount = useMemo(() => visibleList.filter(i => checked.has(i.key)).length, [visibleList, checked]);
+
+  const handleDone = useCallback(() => {
+    setHidden(prev => {
+      const next = new Set(prev);
+      checked.forEach(key => next.add(key));
+      return next;
+    });
+    setChecked(new Set());
+  }, [checked]);
 
   const toggle = (key: string) => {
     setChecked(prev => {
@@ -112,12 +127,29 @@ export default function Shopping() {
   return (
     <AppLayout>
       <div className="space-y-5">
-        <h1 className="text-2xl font-display font-bold">Liste de courses</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-display font-bold">Liste de courses</h1>
+          {checkedCount > 0 && (
+            <Button size="sm" onClick={handleDone} className="gap-1.5">
+              <CheckCheck className="w-4 h-4" />
+              Courses faites ({checkedCount})
+            </Button>
+          )}
+        </div>
 
-        {shoppingList.length === 0 ? (
+        {visibleList.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
-            <p className="text-lg">Aucun repas planifié</p>
-            <p className="text-sm mt-1">Ajoute des repas à ton planning pour générer ta liste.</p>
+            <p className="text-lg">{shoppingList.length > 0 ? 'Toutes les courses sont faites 🎉' : 'Aucun repas planifié'}</p>
+            <p className="text-sm mt-1">
+              {shoppingList.length > 0
+                ? 'Tous les éléments ont été marqués comme achetés.'
+                : 'Ajoute des repas à ton planning pour générer ta liste.'}
+            </p>
+            {shoppingList.length > 0 && hidden.size > 0 && (
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => { setHidden(new Set()); setChecked(new Set()); }}>
+                Réafficher la liste
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-5">
