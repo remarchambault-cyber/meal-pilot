@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { LayoutDashboard, CalendarDays, UtensilsCrossed, ShoppingCart, TrendingUp, BookOpen, Settings } from 'lucide-react';
 
 const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Accueil' },
   { to: '/planning', icon: CalendarDays, label: 'Planning' },
   { to: '/meals', icon: UtensilsCrossed, label: 'Repas' },
   { to: '/my-recipes', icon: BookOpen, label: 'Recettes' },
