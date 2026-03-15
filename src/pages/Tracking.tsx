@@ -378,7 +378,7 @@ export default function Tracking() {
             <div className="flex gap-2">
               <Input type="number" step="0.1" placeholder="Ex: 72.5" value={newWeight} onChange={e => setNewWeight(e.target.value)} className="flex-1" />
               <Button className="gap-1.5 tap-scale" onClick={addWeight}>
-                <Plus className="w-4 h-4" /> {todayWeightLog ? 'MAJ' : 'OK'}
+                <Plus className="w-4 h-4" /> {todayWeightLog ? 'Mettre à jour' : 'Enregistrer'}
               </Button>
             </div>
             {todayWeightLog && (
