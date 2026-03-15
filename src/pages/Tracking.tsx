@@ -254,7 +254,7 @@ export default function Tracking() {
                   <span>Détail du jour</span>
                   {(consumedFromMeals > 0 || manualConsumed > 0 || extraBurned > 0) && (
                     <span className="text-[10px] font-normal">
-                      {consumed} conso. {extraBurned > 0 && `· −${extraBurned} extra`}
+                      {consumed} consommées {extraBurned > 0 && `· −${extraBurned} dépensées`}
                     </span>
                   )}
                 </span>
