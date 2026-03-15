@@ -601,7 +601,7 @@ export default function Planning() {
 
                 {/* Day multi-select */}
                 <div>
-                  <Label className="text-xs font-medium mb-2 block">Jours à planifier</Label>
+                  <Label className="text-xs font-medium mb-2 block">Jours concernés</Label>
                   <div className="grid grid-cols-2 gap-1.5 max-h-52 overflow-y-auto">
                     {batchSelectableDays.map(day => {
                       const selected = batchDays.includes(day);
