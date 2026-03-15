@@ -83,9 +83,13 @@ export function useRecipes() {
 
     setAllRecipes(mapped);
     setLoading(false);
-  }, []);
+  }, [session]);
 
-  useEffect(() => { fetchRecipes(); }, [fetchRecipes]);
+  useEffect(() => {
+    if (session) {
+      fetchRecipes();
+    }
+  }, [session, fetchRecipes]);
 
   // Separate system vs custom for compatibility
   const systemRecipes = useMemo(() => allRecipes.filter(r => {
