@@ -505,8 +505,22 @@ export default function Planning() {
 
             <div>
               <Label className="text-xs font-medium">Recette</Label>
+              <div className="relative mt-1">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher une recette..."
+                  value={recipeSearch}
+                  onChange={e => setRecipeSearch(e.target.value)}
+                  className="pl-8 pr-8 h-9 text-sm"
+                />
+                {recipeSearch && (
+                  <button type="button" onClick={() => setRecipeSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
               <Select value={selectedRecipeId} onValueChange={setSelectedRecipeId}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Choisir une recette" /></SelectTrigger>
+                <SelectTrigger className="mt-1.5"><SelectValue placeholder="Choisir une recette" /></SelectTrigger>
                 <SelectContent>
                   {filteredRecipes.map(recipe => {
                     const mealTarget = mealSuggestions?.[selectedMealType] || 0;
