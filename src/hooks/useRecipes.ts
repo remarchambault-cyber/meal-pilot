@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { Recipe, RecipeIngredient } from '@/data/types';
 import { normalizeIngredientName } from '@/lib/ingredientNormalizer';
@@ -36,6 +37,7 @@ function dbToRecipe(
 }
 
 export function useRecipes() {
+  const { session } = useAuth();
   const { dbProfile } = useProfile();
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,9 +83,13 @@ export function useRecipes() {
 
     setAllRecipes(mapped);
     setLoading(false);
-  }, []);
+  }, [session]);
 
-  useEffect(() => { fetchRecipes(); }, [fetchRecipes]);
+  useEffect(() => {
+    if (session) {
+      fetchRecipes();
+    }
+  }, [session, fetchRecipes]);
 
   // Separate system vs custom for compatibility
   const systemRecipes = useMemo(() => allRecipes.filter(r => {
