@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { Recipe, RecipeIngredient } from '@/data/types';
 import { normalizeIngredientName } from '@/lib/ingredientNormalizer';
