@@ -264,7 +264,10 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, mealTargets
             <>
               {/* Meal type multi-select */}
               <div>
-                <Label className="text-xs font-medium mb-2 block">Créneaux de repas</Label>
+                <Label className="text-xs font-medium mb-1 block">Repas concernés</Label>
+                <p className="text-[11px] text-muted-foreground mb-2">
+                  Sélectionne les repas sur lesquels tu veux prévoir cette préparation.
+                </p>
                 <div className="grid grid-cols-2 gap-1.5">
                   {allMealTypes.map(type => {
                     const isSelected = batchMealTypes.includes(type);
@@ -274,10 +277,10 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, mealTargets
                         type="button"
                         onClick={() => toggleBatchMealType(type)}
                         className={cn(
-                          'text-xs px-3 py-2 rounded-lg border text-left transition-colors',
+                          'text-xs px-3 py-2.5 rounded-lg border text-left transition-colors font-medium',
                           isSelected
-                            ? 'bg-secondary/10 border-secondary text-secondary font-medium'
-                            : 'bg-card border-border text-foreground hover:bg-muted'
+                            ? 'bg-secondary/10 border-secondary text-secondary ring-1 ring-secondary/30'
+                            : 'bg-card border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                         )}
                       >
                         {PLANNING_MEAL_TYPE_LABELS[type]}
