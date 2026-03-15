@@ -390,7 +390,7 @@ export default function Tracking() {
               </p>
             )}
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              Une pesée par jour. Pèse-toi le matin à jeun.
+              Pèse-toi idéalement le matin à jeun pour un suivi fiable.
             </p>
           </motion.div>
 
