@@ -256,7 +256,7 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, mealTargets
               id="batch"
             />
             <label htmlFor="batch" className="text-sm flex items-center gap-1.5 cursor-pointer">
-              <ChefHat className="w-4 h-4 text-secondary" /> Batch cooking (multi-jours & créneaux)
+              <ChefHat className="w-4 h-4 text-secondary" /> Batch cooking (préparer pour plusieurs jours)
             </label>
           </div>
 
