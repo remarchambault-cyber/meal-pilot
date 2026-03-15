@@ -420,7 +420,7 @@ export default function Tracking() {
                   </Button>
                   {todayCalorieLog && (
                     <Button size="sm" variant="outline" className="gap-1 tap-scale" onClick={() => handleCalorieAction('consumed', 'replace')} disabled={!newCalConsumed}>
-                      🔄 Corriger
+                      Remplacer
                     </Button>
                   )}
                 </div>
