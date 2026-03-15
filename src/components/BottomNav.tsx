@@ -16,19 +16,19 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border lg:hidden">
-      <div className="flex items-center justify-around h-16 px-2">
+      <div className="flex items-center justify-around h-14 px-0">
         {navItems.map(({ to, icon: Icon, label }) => {
           const isActive = location.pathname.startsWith(to);
           return (
             <NavLink
               key={to}
               to={to}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg tap-scale text-xs font-medium transition-colors ${
+              className={`flex flex-col items-center gap-0 px-1 py-1 rounded-md tap-scale text-[10px] font-medium transition-colors min-w-0 ${
                 isActive ? 'text-primary' : 'text-muted-foreground'
               }`}
             >
-              <Icon className="w-5 h-5" />
-              <span>{label}</span>
+              <Icon className="w-4 h-4 shrink-0" />
+              <span className="truncate max-w-full">{label}</span>
             </NavLink>
           );
         })}
