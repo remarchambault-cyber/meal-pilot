@@ -696,8 +696,8 @@ export default function Planning() {
               </p>
             </div>
 
-            <Button className="w-full" onClick={confirmDuplicate} disabled={duplicateDays.length === 0}>
-              Confirmer la duplication
+            <Button className="w-full tap-scale" onClick={confirmDuplicate} disabled={duplicateDays.length === 0}>
+              Dupliquer le repas
             </Button>
           </div>
         </DialogContent>
