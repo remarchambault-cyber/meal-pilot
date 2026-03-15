@@ -634,10 +634,10 @@ export default function Planning() {
               </>
             )}
 
-            <div className="text-xs text-muted-foreground bg-muted/60 rounded-md p-2 space-y-1">
-              <p><strong>Portions</strong> = quantité par occurrence.</p>
-              <p><strong>Dupliquer</strong> = copier un repas existant.</p>
-              <p><strong>Batch cooking</strong> = planifier sur plusieurs jours et créneaux.</p>
+            <div className="text-xs text-muted-foreground bg-muted/60 rounded-md p-2.5 space-y-1">
+              <p><strong>Portions</strong> = quantité par repas.</p>
+              <p><strong>Dupliquer</strong> = reproduire un repas sur d'autres jours.</p>
+              <p><strong>Batch cooking</strong> = préparer une recette pour plusieurs jours et repas.</p>
             </div>
 
             <Button
