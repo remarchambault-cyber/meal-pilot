@@ -45,7 +45,7 @@ export default function SettingsPage() {
       await saveProfile(form);
       // Sync localStorage for pages that still use it
       window.localStorage.setItem('mealpilot_profile', JSON.stringify(form));
-      toast({ title: '✅ Profil sauvegardé' });
+      toast({ title: '✅ Profil enregistré' });
     } catch (error: any) {
       toast({ title: '❌ Erreur', description: error.message, variant: 'destructive' });
     } finally {

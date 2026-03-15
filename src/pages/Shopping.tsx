@@ -138,12 +138,12 @@ export default function Shopping() {
         </div>
 
         {visibleList.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
-            <p className="text-lg">{shoppingList.length > 0 ? 'Toutes les courses sont faites 🎉' : 'Aucun repas planifié'}</p>
-            <p className="text-sm mt-1">
+          <div className="text-center py-16">
+            <p className="text-lg text-muted-foreground">{shoppingList.length > 0 ? 'Toutes les courses sont faites 🎉' : 'Ta liste de courses est vide'}</p>
+            <p className="text-sm text-muted-foreground mt-1">
               {shoppingList.length > 0
-                ? 'Tous les éléments ont été marqués comme achetés.'
-                : 'Ajoute des repas à ton planning pour générer ta liste.'}
+                ? 'Tous les ingrédients ont été cochés.'
+                : 'Planifie des repas pour générer ta liste automatiquement.'}
             </p>
             {shoppingList.length > 0 && hidden.size > 0 && (
               <Button variant="outline" size="sm" className="mt-4" onClick={() => { setHidden(new Set()); setChecked(new Set()); }}>

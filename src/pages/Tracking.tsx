@@ -446,7 +446,7 @@ export default function Tracking() {
               </Button>
             )}
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              <strong>Ajouter</strong> = cumule au total existant. <strong>Corriger</strong> = remplace la valeur du jour.
+              <strong>Ajouter</strong> = cumule avec la valeur actuelle. <strong>Remplacer</strong> = corrige la valeur du jour.
             </p>
           </motion.div>
         </div>
