@@ -114,10 +114,13 @@ export default function Tracking() {
   const addCalories = async () => {
     if (!newCalConsumed && !newCalBurned) return;
     try {
+      const existing = calorieLogs.find(l => l.date === today);
+      const consumed = newCalConsumed ? parseInt(newCalConsumed, 10) : (existing?.consumedManual ?? 0);
+      const burned = newCalBurned ? parseInt(newCalBurned, 10) : (existing?.burnedExtra ?? 0);
       const isUpdate = await upsertCalories(
         today,
-        parseInt(newCalConsumed, 10) || 0,
-        parseInt(newCalBurned, 10) || 0,
+        consumed,
+        burned,
       );
       setNewCalConsumed('');
       setNewCalBurned('');
