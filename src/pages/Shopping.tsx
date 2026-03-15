@@ -86,14 +86,27 @@ export default function Shopping() {
     return Object.values(map);
   }, [mealPlan, allRecipes]);
 
+  const visibleList = useMemo(() => shoppingList.filter(item => !hidden.has(item.key)), [shoppingList, hidden]);
+
   const grouped = useMemo(() => {
     const groups: Record<string, ShoppingItem[]> = {};
-    shoppingList.forEach(item => {
+    visibleList.forEach(item => {
       if (!groups[item.category]) groups[item.category] = [];
       groups[item.category].push(item);
     });
     return groups;
-  }, [shoppingList]);
+  }, [visibleList]);
+
+  const checkedCount = useMemo(() => visibleList.filter(i => checked.has(i.key)).length, [visibleList, checked]);
+
+  const handleDone = useCallback(() => {
+    setHidden(prev => {
+      const next = new Set(prev);
+      checked.forEach(key => next.add(key));
+      return next;
+    });
+    setChecked(new Set());
+  }, [checked]);
 
   const toggle = (key: string) => {
     setChecked(prev => {
