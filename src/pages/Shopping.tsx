@@ -44,6 +44,7 @@ export default function Shopping() {
   const { mealPlan } = useMealPlan();
   const { allRecipes } = useRecipes();
   const [checked, setChecked] = useState<Set<string>>(new Set());
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const shoppingList = useMemo(() => {
