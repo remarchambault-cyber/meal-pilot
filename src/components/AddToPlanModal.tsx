@@ -182,7 +182,7 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, mealTargets
             <p className="text-sm font-medium capitalize">{format(date, 'EEEE d MMMM yyyy', { locale: fr })}</p>
             {isBatchCooking && (
               <p className="text-xs text-muted-foreground">
-                Batch cooking actif · {selectedDays.length} jour{selectedDays.length > 1 ? 's' : ''} × {selectedMealTypes.length} repas
+                Batch cooking · {selectedDays.length} jour{selectedDays.length > 1 ? 's' : ''} × {selectedMealTypes.length} repas
               </p>
             )}
           </div>
