@@ -75,10 +75,12 @@ export default function Planning() {
 
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
 
-  const filteredRecipes = useMemo(
-    () => filterRecipesByMealType(allRecipes, selectedMealType),
-    [allRecipes, selectedMealType]
-  );
+  const filteredRecipes = useMemo(() => {
+    const byType = filterRecipesByMealType(allRecipes, selectedMealType);
+    if (!recipeSearch.trim()) return byType;
+    const q = recipeSearch.trim().toLowerCase();
+    return byType.filter(r => r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q));
+  }, [allRecipes, selectedMealType, recipeSearch]);
 
   const batchSelectableDays = useMemo(() => {
     if (!addDialogDate) return [];
