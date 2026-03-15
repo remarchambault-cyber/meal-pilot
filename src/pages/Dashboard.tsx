@@ -9,7 +9,7 @@ import { calculateCalorieTarget, getGoalLabel } from '@/lib/calories';
 import { PLANNING_MEAL_TYPE_LABELS_SHORT, PLANNING_MEAL_TYPE_ORDER } from '@/lib/mealTypes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, ShoppingCart, TrendingUp, Target, Scale, Flame, CheckCircle2, Utensils } from 'lucide-react';
+import { CalendarDays, ShoppingCart, TrendingUp, Target, Scale, Flame, CheckCircle2, Utensils, ArrowRight, Circle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 
@@ -64,132 +64,141 @@ export default function Dashboard() {
   }
 
   const cards = [
-    { icon: Target, label: 'Objectif', value: getGoalLabel(profile.goal), color: 'text-primary', bg: 'bg-primary/10' },
-    { icon: Flame, label: 'Cible du jour', value: `${target.target} kcal`, color: 'text-accent', bg: 'bg-accent/10' },
-    { icon: Scale, label: 'Poids actuel', value: `${currentWeight} kg`, color: 'text-secondary', bg: 'bg-secondary/10' },
+    { icon: Target, label: 'Objectif', value: getGoalLabel(profile.goal), color: 'text-primary', bg: 'bg-primary/8' },
+    { icon: Flame, label: 'Cible du jour', value: `${target.target} kcal`, color: 'text-foreground', bg: 'bg-accent/60' },
+    { icon: Scale, label: 'Poids actuel', value: `${currentWeight} kg`, color: 'text-foreground', bg: 'bg-muted' },
   ];
 
   const actions = [
     { icon: CalendarDays, label: 'Planifier mes repas', to: '/planning' },
     { icon: ShoppingCart, label: 'Liste de courses', to: '/shopping' },
-    { icon: TrendingUp, label: 'Enregistrer mon poids', to: '/tracking' },
+    { icon: TrendingUp, label: 'Suivi & pesée', to: '/tracking' },
   ];
 
   return (
     <AppLayout>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+        {/* Header */}
         <div>
-          <h1 className="text-2xl font-display font-bold">Bonjour {profile.firstName} 👋</h1>
-          <p className="text-body-text text-sm mt-1">
-            Maintien estimé : {target.tdee} kcal · Objectif : {target.target} kcal/jour
+          <h1 className="text-3xl font-display font-bold tracking-tight">
+            Bonjour {profile.firstName}
+          </h1>
+          <p className="text-body-text text-sm mt-2 leading-relaxed">
+            Maintien estimé {target.tdee} kcal · Objectif {target.target} kcal/jour
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* KPI cards */}
+        <div className="grid grid-cols-3 gap-3">
           {cards.map((card, i) => (
             <motion.div
               key={card.label}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="card-elevated p-4 flex items-center gap-3"
+              transition={{ delay: i * 0.06 }}
+              className="card-elevated p-4 flex flex-col items-center text-center gap-2"
             >
-              <div className={`w-10 h-10 rounded-lg ${card.bg} flex items-center justify-center`}>
-                <card.icon className={`w-5 h-5 ${card.color}`} />
+              <div className={`w-10 h-10 rounded-xl ${card.bg} flex items-center justify-center`}>
+                <card.icon className={`w-4.5 h-4.5 ${card.color}`} />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">{card.label}</p>
-                <p className="font-display font-bold text-lg">{card.value}</p>
+                <p className="font-display font-bold text-lg leading-tight">{card.value}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{card.label}</p>
               </div>
             </motion.div>
           ))}
         </div>
 
-        {plannedCalories > 0 && (
-          <div className="card-elevated p-4">
-            <p className="text-xs text-muted-foreground mb-1">Calories prévues aujourd'hui</p>
-            <p className="font-display font-bold text-xl">{plannedCalories} kcal</p>
+        {/* Calories overview */}
+        {(plannedCalories > 0 || todayCalories) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {plannedCalories > 0 && (
+              <div className="card-elevated p-5">
+                <p className="section-title mb-2">Calories prévues</p>
+                <p className="font-display font-bold text-2xl">{plannedCalories} <span className="text-sm font-normal text-muted-foreground">kcal</span></p>
+              </div>
+            )}
+            {todayCalories && (
+              <div className="card-elevated p-5">
+                <p className="section-title mb-2">Consommées</p>
+                <div className="flex items-baseline gap-3">
+                  <p className="font-display font-bold text-2xl">{todayCalories.caloriesConsumed} <span className="text-sm font-normal text-muted-foreground">kcal</span></p>
+                  {todayCalories.caloriesBurned > 0 && (
+                    <span className="text-sm text-primary font-medium">-{todayCalories.caloriesBurned} dépensées</span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {todayCalories && (
-          <div className="card-elevated p-4">
-            <p className="text-xs text-muted-foreground mb-1">Calories consommées aujourd'hui</p>
-            <div className="flex items-center gap-4">
-              <span className="font-display font-bold text-xl">{todayCalories.caloriesConsumed} kcal</span>
-              {todayCalories.caloriesBurned > 0 && (
-                <>
-                  <span className="font-display font-bold text-xl text-secondary">{todayCalories.caloriesBurned} kcal</span>
-                  <span className="text-sm text-muted-foreground">dépensées</span>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Repas du jour */}
+        {/* Today's meals */}
         {todayMeals.length > 0 ? (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="card-elevated p-4"
+            transition={{ delay: 0.12 }}
+            className="card-elevated p-5"
           >
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-display font-semibold text-sm flex items-center gap-2">
-                <Utensils className="w-4 h-4 text-primary" /> Repas du jour
-              </h2>
-              <span className="text-[10px] text-muted-foreground">{todayMeals.filter(m => m.consumed).length}/{todayMeals.length} consommés</span>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display font-semibold text-sm">Repas du jour</h2>
+              <span className="text-xs text-muted-foreground">{todayMeals.filter(m => m.consumed).length}/{todayMeals.length} consommés</span>
             </div>
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {todayMeals.map((meal) => (
                 <button
                   key={meal.id}
                   onClick={() => toggleConsumed(meal.id)}
-                  className="flex items-center justify-between py-1.5 border-b border-border last:border-0 w-full text-left hover:bg-muted/30 rounded-md px-1 -mx-1 transition-colors"
+                  className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0 w-full text-left hover:bg-muted/40 rounded-lg px-2 -mx-2 transition-colors"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0">
                     {meal.consumed ? (
-                      <CheckCircle2 className="w-4 h-4 text-secondary shrink-0" />
+                      <CheckCircle2 className="w-[18px] h-[18px] text-primary shrink-0" />
                     ) : (
-                      <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />
+                      <Circle className="w-[18px] h-[18px] text-border shrink-0" />
                     )}
                     <div className="min-w-0">
-                      <p className={`text-sm truncate ${meal.consumed ? '' : 'text-muted-foreground'}`}>{meal.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{PLANNING_MEAL_TYPE_LABELS_SHORT[meal.mealType]}</p>
+                      <p className={`text-sm font-medium truncate ${meal.consumed ? 'text-foreground' : 'text-body-text'}`}>{meal.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{PLANNING_MEAL_TYPE_LABELS_SHORT[meal.mealType]}</p>
                     </div>
                   </div>
-                  <span className="text-xs text-muted-foreground shrink-0 ml-2">{meal.calories} kcal</span>
+                  <span className="text-xs text-muted-foreground shrink-0 ml-3 font-medium">{meal.calories} kcal</span>
                 </button>
               ))}
             </div>
           </motion.div>
         ) : (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="card-elevated p-4 text-center"
+            transition={{ delay: 0.12 }}
+            className="card-elevated p-8 text-center"
           >
-            <p className="text-sm text-muted-foreground">Aucun repas planifié pour aujourd'hui.</p>
-            <p className="text-xs text-muted-foreground mt-1">Commence par ajouter des repas à ton planning.</p>
-            <Button variant="link" size="sm" className="mt-2" onClick={() => navigate('/planning')}>
-              Aller au planning →
+            <Utensils className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-sm text-body-text font-medium">Aucun repas planifié aujourd'hui</p>
+            <p className="text-xs text-muted-foreground mt-1">Ajoute des repas depuis le planning pour commencer.</p>
+            <Button variant="outline" size="sm" className="mt-4 gap-2" onClick={() => navigate('/planning')}>
+              Aller au planning <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </motion.div>
         )}
-        <div className="space-y-2">
-          <h2 className="text-lg font-display font-semibold">Actions rapides</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+
+        {/* Quick actions */}
+        <div className="space-y-3">
+          <p className="section-title">Actions rapides</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {actions.map(action => (
               <Button
                 key={action.to}
                 variant="outline"
-                className="h-auto py-4 justify-start gap-3 tap-scale"
+                className="h-auto py-4 justify-between gap-3 tap-scale bg-card hover:bg-muted/50 border-border/60"
                 onClick={() => navigate(action.to)}
               >
-                <action.icon className="w-5 h-5 text-primary" />
-                <span className="font-medium text-sm">{action.label}</span>
+                <div className="flex items-center gap-3">
+                  <action.icon className="w-4.5 h-4.5 text-primary" />
+                  <span className="font-medium text-sm">{action.label}</span>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
               </Button>
             ))}
           </div>

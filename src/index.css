@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,74 +6,74 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 220 39% 12%;
+    --background: 40 20% 96%;
+    --foreground: 220 26% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 39% 12%;
+    --card-foreground: 220 26% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 39% 12%;
+    --popover-foreground: 220 26% 14%;
 
-    --primary: 217 91% 60%;
+    --primary: 155 42% 39%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 160 84% 39%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 150 20% 90%;
+    --secondary-foreground: 155 42% 30%;
 
-    --muted: 210 20% 95%;
-    --muted-foreground: 218 20% 46%;
+    --muted: 40 15% 93%;
+    --muted-foreground: 218 10% 45%;
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 150 30% 86%;
+    --accent-foreground: 155 42% 28%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 20% 90%;
-    --input: 214 20% 90%;
-    --ring: 217 91% 60%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 155 42% 39%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 218 20% 27%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-foreground: 218 10% 30%;
+    --sidebar-primary: 155 42% 39%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 96%;
-    --sidebar-accent-foreground: 220 39% 12%;
-    --sidebar-border: 214 20% 92%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 150 20% 95%;
+    --sidebar-accent-foreground: 220 26% 14%;
+    --sidebar-border: 220 13% 93%;
+    --sidebar-ring: 155 42% 39%;
 
-    --success: 160 84% 39%;
+    --success: 155 42% 39%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --body-text: 218 20% 27%;
+    --body-text: 218 10% 35%;
   }
 
   .dark {
-    --background: 220 39% 6%;
-    --foreground: 210 20% 96%;
-    --card: 220 39% 10%;
-    --card-foreground: 210 20% 96%;
-    --popover: 220 39% 10%;
-    --popover-foreground: 210 20% 96%;
-    --primary: 217 91% 60%;
+    --background: 220 20% 7%;
+    --foreground: 40 15% 93%;
+    --card: 220 20% 11%;
+    --card-foreground: 40 15% 93%;
+    --popover: 220 20% 11%;
+    --popover-foreground: 40 15% 93%;
+    --primary: 155 42% 45%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 160 84% 39%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 220 20% 16%;
-    --muted-foreground: 218 20% 65%;
-    --accent: 38 92% 50%;
-    --accent-foreground: 0 0% 100%;
+    --secondary: 155 20% 16%;
+    --secondary-foreground: 155 42% 70%;
+    --muted: 220 15% 15%;
+    --muted-foreground: 218 10% 60%;
+    --accent: 155 20% 18%;
+    --accent-foreground: 155 42% 70%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 20% 18%;
-    --input: 220 20% 18%;
-    --ring: 217 91% 60%;
-    --body-text: 210 20% 80%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 155 42% 45%;
+    --body-text: 40 10% 72%;
   }
 }
 
@@ -87,16 +87,24 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-bold text-foreground;
+    @apply font-display font-bold text-foreground tracking-tight;
   }
 }
 
 @layer utilities {
   .card-elevated {
-    @apply bg-card rounded-xl shadow-sm border border-border transition-shadow duration-200;
+    @apply bg-card rounded-2xl shadow-[0_1px_3px_0_rgba(0,0,0,0.04)] border border-border/60 transition-all duration-200;
+  }
+
+  .card-elevated:hover {
+    @apply shadow-[0_2px_8px_0_rgba(0,0,0,0.06)];
   }
   
   .tap-scale {
     @apply active:scale-[0.97] transition-transform duration-150;
+  }
+
+  .section-title {
+    @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground;
   }
 }

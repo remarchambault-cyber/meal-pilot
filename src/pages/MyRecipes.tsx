@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Trash2, Edit, Eye, Flame, Clock, CalendarPlus, Search, X } from 'lucide-react';
+import { Plus, Trash2, Edit, Eye, Clock, CalendarPlus, Search, X, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import AddToPlanModal from '@/components/AddToPlanModal';
@@ -59,19 +59,19 @@ export default function MyRecipes() {
   const removeStep = (index: number) => setForm(f => ({ ...f, steps: f.steps.filter((_, i) => i !== index) }));
 
   const handleSave = async () => {
-    if (!form.title.trim()) { toast({ title: '⚠️ Titre requis', variant: 'destructive' }); return; }
+    if (!form.title.trim()) { toast({ title: 'Titre requis', variant: 'destructive' }); return; }
     setSaving(true);
     try {
       if (editingId) {
         await updateRecipe(editingId, form);
-        toast({ title: '✅ Recette modifiée' });
+        toast({ title: 'Recette modifiée' });
       } else {
         await createRecipe(form);
-        toast({ title: '✅ Recette créée' });
+        toast({ title: 'Recette créée' });
       }
       setShowEditor(false);
     } catch (e: any) {
-      toast({ title: '❌ Erreur', description: e.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: e.message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -80,34 +80,34 @@ export default function MyRecipes() {
   const handleDelete = async (id: string) => {
     try {
       await deleteRecipe(id);
-      toast({ title: '🗑️ Recette supprimée' });
+      toast({ title: 'Recette supprimée' });
     } catch (e: any) {
-      toast({ title: '❌ Erreur', description: e.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: e.message, variant: 'destructive' });
     }
   };
 
   return (
     <AppLayout>
-      <div className="space-y-5">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-display font-bold">Mes recettes</h1>
-          <Button size="sm" className="gap-1.5 tap-scale" onClick={startCreate}>
+          <Button size="sm" className="gap-1.5 tap-scale rounded-lg" onClick={startCreate}>
             <Plus className="w-4 h-4" /> Créer
           </Button>
         </div>
 
         {customRecipes.length > 0 && (
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Rechercher une recette…"
-              className="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-9 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="pl-10 pr-9 h-11 rounded-xl bg-card"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <button onClick={() => setSearch('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -115,12 +115,13 @@ export default function MyRecipes() {
         )}
 
         {recipesLoading ? (
-          <div className="text-center py-16 text-muted-foreground">Chargement…</div>
+          <div className="text-center py-16 text-muted-foreground text-sm">Chargement…</div>
         ) : customRecipes.length === 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
-            <p className="text-lg text-muted-foreground">Pas encore de recette personnelle</p>
-            <p className="text-sm text-muted-foreground mt-1">Crée tes propres recettes et ajoute-les directement au planning.</p>
-            <Button className="mt-4 gap-1.5 tap-scale" onClick={startCreate}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
+            <BookOpen className="w-10 h-10 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-sm text-body-text font-medium">Pas encore de recette personnelle</p>
+            <p className="text-xs text-muted-foreground mt-1.5 max-w-xs mx-auto">Crée tes propres recettes et ajoute-les au planning.</p>
+            <Button className="mt-5 gap-1.5 tap-scale rounded-xl" onClick={startCreate}>
               <Plus className="w-4 h-4" /> Créer ma première recette
             </Button>
           </motion.div>
@@ -128,48 +129,48 @@ export default function MyRecipes() {
           <div className="space-y-3">
             <AnimatePresence>
               {displayedRecipes.length === 0 && search.trim() ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>Aucune recette trouvée.</p>
-                  <Button variant="outline" size="sm" className="mt-3" onClick={() => setSearch('')}>Réinitialiser la recherche</Button>
+                <div className="text-center py-16">
+                  <p className="text-sm text-body-text">Aucune recette trouvée.</p>
+                  <Button variant="outline" size="sm" className="mt-4 rounded-xl" onClick={() => setSearch('')}>Réinitialiser</Button>
                 </div>
               ) : null}
               {displayedRecipes.map((recipe, i) => (
                 <motion.div
                   key={recipe.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
+                  exit={{ opacity: 0, y: -8 }}
                   transition={{ delay: i * 0.03, duration: 0.3 }}
-                  className="card-elevated p-4 space-y-3"
+                  className="card-elevated p-5 space-y-3"
                 >
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-display font-semibold text-base">{recipe.title}</h3>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
                         {MEAL_BADGE[recipe.mealType] || recipe.mealType}
                       </span>
                     </div>
-                    {recipe.description && <p className="text-sm text-body-text mt-0.5">{recipe.description}</p>}
+                    {recipe.description && <p className="text-sm text-body-text leading-relaxed">{recipe.description}</p>}
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1"><Flame className="w-4 h-4 text-accent" />{recipe.calories} kcal</span>
-                    <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{recipe.prepTime} min</span>
-                    <span>{recipe.ingredients.length} ingrédients</span>
+                    <span className="font-medium text-foreground">{recipe.calories} kcal</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{recipe.prepTime} min</span>
+                    <span>{recipe.ingredients.length} ingr.</span>
                   </div>
-                  <div className="flex gap-2 flex-wrap">
-                    <Button variant="outline" size="sm" className="gap-1.5 tap-scale" onClick={() => navigate(`/recipe/${recipe.id}`)}>
-                      <Eye className="w-4 h-4" /> Voir
+                  <div className="flex gap-2 flex-wrap pt-1">
+                    <Button variant="outline" size="sm" className="gap-1.5 tap-scale rounded-lg text-xs" onClick={() => navigate(`/recipe/${recipe.id}`)}>
+                      <Eye className="w-3.5 h-3.5" /> Voir
                     </Button>
-                    <Button variant="outline" size="sm" className="gap-1.5 tap-scale" onClick={() => startEdit(recipe)}>
-                      <Edit className="w-4 h-4" /> Modifier
+                    <Button variant="outline" size="sm" className="gap-1.5 tap-scale rounded-lg text-xs" onClick={() => startEdit(recipe)}>
+                      <Edit className="w-3.5 h-3.5" /> Modifier
                     </Button>
-                    <Button size="sm" className="gap-1.5 tap-scale" onClick={() => setPlanRecipe(recipe)}>
-                      <CalendarPlus className="w-4 h-4" /> Au planning
+                    <Button size="sm" className="gap-1.5 tap-scale rounded-lg text-xs" onClick={() => setPlanRecipe(recipe)}>
+                      <CalendarPlus className="w-3.5 h-3.5" /> Planning
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="gap-1.5 tap-scale text-destructive">
-                          <Trash2 className="w-4 h-4" /> Supprimer
+                        <Button variant="ghost" size="sm" className="gap-1.5 tap-scale rounded-lg text-xs text-destructive hover:text-destructive">
+                          <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -225,12 +226,11 @@ export default function MyRecipes() {
             </div>
             <div className="grid grid-cols-4 gap-2">
               <div><Label className="text-xs font-medium">Calories</Label><Input type="number" value={form.calories} onChange={e => setForm(f => ({ ...f, calories: parseInt(e.target.value) || 0 }))} className="mt-1" /></div>
-              <div><Label className="text-xs font-medium">Prot. (g)</Label><Input type="number" value={form.protein} onChange={e => setForm(f => ({ ...f, protein: parseInt(e.target.value) || 0 }))} className="mt-1" /></div>
-              <div><Label className="text-xs font-medium">Gluc. (g)</Label><Input type="number" value={form.carbs} onChange={e => setForm(f => ({ ...f, carbs: parseInt(e.target.value) || 0 }))} className="mt-1" /></div>
-              <div><Label className="text-xs font-medium">Lip. (g)</Label><Input type="number" value={form.fat} onChange={e => setForm(f => ({ ...f, fat: parseInt(e.target.value) || 0 }))} className="mt-1" /></div>
+              <div><Label className="text-xs font-medium">Prot.</Label><Input type="number" value={form.protein} onChange={e => setForm(f => ({ ...f, protein: parseInt(e.target.value) || 0 }))} className="mt-1" /></div>
+              <div><Label className="text-xs font-medium">Gluc.</Label><Input type="number" value={form.carbs} onChange={e => setForm(f => ({ ...f, carbs: parseInt(e.target.value) || 0 }))} className="mt-1" /></div>
+              <div><Label className="text-xs font-medium">Lip.</Label><Input type="number" value={form.fat} onChange={e => setForm(f => ({ ...f, fat: parseInt(e.target.value) || 0 }))} className="mt-1" /></div>
             </div>
 
-            {/* Ingredients */}
             <div>
               <Label className="text-xs font-semibold">Ingrédients</Label>
               <div className="space-y-2 mt-2">
@@ -256,14 +256,13 @@ export default function MyRecipes() {
                     </Button>
                   </div>
                 ))}
-                {form.ingredients.length === 0 && <p className="text-xs text-muted-foreground text-center py-2">Aucun ingrédient ajouté</p>}
+                {form.ingredients.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">Aucun ingrédient</p>}
               </div>
-              <Button variant="outline" size="sm" className="gap-1 h-7 text-xs mt-2" onClick={addIngredient}>
+              <Button variant="outline" size="sm" className="gap-1 h-7 text-xs mt-2 rounded-lg" onClick={addIngredient}>
                 <Plus className="w-3 h-3" /> Ajouter un ingrédient
               </Button>
             </div>
 
-            {/* Steps */}
             <div>
               <Label className="text-xs font-semibold">Étapes</Label>
               <ol className="space-y-1 mt-2">
@@ -279,13 +278,12 @@ export default function MyRecipes() {
               </ol>
               <div className="flex gap-2 mt-2">
                 <Input placeholder="Nouvelle étape…" value={newStep} onChange={e => setNewStep(e.target.value)} onKeyDown={e => e.key === 'Enter' && addStep()} className="flex-1" />
-                <Button variant="outline" size="sm" onClick={addStep}>Ajouter</Button>
+                <Button variant="outline" size="sm" className="rounded-lg" onClick={addStep}>Ajouter</Button>
               </div>
             </div>
 
-            {/* Primary save action */}
-            <Button className="w-full tap-scale font-semibold" size="lg" onClick={handleSave} disabled={saving}>
-              {saving ? 'Enregistrement…' : editingId ? 'Enregistrer les modifications' : 'Créer la recette'}
+            <Button className="w-full tap-scale font-semibold rounded-xl" size="lg" onClick={handleSave} disabled={saving}>
+              {saving ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Créer la recette'}
             </Button>
           </div>
         </DialogContent>

@@ -102,12 +102,12 @@ export default function Tracking() {
       const isUpdate = await upsertWeight(today, parseFloat(newWeight));
       setNewWeight('');
       toast({
-        title: isUpdate ? '🔄 Pesée du jour mise à jour' : '✅ Poids enregistré',
+        title: isUpdate ? 'Pesée mise à jour' : 'Poids enregistré',
         description: `${parseFloat(newWeight)} kg`,
       });
     } catch (err) {
       console.error(err);
-      toast({ title: '❌ Erreur', description: 'Impossible d\'enregistrer le poids.', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Impossible d\'enregistrer le poids.', variant: 'destructive' });
     }
   };
 
@@ -137,10 +137,10 @@ export default function Tracking() {
       else setNewCalBurned('');
 
       const label = field === 'consumed' ? 'Consommées' : 'Dépensées';
-      toast({ title: mode === 'add' ? `➕ ${label} : +${value} kcal` : `🔄 ${label} → ${value} kcal` });
+      toast({ title: mode === 'add' ? `${label} : +${value} kcal` : `${label} → ${value} kcal` });
     } catch (err) {
       console.error(err);
-      toast({ title: '❌ Erreur', description: 'Impossible d\'enregistrer les calories.', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Impossible d\'enregistrer les calories.', variant: 'destructive' });
     }
   };
 
@@ -149,7 +149,7 @@ export default function Tracking() {
       await deleteCalories(today);
       setNewCalConsumed('');
       setNewCalBurned('');
-      toast({ title: '🗑️ Calories manuelles du jour réinitialisées' });
+      toast({ title: 'Calories du jour réinitialisées' });
     } catch (err) {
       console.error(err);
     }
@@ -164,19 +164,19 @@ export default function Tracking() {
     const weeklyChange = (delta / days) * 7;
 
     if (profile.goal === 'lose') {
-      if (weeklyChange > 0.1) return { type: 'warning' as const, icon: '⚠️', text: 'Ton poids augmente malgré un objectif de perte. Vérifie ton apport calorique.' };
-      if (weeklyChange < -1) return { type: 'warning' as const, icon: '⚡', text: 'Perte rapide (> 1 kg/semaine). Réduis le déficit pour plus de durabilité.' };
-      if (weeklyChange < -0.1) return { type: 'success' as const, icon: '✅', text: 'Bonne trajectoire : perte de poids régulière.' };
-      return { type: 'info' as const, icon: '💡', text: 'Poids stable. Réduis légèrement les calories ou augmente l\'activité.' };
+      if (weeklyChange > 0.1) return { type: 'warning' as const, text: 'Ton poids augmente malgré un objectif de perte. Vérifie ton apport calorique.' };
+      if (weeklyChange < -1) return { type: 'warning' as const, text: 'Perte rapide (> 1 kg/semaine). Réduis le déficit pour plus de durabilité.' };
+      if (weeklyChange < -0.1) return { type: 'success' as const, text: 'Bonne trajectoire : perte de poids régulière.' };
+      return { type: 'info' as const, text: 'Poids stable. Réduis légèrement les calories ou augmente l\'activité.' };
     }
     if (profile.goal === 'gain') {
-      if (weeklyChange < -0.1) return { type: 'warning' as const, icon: '⚠️', text: 'Le poids baisse malgré l\'objectif de prise. Ajoute ~200 kcal/jour.' };
-      if (weeklyChange > 1) return { type: 'warning' as const, icon: '⚡', text: 'Prise rapide (> 1 kg/semaine). Ralentis les apports.' };
-      if (weeklyChange > 0.1) return { type: 'success' as const, icon: '✅', text: 'Progression cohérente pour la prise de poids.' };
-      return { type: 'info' as const, icon: '💡', text: 'Poids stable. Augmente légèrement les apports.' };
+      if (weeklyChange < -0.1) return { type: 'warning' as const, text: 'Le poids baisse malgré l\'objectif de prise. Ajoute ~200 kcal/jour.' };
+      if (weeklyChange > 1) return { type: 'warning' as const, text: 'Prise rapide (> 1 kg/semaine). Ralentis les apports.' };
+      if (weeklyChange > 0.1) return { type: 'success' as const, text: 'Progression cohérente pour la prise de poids.' };
+      return { type: 'info' as const, text: 'Poids stable. Augmente légèrement les apports.' };
     }
-    if (Math.abs(weeklyChange) > 0.5) return { type: 'info' as const, icon: '💡', text: `Variation notable (${weeklyChange > 0 ? '+' : ''}${weeklyChange.toFixed(1)} kg/sem). Ajuste les apports.` };
-    return { type: 'success' as const, icon: '✅', text: 'Poids globalement stable, bon maintien.' };
+    if (Math.abs(weeklyChange) > 0.5) return { type: 'info' as const, text: `Variation notable (${weeklyChange > 0 ? '+' : ''}${weeklyChange.toFixed(1)} kg/sem). Ajuste les apports.` };
+    return { type: 'success' as const, text: 'Poids globalement stable, bon maintien.' };
   }, [profile, sortedWeightLogsAsc]);
 
   const trend = useMemo(() => {
@@ -195,46 +195,46 @@ export default function Tracking() {
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 12 },
+    hidden: { opacity: 0, y: 10 },
     visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.35 } }),
   };
 
   const gapColor = (val: number) =>
-    val > 0 ? 'text-secondary' : val < 0 ? 'text-destructive' : 'text-muted-foreground';
+    val > 0 ? 'text-primary' : val < 0 ? 'text-destructive' : 'text-muted-foreground';
   const gapBg = (val: number) =>
-    val > 0 ? 'bg-secondary/10' : val < 0 ? 'bg-destructive/10' : 'bg-muted';
+    val > 0 ? 'bg-primary/8' : val < 0 ? 'bg-destructive/10' : 'bg-muted';
 
   return (
     <AppLayout>
-      <div className="space-y-5">
+      <div className="space-y-6">
         <h1 className="text-2xl font-display font-bold">Suivi</h1>
 
-        {/* ═══ NIVEAU 1 — 4 indicateurs principaux ═══ */}
-        <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
-          <div className="grid grid-cols-4 gap-2 text-center">
+        {/* KPI row */}
+        <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-5">
+          <div className="grid grid-cols-4 gap-3 text-center">
             <div>
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-1.5">
+              <div className="w-9 h-9 rounded-xl bg-primary/8 flex items-center justify-center mx-auto mb-2">
                 <Target className="w-4 h-4 text-primary" />
               </div>
               <p className="font-display font-bold text-base leading-tight">{dailyTarget || '—'}</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Cible</p>
             </div>
             <div>
-              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center mx-auto mb-1.5">
+              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center mx-auto mb-2">
                 <CalendarCheck className="w-4 h-4 text-muted-foreground" />
               </div>
               <p className="font-display font-bold text-base leading-tight">{plannedCalories}</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Prévues</p>
             </div>
             <div>
-              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mx-auto mb-1.5">
-                <Utensils className="w-4 h-4 text-accent" />
+              <div className="w-9 h-9 rounded-xl bg-accent/40 flex items-center justify-center mx-auto mb-2">
+                <Utensils className="w-4 h-4 text-accent-foreground" />
               </div>
               <p className="font-display font-bold text-base leading-tight">{netConsumed}</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Net consommé</p>
             </div>
             <div>
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-1.5 ${gapBg(ecartConsomme)}`}>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center mx-auto mb-2 ${gapBg(ecartConsomme)}`}>
                 <Target className={`w-4 h-4 ${gapColor(ecartConsomme)}`} />
               </div>
               <p className={`font-display font-bold text-base leading-tight ${gapColor(ecartConsomme)}`}>
@@ -245,54 +245,47 @@ export default function Tracking() {
           </div>
         </motion.div>
 
-        {/* ═══ NIVEAU 2 — Détails complémentaires (collapsible) ═══ */}
+        {/* Collapsible details */}
         <motion.div custom={1} variants={cardVariants} initial="hidden" animate="visible">
           <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
             <CollapsibleTrigger asChild>
-              <button className="card-elevated p-3 w-full flex items-center justify-between text-sm font-medium hover:bg-muted/50 transition-colors rounded-xl">
-                <span className="flex items-center gap-2 text-muted-foreground">
-                  <span>Détail du jour</span>
-                  {(consumedFromMeals > 0 || manualConsumed > 0 || extraBurned > 0) && (
-                    <span className="text-[10px] font-normal">
-                      {consumed} consommées {extraBurned > 0 && `· −${extraBurned} dépensées`}
-                    </span>
-                  )}
-                </span>
+              <button className="card-elevated p-4 w-full flex items-center justify-between text-sm font-medium hover:bg-muted/30 transition-colors rounded-2xl">
+                <span className="text-muted-foreground">Détail du jour</span>
                 <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${detailsOpen ? 'rotate-180' : ''}`} />
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="card-elevated mt-1 p-4 rounded-xl space-y-3">
+              <div className="card-elevated mt-1.5 p-5 rounded-2xl space-y-3">
                 <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="p-2 rounded-lg bg-muted/40">
+                  <div className="p-3 rounded-xl bg-muted/40">
                     <p className="font-display font-semibold text-sm">{consumedFromMeals}</p>
                     <p className="text-[10px] text-muted-foreground">Repas</p>
                   </div>
-                  <div className="p-2 rounded-lg bg-muted/40">
+                  <div className="p-3 rounded-xl bg-muted/40">
                     <p className="font-display font-semibold text-sm">{manualConsumed}</p>
                     <p className="text-[10px] text-muted-foreground">Manuelles</p>
                   </div>
-                  <div className="p-2 rounded-lg bg-destructive/5">
+                  <div className="p-3 rounded-xl bg-destructive/5">
                     <p className="font-display font-semibold text-sm text-destructive">{extraBurned > 0 ? `−${extraBurned}` : '0'}</p>
-                    <p className="text-[10px] text-muted-foreground">Extra brûlées</p>
+                    <p className="text-[10px] text-muted-foreground">Brûlées</p>
                   </div>
                 </div>
 
-                <div className="space-y-1 text-sm border-t border-border pt-3">
+                <div className="space-y-1 text-sm border-t border-border/50 pt-3">
                   <div className="flex justify-between"><span className="text-muted-foreground">Cible</span><span>{dailyTarget} kcal</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Prévues (planning)</span><span>{plannedCalories} kcal</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Prévues</span><span>{plannedCalories} kcal</span></div>
                   <div className={`flex justify-between text-xs ${gapColor(ecartPlanifie)}`}>
-                    <span className="pl-2">↳ Écart planifié</span>
+                    <span className="pl-2">Écart planifié</span>
                     <span>{ecartPlanifie > 0 ? '+' : ''}{ecartPlanifie} kcal</span>
                   </div>
-                  <div className="border-t border-border my-1" />
+                  <div className="border-t border-border/50 my-1.5" />
                   <div className="flex justify-between"><span className="text-muted-foreground">Consommées repas</span><span>{consumedFromMeals} kcal</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Consommées manuelles</span><span>{manualConsumed} kcal</span></div>
                   <div className="flex justify-between font-medium"><span>Total consommées</span><span>{consumed} kcal</span></div>
                   {extraBurned > 0 && (
-                    <div className="flex justify-between text-destructive"><span>− Dépensées extra</span><span>−{extraBurned} kcal</span></div>
+                    <div className="flex justify-between text-destructive"><span>Dépensées extra</span><span>−{extraBurned} kcal</span></div>
                   )}
-                  <div className="border-t border-border my-1" />
+                  <div className="border-t border-border/50 my-1.5" />
                   <div className="flex justify-between font-semibold">
                     <span>Net consommé</span><span>{netConsumed} kcal</span>
                   </div>
@@ -306,19 +299,18 @@ export default function Tracking() {
           </Collapsible>
         </motion.div>
 
-        {/* ═══ Repas du jour ═══ */}
+        {/* Today meals */}
         {todayMealDetails.length > 0 && (
-          <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
-            <h2 className="font-display font-semibold text-sm mb-2">Repas du jour</h2>
-            <p className="text-[10px] text-muted-foreground mb-2">Marque tes repas comme consommés depuis le planning.</p>
+          <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-5">
+            <p className="section-title mb-3">Repas du jour</p>
             <div className="space-y-0.5">
               {todayMealDetails.map((meal, i) => (
-                <div key={`${meal.name}-${i}`} className="flex justify-between text-sm py-1.5 border-b border-border last:border-0">
-                  <span className="flex items-center gap-1.5">
-                    {meal.consumed && <CheckCircle2 className="w-3.5 h-3.5 text-secondary" />}
-                    <span className={meal.consumed ? '' : 'text-muted-foreground'}>{meal.name}</span>
+                <div key={`${meal.name}-${i}`} className="flex justify-between text-sm py-2 border-b border-border/30 last:border-0">
+                  <span className="flex items-center gap-2">
+                    {meal.consumed && <CheckCircle2 className="w-3.5 h-3.5 text-primary" />}
+                    <span className={meal.consumed ? 'text-foreground' : 'text-muted-foreground'}>{meal.name}</span>
                   </span>
-                  <span className="text-muted-foreground">{meal.calories} kcal</span>
+                  <span className="text-muted-foreground font-medium">{meal.calories} kcal</span>
                 </div>
               ))}
             </div>
@@ -326,19 +318,19 @@ export default function Tracking() {
         )}
 
         {plannedCalories === 0 && (
-          <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
-            <p className="text-sm text-muted-foreground">Aucun repas planifié aujourd'hui.</p>
-            <p className="text-xs text-muted-foreground mt-1">Ajoute des repas depuis le planning pour voir ton suivi ici.</p>
+          <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-6 text-center">
+            <p className="text-sm text-body-text">Aucun repas planifié aujourd'hui</p>
+            <p className="text-xs text-muted-foreground mt-1">Ajoute des repas depuis le planning.</p>
           </motion.div>
         )}
 
-        {/* ═══ Tendance + Conseil ═══ */}
+        {/* Trend + Advice */}
         {(trend || advice) && (
           <motion.div custom={3} variants={cardVariants} initial="hidden" animate="visible" className="space-y-3">
             {trend && (
-              <div className="card-elevated p-3 flex items-center gap-3">
-                {trend.direction === 'up' && <TrendingUp className="w-5 h-5 text-accent" />}
-                {trend.direction === 'down' && <TrendingDown className="w-5 h-5 text-secondary" />}
+              <div className="card-elevated p-4 flex items-center gap-3">
+                {trend.direction === 'up' && <TrendingUp className="w-5 h-5 text-foreground" />}
+                {trend.direction === 'down' && <TrendingDown className="w-5 h-5 text-primary" />}
                 {trend.direction === 'stable' && <Minus className="w-5 h-5 text-muted-foreground" />}
                 <div>
                   <p className="text-sm font-medium">
@@ -346,21 +338,21 @@ export default function Tracking() {
                     {trend.direction === 'down' && `En baisse (${trend.diff.toFixed(1)} kg)`}
                     {trend.direction === 'stable' && 'Poids stable'}
                   </p>
-                  <p className="text-xs text-muted-foreground">Tendance récente</p>
+                  <p className="text-[11px] text-muted-foreground">Tendance récente</p>
                 </div>
               </div>
             )}
             {advice && (
-              <div className={`card-elevated p-3 border-l-4 ${
-                advice.type === 'warning' ? 'border-l-accent' : advice.type === 'success' ? 'border-l-secondary' : 'border-l-primary'
+              <div className={`card-elevated p-4 border-l-[3px] ${
+                advice.type === 'warning' ? 'border-l-foreground/20' : advice.type === 'success' ? 'border-l-primary' : 'border-l-muted-foreground/40'
               }`}>
                 <div className="flex gap-3">
                   <Lightbulb className={`w-4 h-4 shrink-0 mt-0.5 ${
-                    advice.type === 'warning' ? 'text-accent' : advice.type === 'success' ? 'text-secondary' : 'text-primary'
+                    advice.type === 'warning' ? 'text-foreground' : advice.type === 'success' ? 'text-primary' : 'text-muted-foreground'
                   }`} />
                   <div>
-                    <h3 className="font-display font-semibold text-xs">Conseil {advice.icon}</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">{advice.text}</p>
+                    <h3 className="font-display font-semibold text-xs">Conseil</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{advice.text}</p>
                   </div>
                 </div>
               </div>
@@ -368,20 +360,20 @@ export default function Tracking() {
           </motion.div>
         )}
 
-        {/* ═══ Saisies ═══ */}
+        {/* Input forms */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
-            <h2 className="font-display font-semibold text-sm flex items-center gap-2">
-              <Scale className="w-4 h-4 text-primary" /> Poids
-            </h2>
+          <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-5 space-y-3">
+            <p className="section-title flex items-center gap-2">
+              <Scale className="w-3.5 h-3.5 text-primary" /> Poids
+            </p>
             <div className="flex gap-2">
               <Input type="number" step="0.1" placeholder="Ex: 72.5" value={newWeight} onChange={e => setNewWeight(e.target.value)} className="flex-1" />
-              <Button className="gap-1.5 tap-scale" onClick={addWeight}>
+              <Button className="gap-1.5 tap-scale rounded-lg" onClick={addWeight}>
                 <Plus className="w-4 h-4" /> {todayWeightLog ? 'Mettre à jour' : 'Enregistrer'}
               </Button>
             </div>
             {todayWeightLog && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 Aujourd'hui : <span className="font-medium text-foreground">{todayWeightLog.weight} kg</span>
                 {todayWeightLog.updatedAt && (
                   <span> — {format(new Date(todayWeightLog.updatedAt), 'HH:mm')}</span>
@@ -389,16 +381,16 @@ export default function Tracking() {
               </p>
             )}
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              Pèse-toi idéalement le matin à jeun pour un suivi fiable.
+              Pèse-toi le matin à jeun pour un suivi fiable.
             </p>
           </motion.div>
 
-          <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
-            <h2 className="font-display font-semibold text-sm flex items-center gap-2">
-              <Flame className="w-4 h-4 text-accent" /> Calories extra
-            </h2>
+          <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-5 space-y-3">
+            <p className="section-title flex items-center gap-2">
+              <Flame className="w-3.5 h-3.5 text-foreground" /> Calories extra
+            </p>
             {todayCalorieLog && (
-              <div className="p-2.5 rounded-lg bg-muted/40 space-y-1">
+              <div className="p-3 rounded-xl bg-muted/40 space-y-1">
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Consommées manuelles</span>
                   <span className="font-medium">{manualConsumed} kcal</span>
@@ -414,11 +406,11 @@ export default function Tracking() {
                 <Label className="text-xs">Consommées manuelles (kcal)</Label>
                 <div className="flex gap-1.5 mt-1">
                   <Input type="number" min="0" placeholder="kcal" value={newCalConsumed} onChange={e => setNewCalConsumed(e.target.value)} className="flex-1" />
-                  <Button size="sm" className="gap-1 tap-scale" onClick={() => handleCalorieAction('consumed', 'add')} disabled={!newCalConsumed}>
+                  <Button size="sm" className="gap-1 tap-scale rounded-lg" onClick={() => handleCalorieAction('consumed', 'add')} disabled={!newCalConsumed}>
                     <Plus className="w-3.5 h-3.5" /> Ajouter
                   </Button>
                   {todayCalorieLog && (
-                    <Button size="sm" variant="outline" className="gap-1 tap-scale" onClick={() => handleCalorieAction('consumed', 'replace')} disabled={!newCalConsumed}>
+                    <Button size="sm" variant="outline" className="gap-1 tap-scale rounded-lg" onClick={() => handleCalorieAction('consumed', 'replace')} disabled={!newCalConsumed}>
                       Remplacer
                     </Button>
                   )}
@@ -428,11 +420,11 @@ export default function Tracking() {
                 <Label className="text-xs">Dépensées extra (kcal)</Label>
                 <div className="flex gap-1.5 mt-1">
                   <Input type="number" min="0" placeholder="kcal" value={newCalBurned} onChange={e => setNewCalBurned(e.target.value)} className="flex-1" />
-                  <Button size="sm" className="gap-1 tap-scale" onClick={() => handleCalorieAction('burned', 'add')} disabled={!newCalBurned}>
+                  <Button size="sm" className="gap-1 tap-scale rounded-lg" onClick={() => handleCalorieAction('burned', 'add')} disabled={!newCalBurned}>
                     <Plus className="w-3.5 h-3.5" /> Ajouter
                   </Button>
                   {todayCalorieLog && (
-                    <Button size="sm" variant="outline" className="gap-1 tap-scale" onClick={() => handleCalorieAction('burned', 'replace')} disabled={!newCalBurned}>
+                    <Button size="sm" variant="outline" className="gap-1 tap-scale rounded-lg" onClick={() => handleCalorieAction('burned', 'replace')} disabled={!newCalBurned}>
                       Remplacer
                     </Button>
                   )}
@@ -440,20 +432,17 @@ export default function Tracking() {
               </div>
             </div>
             {todayCalorieLog && (
-              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive gap-1 w-full" onClick={resetCalories}>
-                🗑️ Réinitialiser le jour
+              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive gap-1 w-full text-xs" onClick={resetCalories}>
+                Réinitialiser le jour
               </Button>
             )}
-            <p className="text-[10px] text-muted-foreground leading-relaxed">
-              <strong>Ajouter</strong> = cumule avec la valeur actuelle. <strong>Remplacer</strong> = corrige la valeur du jour.
-            </p>
           </motion.div>
         </div>
 
-        {/* ═══ Graphique poids ═══ */}
+        {/* Weight chart */}
         {chartData.length >= 1 && (
-          <motion.div custom={6} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
-            <h2 className="font-display font-semibold text-sm mb-3">📈 Évolution du poids</h2>
+          <motion.div custom={6} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-5">
+            <p className="section-title mb-4">Évolution du poids</p>
             {chartData.length < 2 ? (
               <p className="text-xs text-muted-foreground">Ajoute une pesée un autre jour pour voir le graphique.</p>
             ) : (
@@ -467,33 +456,33 @@ export default function Tracking() {
                     unit=" kg"
                   />
                   <RechartsTooltip
-                    contentStyle={{ borderRadius: '0.75rem', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}
+                    contentStyle={{ borderRadius: '0.875rem', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}
                     formatter={(value: number) => [`${value} kg`, 'Poids']}
                     labelFormatter={(label) => `Date : ${label}`}
                   />
-                  <Line type="monotone" dataKey="poids" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4, fill: 'hsl(var(--primary))' }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="poids" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3, fill: 'hsl(var(--primary))' }} activeDot={{ r: 5 }} />
                 </LineChart>
               </ResponsiveContainer>
             )}
           </motion.div>
         )}
 
-        {/* ═══ Historique pesées ═══ */}
+        {/* Weight history */}
         {recentWeightLogsDesc.length > 0 && (
-          <motion.div custom={7} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
-            <h2 className="font-display font-semibold text-sm mb-3">Historique des pesées</h2>
+          <motion.div custom={7} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-5">
+            <p className="section-title mb-3">Historique des pesées</p>
             <div className="space-y-0.5">
               {recentWeightLogsDesc.map(log => {
                 const diff = weightDiffByLogId[log.id];
                 return (
-                  <div key={log.id} className="flex justify-between items-center text-sm py-1.5 border-b border-border last:border-0">
+                  <div key={log.id} className="flex justify-between items-center text-sm py-2 border-b border-border/30 last:border-0">
                     <span className="text-muted-foreground">
                       {format(new Date(`${log.date}T12:00:00`), 'd MMM yyyy', { locale: fr })}
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{log.weight} kg</span>
                       {diff !== null && Math.abs(diff) >= 0.05 && (
-                        <span className={`text-xs ${diff > 0 ? 'text-destructive' : 'text-secondary'}`}>
+                        <span className={`text-xs ${diff > 0 ? 'text-destructive' : 'text-primary'}`}>
                           {diff > 0 ? '+' : ''}{diff.toFixed(1)}
                         </span>
                       )}

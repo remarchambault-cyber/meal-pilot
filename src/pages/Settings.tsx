@@ -32,7 +32,6 @@ export default function SettingsPage() {
     dietPreference: 'none', extraCaloriesBurned: 0,
   });
 
-  // Populate form when profile loads from DB
   useEffect(() => {
     if (profile) setForm(profile);
   }, [profile]);
@@ -43,11 +42,10 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await saveProfile(form);
-      // Sync localStorage for pages that still use it
       window.localStorage.setItem('mealpilot_profile', JSON.stringify(form));
-      toast({ title: '✅ Profil enregistré' });
+      toast({ title: 'Profil enregistré' });
     } catch (error: any) {
-      toast({ title: '❌ Erreur', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -58,7 +56,7 @@ export default function SettingsPage() {
     setCalorieLogs([]);
     setMealPlan([]);
     setCustomRecipes([]);
-    toast({ title: '🗑️ Données réinitialisées' });
+    toast({ title: 'Données réinitialisées' });
   };
 
   const handleReOnboard = () => {
@@ -70,34 +68,34 @@ export default function SettingsPage() {
     navigate('/auth', { replace: true });
   };
 
-  if (profileLoading) return <AppLayout><div className="flex items-center justify-center py-12 text-muted-foreground">Chargement…</div></AppLayout>;
+  if (profileLoading) return <AppLayout><div className="flex items-center justify-center py-12 text-muted-foreground text-sm">Chargement…</div></AppLayout>;
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         <h1 className="text-2xl font-display font-bold">Paramètres</h1>
 
         {user && (
-          <div className="text-sm text-muted-foreground">Connecté : {user.email}</div>
+          <p className="text-sm text-muted-foreground">{user.email}</p>
         )}
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-elevated p-5 space-y-4">
-          <h2 className="font-display font-semibold">Mon profil</h2>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-elevated p-6 space-y-5">
+          <p className="section-title">Mon profil</p>
 
           <div>
-            <Label>Prénom</Label>
-            <Input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} />
+            <Label className="text-xs font-medium">Prénom</Label>
+            <Input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} className="mt-1" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Âge</Label>
-              <Input type="number" value={form.age} onChange={e => setForm(f => ({ ...f, age: parseInt(e.target.value) || 0 }))} />
+              <Label className="text-xs font-medium">Âge</Label>
+              <Input type="number" value={form.age} onChange={e => setForm(f => ({ ...f, age: parseInt(e.target.value) || 0 }))} className="mt-1" />
             </div>
             <div>
-              <Label>Sexe</Label>
+              <Label className="text-xs font-medium">Sexe</Label>
               <Select value={form.sex} onValueChange={(v) => setForm(f => ({ ...f, sex: v as 'male' | 'female' }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="male">Homme</SelectItem>
                   <SelectItem value="female">Femme</SelectItem>
@@ -108,19 +106,19 @@ export default function SettingsPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Taille (cm)</Label>
-              <Input type="number" value={form.heightCm} onChange={e => setForm(f => ({ ...f, heightCm: parseInt(e.target.value) || 0 }))} />
+              <Label className="text-xs font-medium">Taille (cm)</Label>
+              <Input type="number" value={form.heightCm} onChange={e => setForm(f => ({ ...f, heightCm: parseInt(e.target.value) || 0 }))} className="mt-1" />
             </div>
             <div>
-              <Label>Poids (kg)</Label>
-              <Input type="number" step="0.1" value={form.weightKg} onChange={e => setForm(f => ({ ...f, weightKg: parseFloat(e.target.value) || 0 }))} />
+              <Label className="text-xs font-medium">Poids (kg)</Label>
+              <Input type="number" step="0.1" value={form.weightKg} onChange={e => setForm(f => ({ ...f, weightKg: parseFloat(e.target.value) || 0 }))} className="mt-1" />
             </div>
           </div>
 
           <div>
-            <Label>Niveau d'activité</Label>
+            <Label className="text-xs font-medium">Niveau d'activité</Label>
             <Select value={form.activityLevel} onValueChange={(v) => setForm(f => ({ ...f, activityLevel: v as UserProfile['activityLevel'] }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="sedentary">Sédentaire</SelectItem>
                 <SelectItem value="light">Légèrement actif</SelectItem>
@@ -132,9 +130,9 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <Label>Objectif</Label>
+            <Label className="text-xs font-medium">Objectif</Label>
             <Select value={form.goal} onValueChange={(v) => setForm(f => ({ ...f, goal: v as UserProfile['goal'] }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="lose">Perte de poids</SelectItem>
                 <SelectItem value="maintain">Maintien</SelectItem>
@@ -144,9 +142,9 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <Label>Préférence alimentaire</Label>
+            <Label className="text-xs font-medium">Préférence alimentaire</Label>
             <Select value={form.dietPreference} onValueChange={(v) => setForm(f => ({ ...f, dietPreference: v as UserProfile['dietPreference'] }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Sans restriction</SelectItem>
                 <SelectItem value="vegetarian">Végétarien</SelectItem>
@@ -158,23 +156,23 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <Label>Calories dépensées en plus</Label>
-            <Input type="number" value={form.extraCaloriesBurned} onChange={e => setForm(f => ({ ...f, extraCaloriesBurned: parseInt(e.target.value) || 0 }))} />
+            <Label className="text-xs font-medium">Calories dépensées en plus</Label>
+            <Input type="number" value={form.extraCaloriesBurned} onChange={e => setForm(f => ({ ...f, extraCaloriesBurned: parseInt(e.target.value) || 0 }))} className="mt-1" />
           </div>
 
-          <Button className="w-full gap-2 tap-scale" onClick={handleSave} disabled={saving}>
+          <Button className="w-full gap-2 tap-scale rounded-xl" onClick={handleSave} disabled={saving}>
             <Save className="w-4 h-4" /> {saving ? 'Enregistrement…' : 'Enregistrer'}
           </Button>
         </motion.div>
 
-        <div className="space-y-2">
-          <Button variant="outline" className="w-full gap-2 tap-scale" onClick={handleReOnboard}>
+        <div className="space-y-2.5">
+          <Button variant="outline" className="w-full gap-2 tap-scale rounded-xl justify-start" onClick={handleReOnboard}>
             <RotateCcw className="w-4 h-4" /> Relancer l'onboarding
           </Button>
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" className="w-full gap-2 tap-scale text-destructive">
+              <Button variant="outline" className="w-full gap-2 tap-scale rounded-xl justify-start text-destructive hover:text-destructive">
                 <Trash2 className="w-4 h-4" /> Réinitialiser mes données
               </Button>
             </AlertDialogTrigger>
@@ -192,7 +190,7 @@ export default function SettingsPage() {
             </AlertDialogContent>
           </AlertDialog>
 
-          <Button variant="outline" className="w-full gap-2 tap-scale" onClick={handleSignOut}>
+          <Button variant="outline" className="w-full gap-2 tap-scale rounded-xl justify-start" onClick={handleSignOut}>
             <LogOut className="w-4 h-4" /> Se déconnecter
           </Button>
         </div>

@@ -38,10 +38,10 @@ export default function Auth() {
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        toast({ title: '✅ Compte créé ! Vérifie ton email pour confirmer.' });
+        toast({ title: 'Compte créé ! Vérifie ton email pour confirmer.' });
       }
     } catch (error: any) {
-      toast({ title: '❌ Erreur', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ export default function Auth() {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      toast({ title: '❌ Erreur', description: 'Entre ton adresse email.', variant: 'destructive' });
+      toast({ title: 'Erreur', description: 'Entre ton adresse email.', variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -59,10 +59,10 @@ export default function Auth() {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
-      toast({ title: '📧 Email envoyé', description: 'Si cette adresse existe, tu recevras un lien de réinitialisation.' });
+      toast({ title: 'Email envoyé', description: 'Si cette adresse existe, tu recevras un lien de réinitialisation.' });
       setIsForgotPassword(false);
     } catch (error: any) {
-      toast({ title: '❌ Erreur', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -70,33 +70,34 @@ export default function Auth() {
 
   if (isForgotPassword) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-5">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="w-full max-w-md"
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-sm"
         >
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-display font-extrabold text-primary">MealPilot</h1>
-            <p className="text-muted-foreground mt-2">Réinitialise ton mot de passe</p>
+          <div className="text-center mb-10">
+            <h1 className="text-2xl font-display font-bold text-primary">MealPilot</h1>
+            <p className="text-muted-foreground text-sm mt-2">Réinitialise ton mot de passe</p>
           </div>
 
-          <form onSubmit={handleForgotPassword} className="card-elevated p-6 space-y-4">
+          <form onSubmit={handleForgotPassword} className="card-elevated p-6 space-y-5">
             <div>
-              <Label htmlFor="reset-email">Email</Label>
+              <Label className="text-xs font-medium" htmlFor="reset-email">Email</Label>
               <Input
                 id="reset-email"
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="ton@email.com"
+                className="mt-1"
                 required
               />
             </div>
 
-            <Button type="submit" className="w-full tap-scale" size="lg" disabled={loading}>
-              {loading ? '...' : 'Envoyer le lien de réinitialisation'}
+            <Button type="submit" className="w-full tap-scale rounded-xl" size="lg" disabled={loading}>
+              {loading ? '...' : 'Envoyer le lien'}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
@@ -115,41 +116,43 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-5">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="w-full max-w-md"
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-sm"
       >
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-display font-extrabold text-primary">MealPilot</h1>
-          <p className="text-muted-foreground mt-2">
+        <div className="text-center mb-10">
+          <h1 className="text-2xl font-display font-bold text-primary">MealPilot</h1>
+          <p className="text-muted-foreground text-sm mt-2">
             {isLogin ? 'Connecte-toi à ton compte' : 'Crée ton compte'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="card-elevated p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="card-elevated p-6 space-y-5">
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label className="text-xs font-medium" htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="ton@email.com"
+              className="mt-1"
               required
             />
           </div>
 
           <div>
-            <Label htmlFor="password">Mot de passe</Label>
+            <Label className="text-xs font-medium" htmlFor="password">Mot de passe</Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
+              className="mt-1"
               minLength={6}
               required
             />
@@ -159,7 +162,7 @@ export default function Auth() {
             <div className="text-right">
               <button
                 type="button"
-                className="text-xs text-muted-foreground hover:text-primary hover:underline transition-colors"
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
                 onClick={() => setIsForgotPassword(true)}
               >
                 Mot de passe oublié ?
@@ -167,7 +170,7 @@ export default function Auth() {
             </div>
           )}
 
-          <Button type="submit" className="w-full tap-scale" size="lg" disabled={loading}>
+          <Button type="submit" className="w-full tap-scale rounded-xl" size="lg" disabled={loading}>
             {loading ? '...' : isLogin ? 'Se connecter' : 'Créer mon compte'}
           </Button>
 

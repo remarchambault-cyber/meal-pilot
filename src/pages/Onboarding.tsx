@@ -57,44 +57,43 @@ export default function Onboarding() {
         extraCaloriesBurned: parseInt(form.extraCaloriesBurned) || 0,
       };
       await saveProfile(profile);
-      // Also keep localStorage for pages that still read it
       window.localStorage.setItem('mealpilot_profile', JSON.stringify(profile));
       navigate('/dashboard');
     } catch (error: any) {
-      toast({ title: '❌ Erreur', description: error.message, variant: 'destructive' });
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-5">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.4 }}
         className="w-full max-w-md"
       >
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-display font-extrabold text-primary">MealPilot</h1>
-          <p className="text-muted-foreground mt-2">Configure ton profil pour commencer</p>
+        <div className="text-center mb-10">
+          <h1 className="text-2xl font-display font-bold text-primary">MealPilot</h1>
+          <p className="text-muted-foreground text-sm mt-2">Configure ton profil pour commencer</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="card-elevated p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="card-elevated p-6 space-y-5">
           <div>
-            <Label htmlFor="firstName">Prénom</Label>
-            <Input id="firstName" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} placeholder="Ton prénom" required />
+            <Label className="text-xs font-medium" htmlFor="firstName">Prénom</Label>
+            <Input id="firstName" value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} placeholder="Ton prénom" className="mt-1" required />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="age">Âge</Label>
-              <Input id="age" type="number" value={form.age} onChange={e => setForm(f => ({ ...f, age: e.target.value }))} placeholder="25" required />
+              <Label className="text-xs font-medium" htmlFor="age">Âge</Label>
+              <Input id="age" type="number" value={form.age} onChange={e => setForm(f => ({ ...f, age: e.target.value }))} placeholder="25" className="mt-1" required />
             </div>
             <div>
-              <Label>Sexe</Label>
+              <Label className="text-xs font-medium">Sexe</Label>
               <Select value={form.sex} onValueChange={(v) => setForm(f => ({ ...f, sex: v as 'male' | 'female' }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="male">Homme</SelectItem>
                   <SelectItem value="female">Femme</SelectItem>
@@ -105,19 +104,19 @@ export default function Onboarding() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="height">Taille (cm)</Label>
-              <Input id="height" type="number" value={form.heightCm} onChange={e => setForm(f => ({ ...f, heightCm: e.target.value }))} placeholder="170" required />
+              <Label className="text-xs font-medium" htmlFor="height">Taille (cm)</Label>
+              <Input id="height" type="number" value={form.heightCm} onChange={e => setForm(f => ({ ...f, heightCm: e.target.value }))} placeholder="170" className="mt-1" required />
             </div>
             <div>
-              <Label htmlFor="weight">Poids (kg)</Label>
-              <Input id="weight" type="number" step="0.1" value={form.weightKg} onChange={e => setForm(f => ({ ...f, weightKg: e.target.value }))} placeholder="70" required />
+              <Label className="text-xs font-medium" htmlFor="weight">Poids (kg)</Label>
+              <Input id="weight" type="number" step="0.1" value={form.weightKg} onChange={e => setForm(f => ({ ...f, weightKg: e.target.value }))} placeholder="70" className="mt-1" required />
             </div>
           </div>
 
           <div>
-            <Label>Niveau d'activité</Label>
+            <Label className="text-xs font-medium">Niveau d'activité</Label>
             <Select value={form.activityLevel} onValueChange={(v) => setForm(f => ({ ...f, activityLevel: v as UserProfile['activityLevel'] }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="sedentary">Sédentaire</SelectItem>
                 <SelectItem value="light">Légèrement actif</SelectItem>
@@ -129,9 +128,9 @@ export default function Onboarding() {
           </div>
 
           <div>
-            <Label>Objectif</Label>
+            <Label className="text-xs font-medium">Objectif</Label>
             <Select value={form.goal} onValueChange={(v) => setForm(f => ({ ...f, goal: v as UserProfile['goal'] }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="lose">Perte de poids</SelectItem>
                 <SelectItem value="maintain">Maintien</SelectItem>
@@ -142,9 +141,9 @@ export default function Onboarding() {
 
           {form.goal !== 'maintain' && (
             <div>
-              <Label>Rythme cible</Label>
+              <Label className="text-xs font-medium">Rythme cible</Label>
               <Select value={form.targetRate} onValueChange={(v) => setForm(f => ({ ...f, targetRate: v as UserProfile['targetRate'] }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="slow">Progressif</SelectItem>
                   <SelectItem value="moderate">Modéré</SelectItem>
@@ -155,9 +154,9 @@ export default function Onboarding() {
           )}
 
           <div>
-            <Label>Préférence alimentaire</Label>
+            <Label className="text-xs font-medium">Préférence alimentaire</Label>
             <Select value={form.dietPreference} onValueChange={(v) => setForm(f => ({ ...f, dietPreference: v as UserProfile['dietPreference'] }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Sans restriction</SelectItem>
                 <SelectItem value="vegetarian">Végétarien</SelectItem>
@@ -169,12 +168,12 @@ export default function Onboarding() {
           </div>
 
           <div>
-            <Label htmlFor="extra">Calories dépensées en plus (optionnel)</Label>
-            <Input id="extra" type="number" value={form.extraCaloriesBurned} onChange={e => setForm(f => ({ ...f, extraCaloriesBurned: e.target.value }))} placeholder="0" />
+            <Label className="text-xs font-medium" htmlFor="extra">Calories dépensées en plus (optionnel)</Label>
+            <Input id="extra" type="number" value={form.extraCaloriesBurned} onChange={e => setForm(f => ({ ...f, extraCaloriesBurned: e.target.value }))} placeholder="0" className="mt-1" />
           </div>
 
-          <Button type="submit" className="w-full tap-scale" size="lg" disabled={saving}>
-            {saving ? 'Enregistrement...' : "C'est parti !"}
+          <Button type="submit" className="w-full tap-scale rounded-xl" size="lg" disabled={saving}>
+            {saving ? 'Enregistrement...' : "C'est parti"}
           </Button>
         </form>
       </motion.div>
