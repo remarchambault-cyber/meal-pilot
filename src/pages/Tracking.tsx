@@ -231,7 +231,7 @@ export default function Tracking() {
                 <Utensils className="w-4 h-4 text-accent" />
               </div>
               <p className="font-display font-bold text-base leading-tight">{netConsumed}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Net conso.</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Net consommé</p>
             </div>
             <div>
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-1.5 ${gapBg(ecartConsomme)}`}>
