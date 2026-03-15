@@ -85,14 +85,13 @@ export function useProfile() {
 
   const saveProfile = useCallback(async (userProfile: UserProfile) => {
     if (!user) return;
-    const payload = userProfileToDb(userProfile);
+    const payload = { ...userProfileToDb(userProfile), user_id: user.id };
     const { error } = await supabase
       .from('profiles')
-      .update(payload)
-      .eq('user_id', user.id);
+      .upsert(payload, { onConflict: 'user_id' });
     if (error) throw error;
     setProfile(userProfile);
-    await fetchProfile(); // refresh dbProfile
+    await fetchProfile();
   }, [user, fetchProfile]);
 
   /** True if the profile has been filled (first_name set) */
