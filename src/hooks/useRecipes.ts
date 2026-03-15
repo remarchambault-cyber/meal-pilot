@@ -37,6 +37,7 @@ function dbToRecipe(
 }
 
 export function useRecipes() {
+  const { session } = useAuth();
   const { dbProfile } = useProfile();
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
