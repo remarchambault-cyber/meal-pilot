@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { MealPlanItem, Recipe, UserProfile } from '@/data/types';
-import { mockRecipes } from '@/data/recipes';
+import { useProfile } from '@/hooks/useProfile';
+import { useRecipes } from '@/hooks/useRecipes';
+import { useMealPlan } from '@/hooks/useMealPlan';
+import { MealPlanItem, Recipe } from '@/data/types';
 import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories';
 import { getScaleFactor } from '@/lib/recipeScaling';
 import {
@@ -45,9 +46,9 @@ function toDateKey(date: Date) {
 
 export default function Planning() {
   const navigate = useNavigate();
-  const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
-  const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
-  const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
+  const { profile } = useProfile();
+  const { allRecipes } = useRecipes();
+  const { mealPlan, addMeals, removeMeal: removeMealFromDb, toggleConsumed, duplicateMeals } = useMealPlan();
   const isMobile = useIsMobile();
 
   const [weekOffset, setWeekOffset] = useState(0);
@@ -61,7 +62,6 @@ export default function Planning() {
   const [duplicateSourceMeal, setDuplicateSourceMeal] = useState<MealPlanItem | null>(null);
   const [duplicateDays, setDuplicateDays] = useState<string[]>([]);
 
-  const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
   const mealSuggestions = useMemo(() => target ? getMealCalorieSuggestion(target.target) : null, [target]);
 
@@ -107,13 +107,21 @@ export default function Planning() {
     }, 0);
   };
 
-  const removeMeal = (id: string) => {
-    setMealPlan(prev => prev.filter(m => m.id !== id));
-    toast({ title: '🗑️ Repas supprimé' });
+  const removeMeal = async (id: string) => {
+    try {
+      await removeMealFromDb(id);
+      toast({ title: '🗑️ Repas supprimé' });
+    } catch {
+      toast({ title: '❌ Erreur', variant: 'destructive' });
+    }
   };
 
-  const toggleConsumed = (id: string) => {
-    setMealPlan(prev => prev.map(m => m.id === id ? { ...m, consumed: !m.consumed } : m));
+  const handleToggleConsumed = async (id: string) => {
+    try {
+      await toggleConsumed(id);
+    } catch {
+      toast({ title: '❌ Erreur', variant: 'destructive' });
+    }
   };
 
   const openAddDialog = (dateStr: string) => {
@@ -133,7 +141,7 @@ export default function Planning() {
     setDuplicateDays(prev => (prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]));
   };
 
-  const handleQuickAdd = () => {
+  const handleQuickAdd = async () => {
     if (!addDialogDate || !selectedRecipeId) return;
     const selectedDates = isBatchCooking
       ? [...batchDays].sort((a, b) => a.localeCompare(b))
@@ -160,15 +168,18 @@ export default function Planning() {
       scaleFactor: sf,
     }));
 
-    setMealPlan(prev => [...prev, ...items]);
-    setAddDialogDate(null);
-
-    toast({
-      title: isBatchCooking ? '✅ Batch cooking planifié' : '✅ Repas ajouté',
-      description: isBatchCooking
-        ? `${recipe.title} sur ${selectedDates.length} jours`
-        : `${recipe.title} — ${Math.round(recipe.calories * sf)} kcal`,
-    });
+    try {
+      await addMeals(items);
+      setAddDialogDate(null);
+      toast({
+        title: isBatchCooking ? '✅ Batch cooking planifié' : '✅ Repas ajouté',
+        description: isBatchCooking
+          ? `${recipe.title} sur ${selectedDates.length} jours`
+          : `${recipe.title} — ${Math.round(recipe.calories * sf)} kcal`,
+      });
+    } catch {
+      toast({ title: '❌ Erreur', variant: 'destructive' });
+    }
   };
 
   const openDuplicateDialog = (meal: MealPlanItem) => {
@@ -177,18 +188,16 @@ export default function Planning() {
     setDuplicateDays([defaultDuplicateDate]);
   };
 
-  const confirmDuplicate = () => {
+  const confirmDuplicate = async () => {
     if (!duplicateSourceMeal || duplicateDays.length === 0) return;
-    const duplicatedItems: MealPlanItem[] = duplicateDays.map((date, index) => ({
-      ...duplicateSourceMeal,
-      id: `mp_${Date.now()}_dup_${date.split('-').join('')}_${index}`,
-      date,
-      isBatchCooking: false,
-    }));
-    setMealPlan(prev => [...prev, ...duplicatedItems]);
-    setDuplicateSourceMeal(null);
-    setDuplicateDays([]);
-    toast({ title: '📋 Repas dupliqué', description: `${duplicatedItems.length} occurrence(s) ajoutée(s)` });
+    try {
+      await duplicateMeals(duplicateSourceMeal, duplicateDays);
+      setDuplicateSourceMeal(null);
+      setDuplicateDays([]);
+      toast({ title: '📋 Repas dupliqué', description: `${duplicateDays.length} occurrence(s) ajoutée(s)` });
+    } catch {
+      toast({ title: '❌ Erreur', variant: 'destructive' });
+    }
   };
 
   const addDialogDateFormatted = addDialogDate
@@ -197,7 +206,6 @@ export default function Planning() {
 
   const duplicateRecipe = duplicateSourceMeal ? getRecipe(duplicateSourceMeal.recipeId) : null;
 
-  // Gap color: negative=red, positive=green, zero=neutral
   const gapColor = (gap: number) =>
     gap > 0 ? 'text-secondary' : gap < 0 ? 'text-destructive' : 'text-muted-foreground';
   const gapBg = (gap: number) =>
@@ -321,7 +329,7 @@ export default function Planning() {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => toggleConsumed(meal.id)}>
+                                    <DropdownMenuItem onClick={() => handleToggleConsumed(meal.id)}>
                                       {meal.consumed ? <Circle className="w-3.5 h-3.5 mr-2" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-2" />}
                                       {meal.consumed ? 'Non consommé' : 'Marquer consommé'}
                                     </DropdownMenuItem>
@@ -345,7 +353,7 @@ export default function Planning() {
                                     variant={meal.consumed ? 'default' : 'outline'}
                                     size="sm"
                                     className={cn('h-7 px-2 gap-1 text-xs', meal.consumed && 'bg-secondary hover:bg-secondary/80 text-secondary-foreground')}
-                                    onClick={() => toggleConsumed(meal.id)}
+                                    onClick={() => handleToggleConsumed(meal.id)}
                                   >
                                     {meal.consumed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
                                     {meal.consumed ? 'Consommé' : 'Consommer'}

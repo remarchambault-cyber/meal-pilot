@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      planned_meals: {
+        Row: {
+          adjusted_calories: number | null
+          adjusted_carbs_g: number | null
+          adjusted_fats_g: number | null
+          adjusted_protein_g: number | null
+          batch_group_id: string | null
+          created_at: string
+          date: string
+          id: string
+          is_batch: boolean
+          is_consumed: boolean
+          meal_type: string
+          portions: number
+          profile_id: string
+          recipe_id: string
+          scaling_factor: number
+          updated_at: string
+        }
+        Insert: {
+          adjusted_calories?: number | null
+          adjusted_carbs_g?: number | null
+          adjusted_fats_g?: number | null
+          adjusted_protein_g?: number | null
+          batch_group_id?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          is_batch?: boolean
+          is_consumed?: boolean
+          meal_type?: string
+          portions?: number
+          profile_id: string
+          recipe_id: string
+          scaling_factor?: number
+          updated_at?: string
+        }
+        Update: {
+          adjusted_calories?: number | null
+          adjusted_carbs_g?: number | null
+          adjusted_fats_g?: number | null
+          adjusted_protein_g?: number | null
+          batch_group_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          is_batch?: boolean
+          is_consumed?: boolean
+          meal_type?: string
+          portions?: number
+          profile_id?: string
+          recipe_id?: string
+          scaling_factor?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planned_meals_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planned_meals_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           activity_level: string
@@ -70,6 +142,132 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      recipe_ingredients: {
+        Row: {
+          category: string
+          id: string
+          ingredient_name: string
+          ingredient_normalized_name: string
+          quantity: number
+          recipe_id: string
+          unit: string
+        }
+        Insert: {
+          category?: string
+          id?: string
+          ingredient_name: string
+          ingredient_normalized_name?: string
+          quantity?: number
+          recipe_id: string
+          unit?: string
+        }
+        Update: {
+          category?: string
+          id?: string
+          ingredient_name?: string
+          ingredient_normalized_name?: string
+          quantity?: number
+          recipe_id?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_ingredients_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_steps: {
+        Row: {
+          id: string
+          recipe_id: string
+          step_order: number
+          step_text: string
+        }
+        Insert: {
+          id?: string
+          recipe_id: string
+          step_order?: number
+          step_text?: string
+        }
+        Update: {
+          id?: string
+          recipe_id?: string
+          step_order?: number
+          step_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_steps_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipes: {
+        Row: {
+          base_calories: number
+          base_carbs_g: number
+          base_fats_g: number
+          base_protein_g: number
+          created_at: string
+          description: string
+          diet_tags: string[]
+          id: string
+          is_system_recipe: boolean
+          meal_type: string
+          owner_profile_id: string | null
+          prep_time_min: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          base_calories?: number
+          base_carbs_g?: number
+          base_fats_g?: number
+          base_protein_g?: number
+          created_at?: string
+          description?: string
+          diet_tags?: string[]
+          id?: string
+          is_system_recipe?: boolean
+          meal_type?: string
+          owner_profile_id?: string | null
+          prep_time_min?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          base_calories?: number
+          base_carbs_g?: number
+          base_fats_g?: number
+          base_protein_g?: number
+          created_at?: string
+          description?: string
+          diet_tags?: string[]
+          id?: string
+          is_system_recipe?: boolean
+          meal_type?: string
+          owner_profile_id?: string | null
+          prep_time_min?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipes_owner_profile_id_fkey"
+            columns: ["owner_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

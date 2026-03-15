@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { Recipe, RecipeIngredient, MealPlanItem } from '@/data/types';
+import { Recipe, RecipeIngredient } from '@/data/types';
+import { useRecipes } from '@/hooks/useRecipes';
+import { useMealPlan } from '@/hooks/useMealPlan';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,13 +30,14 @@ const MEAL_BADGE: Record<string, string> = { breakfast: 'Petit déj.', lunch: 'D
 
 export default function MyRecipes() {
   const navigate = useNavigate();
-  const [recipes, setRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
-  const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
+  const { customRecipes, createRecipe, updateRecipe, deleteRecipe, loading: recipesLoading } = useRecipes();
+  const { addMeals } = useMealPlan();
   const [showEditor, setShowEditor] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<Recipe, 'id'>>(EMPTY_RECIPE);
   const [newStep, setNewStep] = useState('');
   const [planRecipe, setPlanRecipe] = useState<Recipe | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const startCreate = () => { setEditingId(null); setForm({ ...EMPTY_RECIPE, ingredients: [], steps: [] }); setShowEditor(true); };
   const startEdit = (recipe: Recipe) => { setEditingId(recipe.id); const { id, ...rest } = recipe; setForm({ ...rest }); setShowEditor(true); };
@@ -49,19 +51,33 @@ export default function MyRecipes() {
   const addStep = () => { if (!newStep.trim()) return; setForm(f => ({ ...f, steps: [...f.steps, newStep.trim()] })); setNewStep(''); };
   const removeStep = (index: number) => setForm(f => ({ ...f, steps: f.steps.filter((_, i) => i !== index) }));
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title.trim()) { toast({ title: '⚠️ Titre requis', variant: 'destructive' }); return; }
-    if (editingId) {
-      setRecipes(prev => prev.map(r => r.id === editingId ? { ...form, id: editingId } : r));
-      toast({ title: '✅ Recette modifiée' });
-    } else {
-      setRecipes(prev => [...prev, { ...form, id: `custom_${Date.now()}` }]);
-      toast({ title: '✅ Recette créée' });
+    setSaving(true);
+    try {
+      if (editingId) {
+        await updateRecipe(editingId, form);
+        toast({ title: '✅ Recette modifiée' });
+      } else {
+        await createRecipe(form);
+        toast({ title: '✅ Recette créée' });
+      }
+      setShowEditor(false);
+    } catch (e: any) {
+      toast({ title: '❌ Erreur', description: e.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
-    setShowEditor(false);
   };
 
-  const handleDelete = (id: string) => { setRecipes(prev => prev.filter(r => r.id !== id)); toast({ title: '🗑️ Recette supprimée' }); };
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteRecipe(id);
+      toast({ title: '🗑️ Recette supprimée' });
+    } catch (e: any) {
+      toast({ title: '❌ Erreur', description: e.message, variant: 'destructive' });
+    }
+  };
 
   return (
     <AppLayout>
@@ -73,7 +89,9 @@ export default function MyRecipes() {
           </Button>
         </div>
 
-        {recipes.length === 0 ? (
+        {recipesLoading ? (
+          <div className="text-center py-16 text-muted-foreground">Chargement…</div>
+        ) : customRecipes.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16 text-muted-foreground">
             <p className="text-lg">Aucune recette personnelle</p>
             <p className="text-sm mt-1">Crée tes propres recettes pour les ajouter au planning.</p>
@@ -84,7 +102,7 @@ export default function MyRecipes() {
         ) : (
           <div className="space-y-3">
             <AnimatePresence>
-              {recipes.map((recipe, i) => (
+              {customRecipes.map((recipe, i) => (
                 <motion.div
                   key={recipe.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -235,8 +253,8 @@ export default function MyRecipes() {
             </div>
 
             {/* Primary save action */}
-            <Button className="w-full tap-scale font-semibold" size="lg" onClick={handleSave}>
-              {editingId ? '✅ Enregistrer les modifications' : '✅ Créer la recette'}
+            <Button className="w-full tap-scale font-semibold" size="lg" onClick={handleSave} disabled={saving}>
+              {saving ? 'Enregistrement…' : editingId ? '✅ Enregistrer les modifications' : '✅ Créer la recette'}
             </Button>
           </div>
         </DialogContent>
@@ -247,7 +265,7 @@ export default function MyRecipes() {
           open={!!planRecipe}
           onOpenChange={(open) => !open && setPlanRecipe(null)}
           recipe={planRecipe}
-          onAdd={(items) => setMealPlan(prev => [...prev, ...items])}
+          onAdd={(items) => addMeals(items)}
         />
       )}
     </AppLayout>

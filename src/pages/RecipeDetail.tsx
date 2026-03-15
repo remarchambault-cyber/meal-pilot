@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { mockRecipes } from '@/data/recipes';
+import { useRecipes } from '@/hooks/useRecipes';
+import { useMealPlan } from '@/hooks/useMealPlan';
+import { useProfile } from '@/hooks/useProfile';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Clock, Flame, Plus, ChevronDown, ChevronUp } from 'lucide-react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { MealPlanItem, Recipe, UserProfile } from '@/data/types';
 import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories';
 import { scaleRecipe, getScaleFactorForMealType } from '@/lib/recipeScaling';
 import { motion } from 'framer-motion';
@@ -25,13 +25,12 @@ export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
-  const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
-  const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
+  const { allRecipes, loading: recipesLoading } = useRecipes();
+  const { addMeals } = useMealPlan();
+  const { profile } = useProfile();
   const [showModal, setShowModal] = useState(false);
   const [detailedMode, setDetailedMode] = useState(false);
 
-  const allRecipes = [...mockRecipes, ...customRecipes];
   const recipe = allRecipes.find(r => r.id === id);
 
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
@@ -43,6 +42,14 @@ export default function RecipeDetail() {
     if (!recipe) return 1;
     return getScaleFactorForMealType(recipe, mealTargets);
   }, [searchParams, recipe, mealTargets]);
+
+  if (recipesLoading) {
+    return (
+      <AppLayout>
+        <div className="text-center py-20 text-muted-foreground">Chargement…</div>
+      </AppLayout>
+    );
+  }
 
   if (!recipe) {
     return (
@@ -185,7 +192,7 @@ export default function RecipeDetail() {
         onOpenChange={setShowModal}
         recipe={recipe}
         mealTargets={mealTargets}
-        onAdd={(items) => setMealPlan(prev => [...prev, ...items])}
+        onAdd={(items) => addMeals(items)}
       />
     </AppLayout>
   );
