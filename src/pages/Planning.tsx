@@ -540,59 +540,93 @@ export default function Planning() {
                 onCheckedChange={(checked) => {
                   const enabled = !!checked;
                   setIsBatchCooking(enabled);
-                  if (!enabled) { setBatchDays([]); return; }
+                  if (!enabled) { setBatchDays([]); setBatchMealTypes([]); return; }
                   if (addDialogDate) setBatchDays(prev => (prev.length > 0 ? prev : [addDialogDate]));
+                  setBatchMealTypes(prev => (prev.length > 0 ? prev : [selectedMealType]));
                 }}
                 id="batch-planning"
               />
               <label htmlFor="batch-planning" className="text-sm flex items-center gap-1.5 cursor-pointer">
                 <ChefHat className="w-4 h-4 text-secondary" />
-                Batch cooking (multi-jours)
+                Batch cooking (multi-jours & créneaux)
               </label>
             </div>
 
             {isBatchCooking && (
-              <div>
-                <Label className="text-xs font-medium mb-2 block">Jours à planifier</Label>
-                <div className="grid grid-cols-2 gap-1.5 max-h-52 overflow-y-auto">
-                  {batchSelectableDays.map(day => {
-                    const selected = batchDays.includes(day);
-                    return (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => toggleBatchDay(day)}
-                        className={cn(
-                          'text-xs px-3 py-2 rounded-lg border text-left capitalize transition-colors',
-                          selected
-                            ? 'bg-primary/10 border-primary text-primary font-medium'
-                            : 'bg-card border-border text-foreground hover:bg-muted'
-                        )}
-                      >
-                        {format(new Date(`${day}T12:00:00`), 'EEE d MMM', { locale: fr })}
-                      </button>
-                    );
-                  })}
+              <>
+                {/* Meal type multi-select */}
+                <div>
+                  <Label className="text-xs font-medium mb-2 block">Créneaux de repas</Label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {PLANNING_MEAL_TYPE_ORDER.map(type => {
+                      const isSelected = batchMealTypes.includes(type);
+                      return (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => toggleBatchMealType(type)}
+                          className={cn(
+                            'text-xs px-3 py-2 rounded-lg border text-left transition-colors',
+                            isSelected
+                              ? 'bg-secondary/10 border-secondary text-secondary font-medium'
+                              : 'bg-card border-border text-foreground hover:bg-muted'
+                          )}
+                        >
+                          {PLANNING_MEAL_TYPE_LABELS[type]}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {batchDays.length} jour(s) · {batchDays.length * portions} portion(s) au total
-                </p>
-              </div>
+
+                {/* Day multi-select */}
+                <div>
+                  <Label className="text-xs font-medium mb-2 block">Jours à planifier</Label>
+                  <div className="grid grid-cols-2 gap-1.5 max-h-52 overflow-y-auto">
+                    {batchSelectableDays.map(day => {
+                      const selected = batchDays.includes(day);
+                      return (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => toggleBatchDay(day)}
+                          className={cn(
+                            'text-xs px-3 py-2 rounded-lg border text-left capitalize transition-colors',
+                            selected
+                              ? 'bg-primary/10 border-primary text-primary font-medium'
+                              : 'bg-card border-border text-foreground hover:bg-muted'
+                          )}
+                        >
+                          {format(new Date(`${day}T12:00:00`), 'EEE d MMM', { locale: fr })}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground space-y-1">
+                    <p>
+                      {batchDays.length} jour{batchDays.length > 1 ? 's' : ''} × {batchSelectedMealTypes.length} créneau{batchSelectedMealTypes.length > 1 ? 'x' : ''} = {batchTotalOccurrences} occurrence{batchTotalOccurrences > 1 ? 's' : ''}
+                    </p>
+                    <p>
+                      Quantité totale à préparer : {batchTotalPortions} portion{batchTotalPortions > 1 ? 's' : ''}
+                    </p>
+                  </div>
+                </div>
+              </>
             )}
 
             <div className="text-xs text-muted-foreground bg-muted/60 rounded-md p-2 space-y-1">
-              <p><strong>Portions</strong> = quantité pour un jour.</p>
+              <p><strong>Portions</strong> = quantité par occurrence.</p>
               <p><strong>Dupliquer</strong> = copier un repas existant.</p>
-              <p><strong>Batch cooking</strong> = planifier sur plusieurs jours.</p>
+              <p><strong>Batch cooking</strong> = planifier sur plusieurs jours et créneaux.</p>
             </div>
 
             <Button
               className="w-full tap-scale"
               onClick={handleQuickAdd}
-              disabled={!selectedRecipeId || (isBatchCooking && batchDays.length === 0)}
+              disabled={!selectedRecipeId || (isBatchCooking && (batchDays.length === 0 || batchSelectedMealTypes.length === 0))}
             >
               {isBatchCooking
-                ? `Ajouter sur ${batchDays.length} jour(s)`
+                ? `Planifier ${batchTotalOccurrences} repas`
                 : 'Ajouter au planning'
               }
             </Button>
