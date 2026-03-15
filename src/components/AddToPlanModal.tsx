@@ -316,7 +316,7 @@ export default function AddToPlanModal({ open, onOpenChange, recipe, mealTargets
 
                 <div className="mt-2 text-xs text-muted-foreground space-y-1">
                   <p>
-                    {selectedDays.length} jour{selectedDays.length > 1 ? 's' : ''} × {selectedMealTypes.length} créneau{selectedMealTypes.length > 1 ? 'x' : ''} = {totalOccurrences} occurrence{totalOccurrences > 1 ? 's' : ''}
+                    {selectedDays.length} jour{selectedDays.length > 1 ? 's' : ''} × {selectedMealTypes.length} repas = {totalOccurrences} occurrence{totalOccurrences > 1 ? 's' : ''}
                   </p>
                   <p>
                     Quantité totale à préparer : {totalPortions} portion{totalPortions > 1 ? 's' : ''}
