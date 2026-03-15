@@ -107,4 +107,18 @@
   .section-title {
     @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground;
   }
+
+  /* Meal type accent colors — premium subtle palette */
+  .meal-accent-breakfast {
+    --meal-color: 30 80% 55%;
+  }
+  .meal-accent-lunch {
+    --meal-color: 155 42% 39%;
+  }
+  .meal-accent-dinner {
+    --meal-color: 250 40% 55%;
+  }
+  .meal-accent-snack {
+    --meal-color: 340 45% 55%;
+  }
 }
