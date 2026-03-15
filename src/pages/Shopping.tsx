@@ -127,12 +127,29 @@ export default function Shopping() {
   return (
     <AppLayout>
       <div className="space-y-5">
-        <h1 className="text-2xl font-display font-bold">Liste de courses</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-display font-bold">Liste de courses</h1>
+          {checkedCount > 0 && (
+            <Button size="sm" onClick={handleDone} className="gap-1.5">
+              <CheckCheck className="w-4 h-4" />
+              Courses faites ({checkedCount})
+            </Button>
+          )}
+        </div>
 
-        {shoppingList.length === 0 ? (
+        {visibleList.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
-            <p className="text-lg">Aucun repas planifié</p>
-            <p className="text-sm mt-1">Ajoute des repas à ton planning pour générer ta liste.</p>
+            <p className="text-lg">{shoppingList.length > 0 ? 'Toutes les courses sont faites 🎉' : 'Aucun repas planifié'}</p>
+            <p className="text-sm mt-1">
+              {shoppingList.length > 0
+                ? 'Tous les éléments ont été marqués comme achetés.'
+                : 'Ajoute des repas à ton planning pour générer ta liste.'}
+            </p>
+            {shoppingList.length > 0 && hidden.size > 0 && (
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => { setHidden(new Set()); setChecked(new Set()); }}>
+                Réafficher la liste
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-5">
