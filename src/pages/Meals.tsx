@@ -173,8 +173,8 @@ export default function Meals() {
 
             {filtered.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
-                <p>Aucune recette pour ce type de repas.</p>
-                <Button variant="outline" className="mt-3" onClick={() => { setFilter('all'); setSeed(s => s + 1); }}>
+                <p>{search ? 'Aucune recette trouvée.' : 'Aucune recette pour ce type de repas.'}</p>
+                <Button variant="outline" className="mt-3" onClick={() => { setFilter('all'); setSearch(''); setSeed(s => s + 1); }}>
                   Réinitialiser les filtres
                 </Button>
               </div>

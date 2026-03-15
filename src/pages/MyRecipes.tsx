@@ -127,7 +127,13 @@ export default function MyRecipes() {
         ) : (
           <div className="space-y-3">
             <AnimatePresence>
-              {customRecipes.map((recipe, i) => (
+              {displayedRecipes.length === 0 && search.trim() ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>Aucune recette trouvée.</p>
+                  <Button variant="outline" size="sm" className="mt-3" onClick={() => setSearch('')}>Réinitialiser la recherche</Button>
+                </div>
+              ) : null}
+              {displayedRecipes.map((recipe, i) => (
                 <motion.div
                   key={recipe.id}
                   initial={{ opacity: 0, y: 10 }}
