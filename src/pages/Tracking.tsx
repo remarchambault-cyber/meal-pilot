@@ -326,8 +326,10 @@ export default function Tracking() {
         )}
 
         {plannedCalories === 0 && (
-          <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center text-sm text-muted-foreground">
-            Aucun repas planifié aujourd'hui.
+          <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
+            <p className="text-sm text-muted-foreground">Aucun repas planifié aujourd'hui.</p>
+            <p className="text-xs text-muted-foreground mt-1">Ajoute des repas depuis le planning pour voir ton suivi ici.</p>
+          </motion.div>
           </motion.div>
         )}
 
