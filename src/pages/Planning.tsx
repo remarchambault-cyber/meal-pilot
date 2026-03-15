@@ -557,7 +557,8 @@ export default function Planning() {
               <>
                 {/* Meal type multi-select */}
                 <div>
-                  <Label className="text-xs font-medium mb-2 block">Créneaux de repas</Label>
+                  <Label className="text-xs font-medium mb-1 block">Repas concernés</Label>
+                  <p className="text-[11px] text-muted-foreground mb-2">Sélectionne les repas sur lesquels tu veux prévoir cette préparation.</p>
                   <div className="grid grid-cols-2 gap-1.5">
                     {PLANNING_MEAL_TYPE_ORDER.map(type => {
                       const isSelected = batchMealTypes.includes(type);
