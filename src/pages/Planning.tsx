@@ -35,10 +35,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 const MEAL_TYPE_COLORS: Record<string, string> = {
-  breakfast: 'border-l-accent',
-  lunch: 'border-l-primary',
-  dinner: 'border-l-secondary',
-  snack: 'border-l-muted-foreground',
+  breakfast: 'border-l-primary',
+  lunch: 'border-l-foreground/20',
+  dinner: 'border-l-accent-foreground',
+  snack: 'border-l-muted-foreground/40',
 };
 
 function toDateKey(date: Date) {
@@ -115,9 +115,9 @@ export default function Planning() {
   const removeMeal = async (id: string) => {
     try {
       await removeMealFromDb(id);
-      toast({ title: '🗑️ Repas retiré du planning' });
+      toast({ title: 'Repas retiré du planning' });
     } catch {
-      toast({ title: '❌ Erreur', variant: 'destructive' });
+      toast({ title: 'Erreur', variant: 'destructive' });
     }
   };
 
@@ -125,7 +125,7 @@ export default function Planning() {
     try {
       await toggleConsumed(id);
     } catch {
-      toast({ title: '❌ Erreur', variant: 'destructive' });
+      toast({ title: 'Erreur', variant: 'destructive' });
     }
   };
 
@@ -171,11 +171,11 @@ export default function Planning() {
     if (isBatchCooking) {
       const selectedDates = [...batchDays].sort((a, b) => a.localeCompare(b));
       if (selectedDates.length === 0) {
-        toast({ title: '⚠️ Aucun jour sélectionné', variant: 'destructive' });
+        toast({ title: 'Aucun jour sélectionné', variant: 'destructive' });
         return;
       }
       if (batchSelectedMealTypes.length === 0) {
-        toast({ title: '⚠️ Aucun repas sélectionné', variant: 'destructive' });
+        toast({ title: 'Aucun repas sélectionné', variant: 'destructive' });
         return;
       }
 
@@ -202,11 +202,11 @@ export default function Planning() {
         setAddDialogDate(null);
         const mealLabels = batchSelectedMealTypes.map(t => PLANNING_MEAL_TYPE_LABELS_SHORT[t]).join(', ');
         toast({
-          title: '✅ Batch cooking planifié',
+          title: 'Batch cooking planifié',
           description: `${recipe.title} · ${selectedDates.length} jour${selectedDates.length > 1 ? 's' : ''} × ${batchSelectedMealTypes.length} repas (${mealLabels}) · ${batchTotalPortions} portion${batchTotalPortions > 1 ? 's' : ''}`,
         });
       } catch {
-        toast({ title: '❌ Erreur', variant: 'destructive' });
+        toast({ title: 'Erreur', variant: 'destructive' });
       }
     } else {
       const mealTarget = mealSuggestions?.[selectedMealType] || 0;
@@ -226,11 +226,11 @@ export default function Planning() {
         await addMeals(items);
         setAddDialogDate(null);
         toast({
-          title: '✅ Repas ajouté',
+          title: 'Repas ajouté',
           description: `${recipe.title} — ${Math.round(recipe.calories * sf)} kcal`,
         });
       } catch {
-        toast({ title: '❌ Erreur', variant: 'destructive' });
+        toast({ title: 'Erreur', variant: 'destructive' });
       }
     }
   };
@@ -247,9 +247,9 @@ export default function Planning() {
       await duplicateMeals(duplicateSourceMeal, duplicateDays);
       setDuplicateSourceMeal(null);
       setDuplicateDays([]);
-      toast({ title: '📋 Repas dupliqué', description: `Ajouté sur ${duplicateDays.length} jour${duplicateDays.length > 1 ? 's' : ''}` });
+      toast({ title: 'Repas dupliqué', description: `Ajouté sur ${duplicateDays.length} jour${duplicateDays.length > 1 ? 's' : ''}` });
     } catch {
-      toast({ title: '❌ Erreur', variant: 'destructive' });
+      toast({ title: 'Erreur', variant: 'destructive' });
     }
   };
 
@@ -260,42 +260,41 @@ export default function Planning() {
   const duplicateRecipe = duplicateSourceMeal ? getRecipe(duplicateSourceMeal.recipeId) : null;
 
   const gapColor = (gap: number) =>
-    gap > 0 ? 'text-secondary' : gap < 0 ? 'text-destructive' : 'text-muted-foreground';
-  const gapBg = (gap: number) =>
-    gap > 0 ? 'bg-secondary/10 text-secondary' : gap < 0 ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground';
+    gap > 0 ? 'text-primary' : gap < 0 ? 'text-destructive' : 'text-muted-foreground';
 
   return (
     <AppLayout>
-      <div className="space-y-5">
+      <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-display font-bold">Planning</h1>
           <div className="flex items-center gap-1.5">
-            <Button variant="outline" size="icon" className="tap-scale h-8 w-8" onClick={() => setWeekOffset(w => w - 1)}>
+            <Button variant="ghost" size="icon" className="tap-scale h-8 w-8 rounded-lg" onClick={() => setWeekOffset(w => w - 1)}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setWeekOffset(0)}>
-              Semaine
+            <Button variant="outline" size="sm" className="text-xs h-8 px-3 rounded-lg" onClick={() => setWeekOffset(0)}>
+              Aujourd'hui
             </Button>
-            <Button variant="outline" size="icon" className="tap-scale h-8 w-8" onClick={() => setWeekOffset(w => w + 1)}>
+            <Button variant="ghost" size="icon" className="tap-scale h-8 w-8 rounded-lg" onClick={() => setWeekOffset(w => w + 1)}>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
+        {/* Calorie targets */}
         {mealSuggestions && target && (
-          <div className="card-elevated p-3">
-            <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5 text-primary" /> Répartition — {target.target} kcal/jour
-            </p>
-            <div className="flex gap-1.5 flex-wrap">
-              <span className="text-[11px] bg-muted px-2 py-0.5 rounded-md">Pdj {mealSuggestions.breakfast}</span>
-              <span className="text-[11px] bg-muted px-2 py-0.5 rounded-md">Déj {mealSuggestions.lunch}</span>
-              <span className="text-[11px] bg-muted px-2 py-0.5 rounded-md">Coll {mealSuggestions.snack}</span>
-              <span className="text-[11px] bg-muted px-2 py-0.5 rounded-md">Dîner {mealSuggestions.dinner}</span>
-            </div>
+          <div className="flex gap-2 flex-wrap">
+            <span className="text-[11px] bg-muted px-2.5 py-1 rounded-lg text-muted-foreground font-medium">
+              <Target className="w-3 h-3 inline mr-1 -mt-0.5" />{target.target} kcal/jour
+            </span>
+            <span className="text-[11px] bg-muted px-2.5 py-1 rounded-lg text-muted-foreground">Pdj {mealSuggestions.breakfast}</span>
+            <span className="text-[11px] bg-muted px-2.5 py-1 rounded-lg text-muted-foreground">Déj {mealSuggestions.lunch}</span>
+            <span className="text-[11px] bg-muted px-2.5 py-1 rounded-lg text-muted-foreground">Coll {mealSuggestions.snack}</span>
+            <span className="text-[11px] bg-muted px-2.5 py-1 rounded-lg text-muted-foreground">Dîner {mealSuggestions.dinner}</span>
           </div>
         )}
 
+        {/* Days */}
         <div className="space-y-3">
           {days.map((day, i) => {
             const meals = getMealsForDay(day);
@@ -307,37 +306,37 @@ export default function Planning() {
             return (
               <motion.div
                 key={day.toISOString()}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03, duration: 0.3 }}
-                className={cn('card-elevated p-3 sm:p-4', isToday && 'ring-2 ring-primary/30')}
+                className={cn('card-elevated p-4 sm:p-5', isToday && 'ring-1 ring-primary/20')}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className={cn('font-display font-semibold text-sm capitalize', isToday && 'text-primary')}>
-                    {isMobile
-                      ? format(day, 'EEE d MMM', { locale: fr })
-                      : format(day, 'EEEE d MMMM', { locale: fr })
-                    }
-                    {isToday && <span className="ml-1.5 text-[10px] font-normal text-primary">(auj.)</span>}
-                  </h3>
+                {/* Day header */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <h3 className={cn('font-display font-semibold text-sm capitalize', isToday && 'text-primary')}>
+                      {isMobile
+                        ? format(day, 'EEE d MMM', { locale: fr })
+                        : format(day, 'EEEE d MMMM', { locale: fr })
+                      }
+                    </h3>
+                    {isToday && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Aujourd'hui</span>}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] text-muted-foreground font-medium">{plannedCalories} kcal</span>
+                    {dailyTarget > 0 && gap !== 0 && (
+                      <span className={cn('text-[10px] font-medium', gapColor(gap))}>
+                        ({gap > 0 ? '+' : ''}{gap})
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                {/* Day summary badges */}
-                <div className="flex flex-wrap gap-1 mb-2">
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                    {plannedCalories} kcal
-                  </span>
-                  {dailyTarget > 0 && (
-                    <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-medium', gapBg(gap))}>
-                      {gap > 0 ? '+' : ''}{gap}
-                    </span>
-                  )}
-                </div>
-
+                {/* Meals */}
                 {meals.length === 0 ? (
-                  <p className="text-xs text-muted-foreground mb-2 italic">Aucun repas prévu — ajoute-en un ci-dessous.</p>
+                  <p className="text-xs text-muted-foreground mb-3">Aucun repas prévu</p>
                 ) : (
-                  <div className="space-y-1.5 mb-2">
+                  <div className="space-y-1.5 mb-3">
                     <AnimatePresence>
                       {meals.map(meal => {
                         const recipe = getRecipe(meal.recipeId);
@@ -347,25 +346,27 @@ export default function Planning() {
                         return (
                           <motion.div
                             key={meal.id}
-                            initial={{ opacity: 0, x: -8 }}
+                            initial={{ opacity: 0, x: -6 }}
                             animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 8 }}
-                            className={cn('bg-muted/50 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 border-l-4', MEAL_TYPE_COLORS[meal.mealType] || '', meal.consumed && 'ring-1 ring-secondary/40')}
+                            exit={{ opacity: 0, x: 6 }}
+                            className={cn(
+                              'bg-muted/30 rounded-xl px-3 py-2 border-l-[3px] transition-all',
+                              MEAL_TYPE_COLORS[meal.mealType] || '',
+                              meal.consumed && 'bg-primary/5'
+                            )}
                           >
-                            <div className="flex items-center justify-between gap-1.5">
+                            <div className="flex items-center justify-between gap-2">
                               <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-1">
-                                  <span className="text-[10px] text-muted-foreground">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] text-muted-foreground font-medium">
                                     {PLANNING_MEAL_TYPE_LABELS_SHORT[meal.mealType]}
                                   </span>
-                                  {meal.isBatchCooking && (
-                                    <ChefHat className="w-3 h-3 text-secondary" />
-                                  )}
+                                  {meal.isBatchCooking && <ChefHat className="w-3 h-3 text-primary" />}
                                   {meal.consumed && (
-                                    <span className="text-[9px] bg-secondary/15 text-secondary px-1.5 rounded-full font-medium">✓ consommé</span>
+                                    <span className="text-[9px] bg-primary/10 text-primary px-1.5 rounded-full font-medium">consommé</span>
                                   )}
                                 </div>
-                                <p className="text-sm font-medium truncate">{recipe.title}</p>
+                                <p className="text-sm font-medium truncate mt-0.5">{recipe.title}</p>
                                 <p className="text-[11px] text-muted-foreground">
                                   {mealCal} kcal
                                   {(meal.portions || 1) > 1 ? ` · ${meal.portions}p` : ''}
@@ -373,11 +374,10 @@ export default function Planning() {
                                 </p>
                               </div>
 
-                              {/* Desktop: inline buttons. Mobile: dropdown menu */}
                               {isMobile ? (
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0">
+                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0 rounded-lg">
                                       <MoreVertical className="w-4 h-4" />
                                     </Button>
                                   </DropdownMenuTrigger>
@@ -405,31 +405,21 @@ export default function Planning() {
                                   <Button
                                     variant={meal.consumed ? 'default' : 'outline'}
                                     size="sm"
-                                    className={cn('h-7 px-2 gap-1 text-xs', meal.consumed && 'bg-secondary hover:bg-secondary/80 text-secondary-foreground')}
+                                    className={cn('h-7 px-2 gap-1 text-xs rounded-lg', meal.consumed && 'bg-primary hover:bg-primary/90 text-primary-foreground')}
                                     onClick={() => handleToggleConsumed(meal.id)}
                                   >
                                     {meal.consumed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
                                     {meal.consumed ? 'Consommé' : 'Consommer'}
                                   </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 px-2 gap-1 text-xs"
-                                    onClick={() => navigate(`/recipe/${meal.recipeId}${meal.scaleFactor ? `?scale=${meal.scaleFactor}` : ''}`)}
-                                  >
+                                  <Button variant="ghost" size="sm" className="h-7 px-2 gap-1 text-xs rounded-lg" onClick={() => navigate(`/recipe/${meal.recipeId}${meal.scaleFactor ? `?scale=${meal.scaleFactor}` : ''}`)}>
                                     <Eye className="w-3.5 h-3.5" /> Voir
                                   </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 px-2 gap-1 text-xs"
-                                    onClick={() => openDuplicateDialog(meal)}
-                                  >
-                                    <Copy className="w-3.5 h-3.5" /> Dupliquer
+                                  <Button variant="ghost" size="sm" className="h-7 px-2 gap-1 text-xs rounded-lg" onClick={() => openDuplicateDialog(meal)}>
+                                    <Copy className="w-3.5 h-3.5" />
                                   </Button>
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                      <Button variant="outline" size="sm" className="h-7 px-2 gap-1 text-xs text-destructive">
+                                      <Button variant="ghost" size="sm" className="h-7 px-2 gap-1 text-xs text-destructive rounded-lg">
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </Button>
                                     </AlertDialogTrigger>
@@ -457,7 +447,7 @@ export default function Planning() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="gap-1.5 text-muted-foreground hover:text-primary tap-scale w-full justify-center text-xs"
+                  className="gap-1.5 text-muted-foreground hover:text-primary tap-scale w-full justify-center text-xs rounded-lg"
                   onClick={() => openAddDialog(toDateKey(day))}
                 >
                   <Plus className="w-3.5 h-3.5" /> Ajouter un repas
@@ -476,7 +466,7 @@ export default function Planning() {
           </DialogHeader>
 
           <div className="space-y-4 pt-2">
-            <div className="card-elevated p-3 text-center">
+            <div className="bg-muted/50 rounded-xl p-3 text-center">
               <p className="text-sm font-display font-semibold capitalize">{addDialogDateFormatted}</p>
             </div>
 
@@ -498,7 +488,7 @@ export default function Planning() {
                 </SelectContent>
               </Select>
               {mealSuggestions && (
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-[11px] text-muted-foreground mt-1">
                   Cible : ~{mealSuggestions[selectedMealType]} kcal
                 </p>
               )}
@@ -565,18 +555,16 @@ export default function Planning() {
                 }}
                 id="batch-planning"
               />
-              <label htmlFor="batch-planning" className="text-sm flex items-center gap-1.5 cursor-pointer">
-                <ChefHat className="w-4 h-4 text-secondary" />
-                Batch cooking (préparer pour plusieurs jours)
+              <label htmlFor="batch-planning" className="text-sm flex items-center gap-1.5 cursor-pointer text-body-text">
+                <ChefHat className="w-4 h-4 text-primary" />
+                Batch cooking
               </label>
             </div>
 
             {isBatchCooking && (
               <>
-                {/* Meal type multi-select */}
                 <div>
                   <Label className="text-xs font-medium mb-1 block">Repas concernés</Label>
-                  <p className="text-[11px] text-muted-foreground mb-2">Sélectionne les repas sur lesquels tu veux prévoir cette préparation.</p>
                   <div className="grid grid-cols-2 gap-1.5">
                     {PLANNING_MEAL_TYPE_ORDER.map(type => {
                       const isSelected = batchMealTypes.includes(type);
@@ -586,10 +574,10 @@ export default function Planning() {
                           type="button"
                           onClick={() => toggleBatchMealType(type)}
                           className={cn(
-                            'text-xs px-3 py-2 rounded-lg border text-left transition-colors',
+                            'text-xs px-3 py-2.5 rounded-xl border text-left transition-all font-medium',
                             isSelected
-                              ? 'bg-secondary/10 border-secondary text-secondary font-medium'
-                              : 'bg-card border-border text-foreground hover:bg-muted'
+                              ? 'bg-primary/8 border-primary/30 text-primary'
+                              : 'bg-card border-border text-muted-foreground hover:bg-muted'
                           )}
                         >
                           {PLANNING_MEAL_TYPE_LABELS[type]}
@@ -599,7 +587,6 @@ export default function Planning() {
                   </div>
                 </div>
 
-                {/* Day multi-select */}
                 <div>
                   <Label className="text-xs font-medium mb-2 block">Jours concernés</Label>
                   <div className="grid grid-cols-2 gap-1.5 max-h-52 overflow-y-auto">
@@ -611,9 +598,9 @@ export default function Planning() {
                           type="button"
                           onClick={() => toggleBatchDay(day)}
                           className={cn(
-                            'text-xs px-3 py-2 rounded-lg border text-left capitalize transition-colors',
+                            'text-xs px-3 py-2 rounded-xl border text-left capitalize transition-all',
                             selected
-                              ? 'bg-primary/10 border-primary text-primary font-medium'
+                              ? 'bg-primary/8 border-primary/30 text-primary font-medium'
                               : 'bg-card border-border text-foreground hover:bg-muted'
                           )}
                         >
@@ -622,26 +609,20 @@ export default function Planning() {
                       );
                     })}
                   </div>
-                  <div className="mt-2 text-xs text-muted-foreground space-y-1">
+                  <div className="mt-2 text-[11px] text-muted-foreground space-y-0.5">
                     <p>
                       {batchDays.length} jour{batchDays.length > 1 ? 's' : ''} × {batchSelectedMealTypes.length} repas = {batchTotalOccurrences} occurrence{batchTotalOccurrences > 1 ? 's' : ''}
                     </p>
                     <p>
-                      Quantité totale à préparer : {batchTotalPortions} portion{batchTotalPortions > 1 ? 's' : ''}
+                      Total à préparer : {batchTotalPortions} portion{batchTotalPortions > 1 ? 's' : ''}
                     </p>
                   </div>
                 </div>
               </>
             )}
 
-            <div className="text-xs text-muted-foreground bg-muted/60 rounded-md p-2.5 space-y-1">
-              <p><strong>Portions</strong> = quantité par repas.</p>
-              <p><strong>Dupliquer</strong> = reproduire un repas sur d'autres jours.</p>
-              <p><strong>Batch cooking</strong> = préparer une recette pour plusieurs jours et repas.</p>
-            </div>
-
             <Button
-              className="w-full tap-scale"
+              className="w-full tap-scale rounded-xl"
               onClick={handleQuickAdd}
               disabled={!selectedRecipeId || (isBatchCooking && (batchDays.length === 0 || batchSelectedMealTypes.length === 0))}
             >
@@ -662,9 +643,9 @@ export default function Planning() {
           </DialogHeader>
 
           <div className="space-y-4 pt-2">
-            <div className="card-elevated p-3">
+            <div className="bg-muted/50 rounded-xl p-3">
               <p className="text-sm font-display font-semibold">{duplicateRecipe?.title || 'Repas'}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 Depuis {duplicateSourceMeal ? format(new Date(`${duplicateSourceMeal.date}T12:00:00`), 'EEEE d MMMM', { locale: fr }) : ''}
               </p>
             </div>
@@ -680,9 +661,9 @@ export default function Planning() {
                       type="button"
                       onClick={() => toggleDuplicateDay(day)}
                       className={cn(
-                        'text-xs px-3 py-2 rounded-lg border text-left capitalize transition-colors',
+                        'text-xs px-3 py-2 rounded-xl border text-left capitalize transition-all',
                         selected
-                          ? 'bg-primary/10 border-primary text-primary font-medium'
+                          ? 'bg-primary/8 border-primary/30 text-primary font-medium'
                           : 'bg-card border-border text-foreground hover:bg-muted'
                       )}
                     >
@@ -691,12 +672,12 @@ export default function Planning() {
                   );
                 })}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-[11px] text-muted-foreground mt-2">
                 {duplicateDays.length} jour{duplicateDays.length > 1 ? 's' : ''} sélectionné{duplicateDays.length > 1 ? 's' : ''}
               </p>
             </div>
 
-            <Button className="w-full tap-scale" onClick={confirmDuplicate} disabled={duplicateDays.length === 0}>
+            <Button className="w-full tap-scale rounded-xl" onClick={confirmDuplicate} disabled={duplicateDays.length === 0}>
               Dupliquer le repas
             </Button>
           </div>

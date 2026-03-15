@@ -7,17 +7,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { motion } from 'framer-motion';
 import { formatQuantity, formatUnit } from '@/lib/units';
 import { normalizeIngredientName, ingredientKey } from '@/lib/ingredientNormalizer';
-import { ChevronDown, ChevronRight, CheckCheck } from 'lucide-react';
+import { ChevronDown, ChevronRight, CheckCheck, ShoppingCart } from 'lucide-react';
 
 const CATEGORY_ORDER = ['protein', 'carbs', 'vegetables', 'dairy', 'fruits', 'condiments', 'other'];
 const CATEGORY_LABELS: Record<string, string> = {
-  protein: '🥩 Protéines',
-  carbs: '🍚 Féculents',
-  vegetables: '🥬 Légumes',
-  dairy: '🧀 Produits laitiers',
-  fruits: '🍎 Fruits',
-  condiments: '🧂 Assaisonnements',
-  other: '📦 Autres',
+  protein: 'Protéines',
+  carbs: 'Féculents',
+  vegetables: 'Légumes',
+  dairy: 'Produits laitiers',
+  fruits: 'Fruits',
+  condiments: 'Assaisonnements',
+  other: 'Autres',
 };
 
 interface ShoppingSource {
@@ -36,7 +36,6 @@ interface ShoppingItem {
   sources: ShoppingSource[];
 }
 
-/** Capitalize first letter */
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
@@ -126,42 +125,45 @@ export default function Shopping() {
 
   return (
     <AppLayout>
-      <div className="space-y-5">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-display font-bold">Liste de courses</h1>
           {checkedCount > 0 && (
-            <Button size="sm" onClick={handleDone} className="gap-1.5">
-              <CheckCheck className="w-4 h-4" />
-              Retirer les cochés ({checkedCount})
+            <Button size="sm" onClick={handleDone} className="gap-1.5 rounded-lg">
+              <CheckCheck className="w-3.5 h-3.5" />
+              Retirer ({checkedCount})
             </Button>
           )}
         </div>
 
         {visibleList.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-lg text-muted-foreground">{shoppingList.length > 0 ? 'Toutes les courses sont faites 🎉' : 'Ta liste de courses est vide'}</p>
-            <p className="text-sm text-muted-foreground mt-1">
+          <div className="text-center py-20">
+            <ShoppingCart className="w-10 h-10 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-sm text-body-text font-medium">
+              {shoppingList.length > 0 ? 'Toutes les courses sont faites' : 'Liste de courses vide'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1.5 max-w-xs mx-auto">
               {shoppingList.length > 0
                 ? 'Tous les ingrédients ont été cochés.'
                 : 'Planifie des repas pour générer ta liste automatiquement.'}
             </p>
             {shoppingList.length > 0 && hidden.size > 0 && (
-              <Button variant="outline" size="sm" className="mt-4" onClick={() => { setHidden(new Set()); setChecked(new Set()); }}>
+              <Button variant="outline" size="sm" className="mt-4 rounded-xl" onClick={() => { setHidden(new Set()); setChecked(new Set()); }}>
                 Réafficher la liste
               </Button>
             )}
           </div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {CATEGORY_ORDER.filter(cat => grouped[cat]).map(cat => (
               <motion.div
                 key={cat}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="card-elevated p-4"
+                className="card-elevated p-5"
               >
-                <h2 className="font-display font-semibold text-sm mb-3">{CATEGORY_LABELS[cat]}</h2>
-                <ul className="space-y-1">
+                <p className="section-title mb-3">{CATEGORY_LABELS[cat]}</p>
+                <ul className="space-y-0.5">
                   {grouped[cat].map(item => {
                     const isExpanded = expanded.has(item.key);
                     const aggregatedSources = item.sources.reduce<Record<string, { recipeName: string; quantity: number; unit: string; occurrences: number }>>((acc, source) => {
@@ -176,29 +178,29 @@ export default function Shopping() {
 
                     return (
                       <li key={item.key}>
-                        <div className="flex items-center gap-3 py-1.5">
+                        <div className="flex items-center gap-3 py-2">
                           <Checkbox checked={checked.has(item.key)} onCheckedChange={() => toggle(item.key)} />
-                          <span className={`text-sm flex-1 ${checked.has(item.key) ? 'line-through text-muted-foreground' : ''}`}>
+                          <span className={`text-sm flex-1 ${checked.has(item.key) ? 'line-through text-muted-foreground' : 'text-body-text'}`}>
                             {item.name}
                           </span>
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-sm text-muted-foreground font-medium tabular-nums">
                             {formatQuantity(item.quantity, item.unit)} {formatUnit(item.quantity, item.unit)}
                           </span>
                           {item.sources.length > 0 && (
-                            <button onClick={() => toggleExpand(item.key)} className="text-muted-foreground hover:text-foreground p-1">
+                            <button onClick={() => toggleExpand(item.key)} className="text-muted-foreground hover:text-foreground p-1 rounded-lg">
                               {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                             </button>
                           )}
                         </div>
                         {isExpanded && (
-                          <div className="ml-9 mb-2 space-y-1.5">
-                            <p className="text-xs text-muted-foreground">
-                              Total : {formatQuantity(item.quantity, item.unit)} {formatUnit(item.quantity, item.unit)} · {item.sources.length} occurrence{item.sources.length > 1 ? 's' : ''}
+                          <div className="ml-9 mb-2 space-y-1 bg-muted/30 rounded-lg p-3">
+                            <p className="text-[11px] text-muted-foreground font-medium">
+                              Total : {formatQuantity(item.quantity, item.unit)} {formatUnit(item.quantity, item.unit)}
                             </p>
                             {detailedSources.map(source => (
-                              <p key={source.recipeName} className="text-xs text-muted-foreground">
-                                • {formatQuantity(source.quantity, source.unit)} {formatUnit(source.quantity, source.unit)} pour {source.recipeName}
-                                {source.occurrences > 1 ? ` (${source.occurrences} fois)` : ''}
+                              <p key={source.recipeName} className="text-[11px] text-muted-foreground">
+                                {formatQuantity(source.quantity, source.unit)} {formatUnit(source.quantity, source.unit)} — {source.recipeName}
+                                {source.occurrences > 1 ? ` (×${source.occurrences})` : ''}
                               </p>
                             ))}
                           </div>
