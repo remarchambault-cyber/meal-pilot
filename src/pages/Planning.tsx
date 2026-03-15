@@ -132,6 +132,13 @@ export default function Planning() {
     setPortions(1);
     setIsBatchCooking(false);
     setBatchDays([dateStr]);
+    setBatchMealTypes(['lunch']);
+  };
+
+  const toggleBatchMealType = (type: MealPlanItem['mealType']) => {
+    setBatchMealTypes(prev =>
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
   };
 
   const toggleBatchDay = (day: string) => {
