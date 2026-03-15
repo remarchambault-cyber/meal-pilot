@@ -247,7 +247,7 @@ export default function Planning() {
       await duplicateMeals(duplicateSourceMeal, duplicateDays);
       setDuplicateSourceMeal(null);
       setDuplicateDays([]);
-      toast({ title: '📋 Repas dupliqué', description: `${duplicateDays.length} occurrence(s) ajoutée(s)` });
+      toast({ title: '📋 Repas dupliqué', description: `Ajouté sur ${duplicateDays.length} jour${duplicateDays.length > 1 ? 's' : ''}` });
     } catch {
       toast({ title: '❌ Erreur', variant: 'destructive' });
     }
