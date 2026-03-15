@@ -63,6 +63,7 @@ export default function Planning() {
 
   const [duplicateSourceMeal, setDuplicateSourceMeal] = useState<MealPlanItem | null>(null);
   const [duplicateDays, setDuplicateDays] = useState<string[]>([]);
+  const [recipeSearch, setRecipeSearch] = useState('');
 
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
   const mealSuggestions = useMemo(() => target ? getMealCalorieSuggestion(target.target) : null, [target]);
