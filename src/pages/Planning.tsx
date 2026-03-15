@@ -58,6 +58,7 @@ export default function Planning() {
   const [portions, setPortions] = useState(1);
   const [isBatchCooking, setIsBatchCooking] = useState(false);
   const [batchDays, setBatchDays] = useState<string[]>([]);
+  const [batchMealTypes, setBatchMealTypes] = useState<MealPlanItem['mealType'][]>([]);
 
   const [duplicateSourceMeal, setDuplicateSourceMeal] = useState<MealPlanItem | null>(null);
   const [duplicateDays, setDuplicateDays] = useState<string[]>([]);
