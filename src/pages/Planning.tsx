@@ -149,44 +149,84 @@ export default function Planning() {
     setDuplicateDays(prev => (prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]));
   };
 
+  const batchSelectedMealTypes = useMemo(
+    () => PLANNING_MEAL_TYPE_ORDER.filter(t => batchMealTypes.includes(t)),
+    [batchMealTypes]
+  );
+
+  const batchTotalOccurrences = isBatchCooking ? batchDays.length * batchSelectedMealTypes.length : 1;
+  const batchTotalPortions = batchTotalOccurrences * portions;
+
   const handleQuickAdd = async () => {
     if (!addDialogDate || !selectedRecipeId) return;
-    const selectedDates = isBatchCooking
-      ? [...batchDays].sort((a, b) => a.localeCompare(b))
-      : [addDialogDate];
-
-    if (selectedDates.length === 0) {
-      toast({ title: '⚠️ Aucun jour sélectionné', variant: 'destructive' });
-      return;
-    }
 
     const recipe = getRecipe(selectedRecipeId);
     if (!recipe) return;
 
-    const mealTarget = mealSuggestions?.[selectedMealType] || 0;
-    const sf = mealTarget ? getScaleFactor(recipe.calories, mealTarget) : 1;
+    if (isBatchCooking) {
+      const selectedDates = [...batchDays].sort((a, b) => a.localeCompare(b));
+      if (selectedDates.length === 0) {
+        toast({ title: '⚠️ Aucun jour sélectionné', variant: 'destructive' });
+        return;
+      }
+      if (batchSelectedMealTypes.length === 0) {
+        toast({ title: '⚠️ Aucun créneau sélectionné', variant: 'destructive' });
+        return;
+      }
 
-    const items: MealPlanItem[] = selectedDates.map((date, index) => ({
-      id: `mp_${Date.now()}_${date.split('-').join('')}_${index}`,
-      date,
-      mealType: selectedMealType,
-      recipeId: selectedRecipeId,
-      isBatchCooking,
-      portions,
-      scaleFactor: sf,
-    }));
+      const items: MealPlanItem[] = [];
+      let idx = 0;
+      for (const date of selectedDates) {
+        for (const mt of batchSelectedMealTypes) {
+          const mealTarget = mealSuggestions?.[mt] || 0;
+          const sf = mealTarget ? getScaleFactor(recipe.calories, mealTarget) : 1;
+          items.push({
+            id: `mp_${Date.now()}_${date.replace(/-/g, '')}_${mt}_${idx++}`,
+            date,
+            mealType: mt,
+            recipeId: selectedRecipeId,
+            isBatchCooking: true,
+            portions,
+            scaleFactor: sf,
+          });
+        }
+      }
 
-    try {
-      await addMeals(items);
-      setAddDialogDate(null);
-      toast({
-        title: isBatchCooking ? '✅ Batch cooking planifié' : '✅ Repas ajouté',
-        description: isBatchCooking
-          ? `${recipe.title} sur ${selectedDates.length} jours`
-          : `${recipe.title} — ${Math.round(recipe.calories * sf)} kcal`,
-      });
-    } catch {
-      toast({ title: '❌ Erreur', variant: 'destructive' });
+      try {
+        await addMeals(items);
+        setAddDialogDate(null);
+        const mealLabels = batchSelectedMealTypes.map(t => PLANNING_MEAL_TYPE_LABELS_SHORT[t]).join(', ');
+        toast({
+          title: '✅ Batch cooking planifié',
+          description: `${recipe.title} · ${selectedDates.length} jour${selectedDates.length > 1 ? 's' : ''} × ${batchSelectedMealTypes.length} créneau${batchSelectedMealTypes.length > 1 ? 'x' : ''} (${mealLabels}) · ${batchTotalPortions} portion${batchTotalPortions > 1 ? 's' : ''}`,
+        });
+      } catch {
+        toast({ title: '❌ Erreur', variant: 'destructive' });
+      }
+    } else {
+      const mealTarget = mealSuggestions?.[selectedMealType] || 0;
+      const sf = mealTarget ? getScaleFactor(recipe.calories, mealTarget) : 1;
+
+      const items: MealPlanItem[] = [{
+        id: `mp_${Date.now()}_${addDialogDate.replace(/-/g, '')}_0`,
+        date: addDialogDate,
+        mealType: selectedMealType,
+        recipeId: selectedRecipeId,
+        isBatchCooking: false,
+        portions,
+        scaleFactor: sf,
+      }];
+
+      try {
+        await addMeals(items);
+        setAddDialogDate(null);
+        toast({
+          title: '✅ Repas ajouté',
+          description: `${recipe.title} — ${Math.round(recipe.calories * sf)} kcal`,
+        });
+      } catch {
+        toast({ title: '❌ Erreur', variant: 'destructive' });
+      }
     }
   };
 
