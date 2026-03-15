@@ -14,11 +14,16 @@ import { useEffect } from 'react';
 export default function Onboarding() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { saveProfile } = useProfile();
+  const { saveProfile, isOnboarded, loading: profileLoading } = useProfile();
 
   useEffect(() => {
-    if (!authLoading && !user) navigate('/auth', { replace: true });
-  }, [authLoading, user, navigate]);
+    if (authLoading || profileLoading) return;
+    if (!user) {
+      navigate('/auth', { replace: true });
+    } else if (isOnboarded) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [authLoading, profileLoading, user, isOnboarded, navigate]);
 
   const [form, setForm] = useState({
     firstName: '',
