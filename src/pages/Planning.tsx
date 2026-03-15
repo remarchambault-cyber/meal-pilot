@@ -670,7 +670,7 @@ export default function Planning() {
             </div>
 
             <div>
-              <Label className="text-xs font-medium mb-2 block">Jours de duplication</Label>
+              <Label className="text-xs font-medium mb-2 block">Copier sur ces jours</Label>
               <div className="grid grid-cols-2 gap-1.5 max-h-52 overflow-y-auto">
                 {duplicateSelectableDays.map(day => {
                   const selected = duplicateDays.includes(day);
