@@ -330,7 +330,6 @@ export default function Tracking() {
             <p className="text-sm text-muted-foreground">Aucun repas planifié aujourd'hui.</p>
             <p className="text-xs text-muted-foreground mt-1">Ajoute des repas depuis le planning pour voir ton suivi ici.</p>
           </motion.div>
-          </motion.div>
         )}
 
         {/* ═══ Tendance + Conseil ═══ */}
