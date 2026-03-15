@@ -13,6 +13,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,6 +40,27 @@ export default function Auth() {
         if (error) throw error;
         toast({ title: '✅ Compte créé ! Vérifie ton email pour confirmer.' });
       }
+    } catch (error: any) {
+      toast({ title: '❌ Erreur', description: error.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      toast({ title: '❌ Erreur', description: 'Entre ton adresse email.', variant: 'destructive' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast({ title: '📧 Email envoyé', description: 'Si cette adresse existe, tu recevras un lien de réinitialisation.' });
+      setIsForgotPassword(false);
     } catch (error: any) {
       toast({ title: '❌ Erreur', description: error.message, variant: 'destructive' });
     } finally {
