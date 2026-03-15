@@ -203,7 +203,7 @@ export default function Planning() {
         const mealLabels = batchSelectedMealTypes.map(t => PLANNING_MEAL_TYPE_LABELS_SHORT[t]).join(', ');
         toast({
           title: '✅ Batch cooking planifié',
-          description: `${recipe.title} · ${selectedDates.length} jour${selectedDates.length > 1 ? 's' : ''} × ${batchSelectedMealTypes.length} créneau${batchSelectedMealTypes.length > 1 ? 'x' : ''} (${mealLabels}) · ${batchTotalPortions} portion${batchTotalPortions > 1 ? 's' : ''}`,
+          description: `${recipe.title} · ${selectedDates.length} jour${selectedDates.length > 1 ? 's' : ''} × ${batchSelectedMealTypes.length} repas (${mealLabels}) · ${batchTotalPortions} portion${batchTotalPortions > 1 ? 's' : ''}`,
         });
       } catch {
         toast({ title: '❌ Erreur', variant: 'destructive' });
