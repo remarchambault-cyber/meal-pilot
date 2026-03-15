@@ -111,20 +111,33 @@ export default function Tracking() {
     }
   };
 
-  const addCalories = async () => {
-    if (!newCalConsumed && !newCalBurned) return;
+  const handleCalorieAction = async (field: 'consumed' | 'burned', mode: 'add' | 'replace') => {
+    const raw = field === 'consumed' ? newCalConsumed : newCalBurned;
+    if (!raw) return;
+    const value = parseInt(raw, 10);
+    if (isNaN(value) || value < 0) return;
+
     try {
       const existing = calorieLogs.find(l => l.date === today);
-      const consumed = newCalConsumed ? parseInt(newCalConsumed, 10) : (existing?.consumedManual ?? 0);
-      const burned = newCalBurned ? parseInt(newCalBurned, 10) : (existing?.burnedExtra ?? 0);
-      const isUpdate = await upsertCalories(
-        today,
-        consumed,
-        burned,
-      );
-      setNewCalConsumed('');
-      setNewCalBurned('');
-      toast({ title: isUpdate ? '🔄 Calories du jour mises à jour' : '✅ Calories enregistrées' });
+      const currentConsumed = existing?.consumedManual ?? 0;
+      const currentBurned = existing?.burnedExtra ?? 0;
+
+      let finalConsumed = currentConsumed;
+      let finalBurned = currentBurned;
+
+      if (field === 'consumed') {
+        finalConsumed = mode === 'add' ? currentConsumed + value : value;
+      } else {
+        finalBurned = mode === 'add' ? currentBurned + value : value;
+      }
+
+      await upsertCalories(today, finalConsumed, finalBurned);
+
+      if (field === 'consumed') setNewCalConsumed('');
+      else setNewCalBurned('');
+
+      const label = field === 'consumed' ? 'Consommées' : 'Dépensées';
+      toast({ title: mode === 'add' ? `➕ ${label} : +${value} kcal` : `🔄 ${label} → ${value} kcal` });
     } catch (err) {
       console.error(err);
       toast({ title: '❌ Erreur', description: 'Impossible d\'enregistrer les calories.', variant: 'destructive' });
