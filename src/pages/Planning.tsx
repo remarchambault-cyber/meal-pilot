@@ -399,7 +399,7 @@ export default function Planning() {
                       <>
                         <p className={cn(
                           'text-[10px] font-medium mt-0.5',
-                          gap === 0 ? 'text-muted-foreground' : gap > 0 ? 'text-destructive' : 'text-primary'
+                          gapTextColor(gap, profile?.goal || 'maintain')
                         )}>
                           {gap === 0 ? 'Objectif atteint' : gap > 0 ? `+${gap} kcal` : `${gap} kcal`}
                         </p>
