@@ -15,25 +15,25 @@ export default function DesktopSidebar() {
   const location = useLocation();
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 h-screen fixed left-0 top-0 bg-card border-r border-border p-6">
-      <div className="mb-10">
-        <h1 className="text-2xl font-display font-extrabold text-primary tracking-tight">MealPilot</h1>
-        <p className="text-xs text-muted-foreground mt-1">Ton assistant repas</p>
+    <aside className="hidden lg:flex flex-col w-64 h-screen fixed left-0 top-0 bg-card border-r border-border/60 px-5 py-8">
+      <div className="mb-12 px-3">
+        <h1 className="text-xl font-display font-bold text-primary tracking-tight">MealPilot</h1>
+        <p className="text-[11px] text-muted-foreground mt-0.5 tracking-wide">Nutrition intelligente</p>
       </div>
-      <nav className="flex flex-col gap-1 flex-1">
+      <nav className="flex flex-col gap-0.5 flex-1">
         {navItems.map(({ to, icon: Icon, label }) => {
           const isActive = location.pathname.startsWith(to);
           return (
             <NavLink
               key={to}
               to={to}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-150 ${
                 isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  ? 'bg-primary/8 text-primary'
+                  : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
               }`}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-[18px] h-[18px]" />
               {label}
             </NavLink>
           );
