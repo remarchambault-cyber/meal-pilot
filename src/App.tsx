@@ -16,6 +16,7 @@ import Shopping from "./pages/Shopping";
 import Tracking from "./pages/Tracking";
 import SettingsPage from "./pages/Settings";
 import MyRecipes from "./pages/MyRecipes";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/meals" element={<Meals />} />

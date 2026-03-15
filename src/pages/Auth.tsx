@@ -13,6 +13,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,6 +46,73 @@ export default function Auth() {
       setLoading(false);
     }
   };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      toast({ title: '❌ Erreur', description: 'Entre ton adresse email.', variant: 'destructive' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast({ title: '📧 Email envoyé', description: 'Si cette adresse existe, tu recevras un lien de réinitialisation.' });
+      setIsForgotPassword(false);
+    } catch (error: any) {
+      toast({ title: '❌ Erreur', description: error.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (isForgotPassword) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="w-full max-w-md"
+        >
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-display font-extrabold text-primary">MealPilot</h1>
+            <p className="text-muted-foreground mt-2">Réinitialise ton mot de passe</p>
+          </div>
+
+          <form onSubmit={handleForgotPassword} className="card-elevated p-6 space-y-4">
+            <div>
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="ton@email.com"
+                required
+              />
+            </div>
+
+            <Button type="submit" className="w-full tap-scale" size="lg" disabled={loading}>
+              {loading ? '...' : 'Envoyer le lien de réinitialisation'}
+            </Button>
+
+            <p className="text-center text-sm text-muted-foreground">
+              <button
+                type="button"
+                className="text-primary font-medium hover:underline"
+                onClick={() => setIsForgotPassword(false)}
+              >
+                Retour à la connexion
+              </button>
+            </p>
+          </form>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -86,6 +154,18 @@ export default function Auth() {
               required
             />
           </div>
+
+          {isLogin && (
+            <div className="text-right">
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-primary hover:underline transition-colors"
+                onClick={() => setIsForgotPassword(true)}
+              >
+                Mot de passe oublié ?
+              </button>
+            </div>
+          )}
 
           <Button type="submit" className="w-full tap-scale" size="lg" disabled={loading}>
             {loading ? '...' : isLogin ? 'Se connecter' : 'Créer mon compte'}
