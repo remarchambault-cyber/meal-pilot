@@ -692,7 +692,7 @@ export default function Planning() {
                 })}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                {duplicateDays.length} jour(s) sélectionné(s)
+                {duplicateDays.length} jour{duplicateDays.length > 1 ? 's' : ''} sélectionné{duplicateDays.length > 1 ? 's' : ''}
               </p>
             </div>
 
