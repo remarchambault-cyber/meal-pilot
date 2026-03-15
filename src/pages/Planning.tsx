@@ -624,7 +624,7 @@ export default function Planning() {
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground space-y-1">
                     <p>
-                      {batchDays.length} jour{batchDays.length > 1 ? 's' : ''} × {batchSelectedMealTypes.length} créneau{batchSelectedMealTypes.length > 1 ? 'x' : ''} = {batchTotalOccurrences} occurrence{batchTotalOccurrences > 1 ? 's' : ''}
+                      {batchDays.length} jour{batchDays.length > 1 ? 's' : ''} × {batchSelectedMealTypes.length} repas = {batchTotalOccurrences} occurrence{batchTotalOccurrences > 1 ? 's' : ''}
                     </p>
                     <p>
                       Quantité totale à préparer : {batchTotalPortions} portion{batchTotalPortions > 1 ? 's' : ''}
