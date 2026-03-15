@@ -67,7 +67,7 @@ export default function Meals() {
         return { recipe, scaleFactor: sf, scaledCalories: scaledCal, score: calorieGap + jitter };
       })
       .sort((a, b) => a.score - b.score);
-  }, [allRecipes, filter, mealTargets, seed]);
+  }, [allRecipes, filter, mealTargets, seed, search]);
 
   const selectedFilterTarget = useMemo(() => {
     if (!mealTargets || filter === 'all') return null;
