@@ -408,28 +408,43 @@ export default function Tracking() {
                 </div>
               </div>
             )}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-3">
               <div>
-                <Label className="text-xs">Consommées</Label>
-                <Input type="number" placeholder={todayCalorieLog ? String(manualConsumed) : 'kcal'} value={newCalConsumed} onChange={e => setNewCalConsumed(e.target.value)} />
+                <Label className="text-xs">Consommées manuelles (kcal)</Label>
+                <div className="flex gap-1.5 mt-1">
+                  <Input type="number" min="0" placeholder="kcal" value={newCalConsumed} onChange={e => setNewCalConsumed(e.target.value)} className="flex-1" />
+                  <Button size="sm" className="gap-1 tap-scale" onClick={() => handleCalorieAction('consumed', 'add')} disabled={!newCalConsumed}>
+                    <Plus className="w-3.5 h-3.5" /> Ajouter
+                  </Button>
+                  {todayCalorieLog && (
+                    <Button size="sm" variant="outline" className="gap-1 tap-scale" onClick={() => handleCalorieAction('consumed', 'replace')} disabled={!newCalConsumed}>
+                      🔄 Corriger
+                    </Button>
+                  )}
+                </div>
               </div>
               <div>
-                <Label className="text-xs">Dépensées</Label>
-                <Input type="number" placeholder={todayCalorieLog ? String(extraBurned) : 'kcal'} value={newCalBurned} onChange={e => setNewCalBurned(e.target.value)} />
+                <Label className="text-xs">Dépensées extra (kcal)</Label>
+                <div className="flex gap-1.5 mt-1">
+                  <Input type="number" min="0" placeholder="kcal" value={newCalBurned} onChange={e => setNewCalBurned(e.target.value)} className="flex-1" />
+                  <Button size="sm" className="gap-1 tap-scale" onClick={() => handleCalorieAction('burned', 'add')} disabled={!newCalBurned}>
+                    <Plus className="w-3.5 h-3.5" /> Ajouter
+                  </Button>
+                  {todayCalorieLog && (
+                    <Button size="sm" variant="outline" className="gap-1 tap-scale" onClick={() => handleCalorieAction('burned', 'replace')} disabled={!newCalBurned}>
+                      🔄 Corriger
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button className="flex-1 gap-1.5 tap-scale" variant="outline" onClick={addCalories}>
-                {todayCalorieLog ? '🔄 Modifier' : <><Plus className="w-4 h-4" /> Enregistrer</>}
+            {todayCalorieLog && (
+              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive gap-1 w-full" onClick={resetCalories}>
+                🗑️ Réinitialiser le jour
               </Button>
-              {todayCalorieLog && (
-                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive shrink-0" onClick={resetCalories} title="Réinitialiser">
-                  🗑️
-                </Button>
-              )}
-            </div>
+            )}
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              {todayCalorieLog ? 'Une saisie par jour. Modifie ou réinitialise la valeur.' : 'Une seule saisie par jour. Tu pourras la modifier ensuite.'}
+              <strong>Ajouter</strong> = cumule au total existant. <strong>Corriger</strong> = remplace la valeur du jour.
             </p>
           </motion.div>
         </div>
