@@ -6,6 +6,7 @@ import { useMealPlan } from '@/hooks/useMealPlan';
 import { MealPlanItem, Recipe } from '@/data/types';
 import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories';
 import { getScaleFactor } from '@/lib/recipeScaling';
+import { gapTextColor } from '@/lib/gapColor';
 import {
   filterRecipesByMealType,
   PLANNING_MEAL_TYPE_LABELS,
