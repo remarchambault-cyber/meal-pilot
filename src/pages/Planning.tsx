@@ -133,6 +133,7 @@ export default function Planning() {
     setAddDialogDate(dateStr);
     setSelectedMealType('lunch');
     setSelectedRecipeId('');
+    setRecipeSearch('');
     setPortions(1);
     setIsBatchCooking(false);
     setBatchDays([dateStr]);
