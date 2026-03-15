@@ -48,11 +48,16 @@ export default function Meals() {
   const mealTargets = useMemo(() => target ? getMealCalorieSuggestion(target.target) : null, [target]);
 
   const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
     const typeFiltered = filter === 'all'
       ? [...allRecipes]
       : allRecipes.filter(recipe => recipe.mealType === filter);
 
-    return typeFiltered
+    const searchFiltered = q
+      ? typeFiltered.filter(r => r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q))
+      : typeFiltered;
+
+    return searchFiltered
       .map(recipe => {
         const sf = getScaleFactorForMealType(recipe, mealTargets);
         const scaledCal = Math.round(recipe.calories * sf);
