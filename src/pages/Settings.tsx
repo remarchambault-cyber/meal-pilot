@@ -45,7 +45,7 @@ export default function SettingsPage() {
       await saveProfile(form);
       // Sync localStorage for pages that still use it
       window.localStorage.setItem('mealpilot_profile', JSON.stringify(form));
-      toast({ title: '✅ Profil sauvegardé' });
+      toast({ title: '✅ Profil enregistré' });
     } catch (error: any) {
       toast({ title: '❌ Erreur', description: error.message, variant: 'destructive' });
     } finally {
@@ -163,7 +163,7 @@ export default function SettingsPage() {
           </div>
 
           <Button className="w-full gap-2 tap-scale" onClick={handleSave} disabled={saving}>
-            <Save className="w-4 h-4" /> {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+            <Save className="w-4 h-4" /> {saving ? 'Enregistrement…' : 'Enregistrer'}
           </Button>
         </motion.div>
 

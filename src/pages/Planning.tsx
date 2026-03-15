@@ -115,7 +115,7 @@ export default function Planning() {
   const removeMeal = async (id: string) => {
     try {
       await removeMealFromDb(id);
-      toast({ title: '🗑️ Repas supprimé' });
+      toast({ title: '🗑️ Repas retiré du planning' });
     } catch {
       toast({ title: '❌ Erreur', variant: 'destructive' });
     }
@@ -175,7 +175,7 @@ export default function Planning() {
         return;
       }
       if (batchSelectedMealTypes.length === 0) {
-        toast({ title: '⚠️ Aucun créneau sélectionné', variant: 'destructive' });
+        toast({ title: '⚠️ Aucun repas sélectionné', variant: 'destructive' });
         return;
       }
 
@@ -203,7 +203,7 @@ export default function Planning() {
         const mealLabels = batchSelectedMealTypes.map(t => PLANNING_MEAL_TYPE_LABELS_SHORT[t]).join(', ');
         toast({
           title: '✅ Batch cooking planifié',
-          description: `${recipe.title} · ${selectedDates.length} jour${selectedDates.length > 1 ? 's' : ''} × ${batchSelectedMealTypes.length} créneau${batchSelectedMealTypes.length > 1 ? 'x' : ''} (${mealLabels}) · ${batchTotalPortions} portion${batchTotalPortions > 1 ? 's' : ''}`,
+          description: `${recipe.title} · ${selectedDates.length} jour${selectedDates.length > 1 ? 's' : ''} × ${batchSelectedMealTypes.length} repas (${mealLabels}) · ${batchTotalPortions} portion${batchTotalPortions > 1 ? 's' : ''}`,
         });
       } catch {
         toast({ title: '❌ Erreur', variant: 'destructive' });
@@ -247,7 +247,7 @@ export default function Planning() {
       await duplicateMeals(duplicateSourceMeal, duplicateDays);
       setDuplicateSourceMeal(null);
       setDuplicateDays([]);
-      toast({ title: '📋 Repas dupliqué', description: `${duplicateDays.length} occurrence(s) ajoutée(s)` });
+      toast({ title: '📋 Repas dupliqué', description: `Ajouté sur ${duplicateDays.length} jour${duplicateDays.length > 1 ? 's' : ''}` });
     } catch {
       toast({ title: '❌ Erreur', variant: 'destructive' });
     }
@@ -335,7 +335,7 @@ export default function Planning() {
                 </div>
 
                 {meals.length === 0 ? (
-                  <p className="text-xs text-muted-foreground mb-2">Aucun repas</p>
+                  <p className="text-xs text-muted-foreground mb-2 italic">Aucun repas prévu — ajoute-en un ci-dessous.</p>
                 ) : (
                   <div className="space-y-1.5 mb-2">
                     <AnimatePresence>
@@ -460,7 +460,7 @@ export default function Planning() {
                   className="gap-1.5 text-muted-foreground hover:text-primary tap-scale w-full justify-center text-xs"
                   onClick={() => openAddDialog(toDateKey(day))}
                 >
-                  <Plus className="w-3.5 h-3.5" /> Ajouter
+                  <Plus className="w-3.5 h-3.5" /> Ajouter un repas
                 </Button>
               </motion.div>
             );
@@ -535,7 +535,7 @@ export default function Planning() {
                     );
                   })}
                   {filteredRecipes.length === 0 && (
-                    <div className="px-3 py-2 text-sm text-muted-foreground">Aucune recette pour ce type</div>
+                    <div className="px-3 py-2 text-sm text-muted-foreground">Aucune recette trouvée</div>
                   )}
                 </SelectContent>
               </Select>
@@ -567,7 +567,7 @@ export default function Planning() {
               />
               <label htmlFor="batch-planning" className="text-sm flex items-center gap-1.5 cursor-pointer">
                 <ChefHat className="w-4 h-4 text-secondary" />
-                Batch cooking (multi-jours & créneaux)
+                Batch cooking (préparer pour plusieurs jours)
               </label>
             </div>
 
@@ -601,7 +601,7 @@ export default function Planning() {
 
                 {/* Day multi-select */}
                 <div>
-                  <Label className="text-xs font-medium mb-2 block">Jours à planifier</Label>
+                  <Label className="text-xs font-medium mb-2 block">Jours concernés</Label>
                   <div className="grid grid-cols-2 gap-1.5 max-h-52 overflow-y-auto">
                     {batchSelectableDays.map(day => {
                       const selected = batchDays.includes(day);
@@ -624,7 +624,7 @@ export default function Planning() {
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground space-y-1">
                     <p>
-                      {batchDays.length} jour{batchDays.length > 1 ? 's' : ''} × {batchSelectedMealTypes.length} créneau{batchSelectedMealTypes.length > 1 ? 'x' : ''} = {batchTotalOccurrences} occurrence{batchTotalOccurrences > 1 ? 's' : ''}
+                      {batchDays.length} jour{batchDays.length > 1 ? 's' : ''} × {batchSelectedMealTypes.length} repas = {batchTotalOccurrences} occurrence{batchTotalOccurrences > 1 ? 's' : ''}
                     </p>
                     <p>
                       Quantité totale à préparer : {batchTotalPortions} portion{batchTotalPortions > 1 ? 's' : ''}
@@ -634,10 +634,10 @@ export default function Planning() {
               </>
             )}
 
-            <div className="text-xs text-muted-foreground bg-muted/60 rounded-md p-2 space-y-1">
-              <p><strong>Portions</strong> = quantité par occurrence.</p>
-              <p><strong>Dupliquer</strong> = copier un repas existant.</p>
-              <p><strong>Batch cooking</strong> = planifier sur plusieurs jours et créneaux.</p>
+            <div className="text-xs text-muted-foreground bg-muted/60 rounded-md p-2.5 space-y-1">
+              <p><strong>Portions</strong> = quantité par repas.</p>
+              <p><strong>Dupliquer</strong> = reproduire un repas sur d'autres jours.</p>
+              <p><strong>Batch cooking</strong> = préparer une recette pour plusieurs jours et repas.</p>
             </div>
 
             <Button
@@ -670,7 +670,7 @@ export default function Planning() {
             </div>
 
             <div>
-              <Label className="text-xs font-medium mb-2 block">Jours de duplication</Label>
+              <Label className="text-xs font-medium mb-2 block">Copier sur ces jours</Label>
               <div className="grid grid-cols-2 gap-1.5 max-h-52 overflow-y-auto">
                 {duplicateSelectableDays.map(day => {
                   const selected = duplicateDays.includes(day);
@@ -692,12 +692,12 @@ export default function Planning() {
                 })}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                {duplicateDays.length} jour(s) sélectionné(s)
+                {duplicateDays.length} jour{duplicateDays.length > 1 ? 's' : ''} sélectionné{duplicateDays.length > 1 ? 's' : ''}
               </p>
             </div>
 
-            <Button className="w-full" onClick={confirmDuplicate} disabled={duplicateDays.length === 0}>
-              Confirmer la duplication
+            <Button className="w-full tap-scale" onClick={confirmDuplicate} disabled={duplicateDays.length === 0}>
+              Dupliquer le repas
             </Button>
           </div>
         </DialogContent>

@@ -117,9 +117,9 @@ export default function MyRecipes() {
         {recipesLoading ? (
           <div className="text-center py-16 text-muted-foreground">Chargement…</div>
         ) : customRecipes.length === 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16 text-muted-foreground">
-            <p className="text-lg">Aucune recette personnelle</p>
-            <p className="text-sm mt-1">Crée tes propres recettes pour les ajouter au planning.</p>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+            <p className="text-lg text-muted-foreground">Pas encore de recette personnelle</p>
+            <p className="text-sm text-muted-foreground mt-1">Crée tes propres recettes et ajoute-les directement au planning.</p>
             <Button className="mt-4 gap-1.5 tap-scale" onClick={startCreate}>
               <Plus className="w-4 h-4" /> Créer ma première recette
             </Button>
@@ -285,7 +285,7 @@ export default function MyRecipes() {
 
             {/* Primary save action */}
             <Button className="w-full tap-scale font-semibold" size="lg" onClick={handleSave} disabled={saving}>
-              {saving ? 'Enregistrement…' : editingId ? '✅ Enregistrer les modifications' : '✅ Créer la recette'}
+              {saving ? 'Enregistrement…' : editingId ? 'Enregistrer les modifications' : 'Créer la recette'}
             </Button>
           </div>
         </DialogContent>

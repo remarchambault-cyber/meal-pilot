@@ -231,7 +231,7 @@ export default function Tracking() {
                 <Utensils className="w-4 h-4 text-accent" />
               </div>
               <p className="font-display font-bold text-base leading-tight">{netConsumed}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Net conso.</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Net consommé</p>
             </div>
             <div>
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-1.5 ${gapBg(ecartConsomme)}`}>
@@ -254,7 +254,7 @@ export default function Tracking() {
                   <span>Détail du jour</span>
                   {(consumedFromMeals > 0 || manualConsumed > 0 || extraBurned > 0) && (
                     <span className="text-[10px] font-normal">
-                      {consumed} conso. {extraBurned > 0 && `· −${extraBurned} extra`}
+                      {consumed} consommées {extraBurned > 0 && `· −${extraBurned} dépensées`}
                     </span>
                   )}
                 </span>
@@ -326,8 +326,9 @@ export default function Tracking() {
         )}
 
         {plannedCalories === 0 && (
-          <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center text-sm text-muted-foreground">
-            Aucun repas planifié aujourd'hui.
+          <motion.div custom={2} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 text-center">
+            <p className="text-sm text-muted-foreground">Aucun repas planifié aujourd'hui.</p>
+            <p className="text-xs text-muted-foreground mt-1">Ajoute des repas depuis le planning pour voir ton suivi ici.</p>
           </motion.div>
         )}
 
@@ -376,7 +377,7 @@ export default function Tracking() {
             <div className="flex gap-2">
               <Input type="number" step="0.1" placeholder="Ex: 72.5" value={newWeight} onChange={e => setNewWeight(e.target.value)} className="flex-1" />
               <Button className="gap-1.5 tap-scale" onClick={addWeight}>
-                <Plus className="w-4 h-4" /> {todayWeightLog ? 'MAJ' : 'OK'}
+                <Plus className="w-4 h-4" /> {todayWeightLog ? 'Mettre à jour' : 'Enregistrer'}
               </Button>
             </div>
             {todayWeightLog && (
@@ -388,7 +389,7 @@ export default function Tracking() {
               </p>
             )}
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              Une pesée par jour. Pèse-toi le matin à jeun.
+              Pèse-toi idéalement le matin à jeun pour un suivi fiable.
             </p>
           </motion.div>
 
@@ -418,7 +419,7 @@ export default function Tracking() {
                   </Button>
                   {todayCalorieLog && (
                     <Button size="sm" variant="outline" className="gap-1 tap-scale" onClick={() => handleCalorieAction('consumed', 'replace')} disabled={!newCalConsumed}>
-                      🔄 Corriger
+                      Remplacer
                     </Button>
                   )}
                 </div>
@@ -432,7 +433,7 @@ export default function Tracking() {
                   </Button>
                   {todayCalorieLog && (
                     <Button size="sm" variant="outline" className="gap-1 tap-scale" onClick={() => handleCalorieAction('burned', 'replace')} disabled={!newCalBurned}>
-                      🔄 Corriger
+                      Remplacer
                     </Button>
                   )}
                 </div>
@@ -444,7 +445,7 @@ export default function Tracking() {
               </Button>
             )}
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              <strong>Ajouter</strong> = cumule au total existant. <strong>Corriger</strong> = remplace la valeur du jour.
+              <strong>Ajouter</strong> = cumule avec la valeur actuelle. <strong>Remplacer</strong> = corrige la valeur du jour.
             </p>
           </motion.div>
         </div>

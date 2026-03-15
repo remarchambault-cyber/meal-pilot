@@ -171,9 +171,10 @@ export default function Dashboard() {
             transition={{ delay: 0.15 }}
             className="card-elevated p-4 text-center"
           >
-            <p className="text-sm text-muted-foreground">Aucun repas planifié aujourd'hui</p>
-            <Button variant="link" size="sm" className="mt-1" onClick={() => navigate('/planning')}>
-              Planifier mes repas →
+            <p className="text-sm text-muted-foreground">Aucun repas planifié pour aujourd'hui.</p>
+            <p className="text-xs text-muted-foreground mt-1">Commence par ajouter des repas à ton planning.</p>
+            <Button variant="link" size="sm" className="mt-2" onClick={() => navigate('/planning')}>
+              Aller au planning →
             </Button>
           </motion.div>
         )}
