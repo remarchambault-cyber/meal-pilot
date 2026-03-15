@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
 import { useRecipes } from '@/hooks/useRecipes';
 import { useMealPlan } from '@/hooks/useMealPlan';
 import { useProfile } from '@/hooks/useProfile';
@@ -10,7 +11,7 @@ import { getScaleFactorForMealType, scaleRecipe } from '@/lib/recipeScaling';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Flame, RefreshCw, Plus, Eye, Target } from 'lucide-react';
+import { Clock, Flame, RefreshCw, Plus, Eye, Target, Search, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AddToPlanModal from '@/components/AddToPlanModal';
 
@@ -42,16 +43,22 @@ export default function Meals() {
   const [filter, setFilter] = useState<MealFilter>('all');
   const [seed, setSeed] = useState(0);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
+  const [search, setSearch] = useState('');
 
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
   const mealTargets = useMemo(() => target ? getMealCalorieSuggestion(target.target) : null, [target]);
 
   const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
     const typeFiltered = filter === 'all'
       ? [...allRecipes]
       : allRecipes.filter(recipe => recipe.mealType === filter);
 
-    return typeFiltered
+    const searchFiltered = q
+      ? typeFiltered.filter(r => r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q))
+      : typeFiltered;
+
+    return searchFiltered
       .map(recipe => {
         const sf = getScaleFactorForMealType(recipe, mealTargets);
         const scaledCal = Math.round(recipe.calories * sf);
@@ -61,7 +68,7 @@ export default function Meals() {
         return { recipe, scaleFactor: sf, scaledCalories: scaledCal, score: calorieGap + jitter };
       })
       .sort((a, b) => a.score - b.score);
-  }, [allRecipes, filter, mealTargets, seed]);
+  }, [allRecipes, filter, mealTargets, seed, search]);
 
   const selectedFilterTarget = useMemo(() => {
     if (!mealTargets || filter === 'all') return null;
@@ -82,6 +89,22 @@ export default function Meals() {
         {target && (
           <p className="text-sm text-muted-foreground">Objectif : {target.target} kcal/jour</p>
         )}
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Rechercher une recette…"
+            className="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-9 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <Select value={filter} onValueChange={(value) => setFilter(value as MealFilter)}>
@@ -167,8 +190,8 @@ export default function Meals() {
 
             {filtered.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
-                <p>Aucune recette pour ce type de repas.</p>
-                <Button variant="outline" className="mt-3" onClick={() => { setFilter('all'); setSeed(s => s + 1); }}>
+                <p>{search ? 'Aucune recette trouvée.' : 'Aucune recette pour ce type de repas.'}</p>
+                <Button variant="outline" className="mt-3" onClick={() => { setFilter('all'); setSearch(''); setSeed(s => s + 1); }}>
                   Réinitialiser les filtres
                 </Button>
               </div>

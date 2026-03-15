@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Trash2, Edit, Eye, Flame, Clock, CalendarPlus } from 'lucide-react';
+import { Plus, Trash2, Edit, Eye, Flame, Clock, CalendarPlus, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 import AddToPlanModal from '@/components/AddToPlanModal';
@@ -38,6 +38,13 @@ export default function MyRecipes() {
   const [newStep, setNewStep] = useState('');
   const [planRecipe, setPlanRecipe] = useState<Recipe | null>(null);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const displayedRecipes = customRecipes.filter(r => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase().trim();
+    return r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q);
+  });
 
   const startCreate = () => { setEditingId(null); setForm({ ...EMPTY_RECIPE, ingredients: [], steps: [] }); setShowEditor(true); };
   const startEdit = (recipe: Recipe) => { setEditingId(recipe.id); const { id, ...rest } = recipe; setForm({ ...rest }); setShowEditor(true); };
@@ -89,6 +96,24 @@ export default function MyRecipes() {
           </Button>
         </div>
 
+        {customRecipes.length > 0 && (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Rechercher une recette…"
+              className="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-9 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
+
         {recipesLoading ? (
           <div className="text-center py-16 text-muted-foreground">Chargement…</div>
         ) : customRecipes.length === 0 ? (
@@ -102,7 +127,13 @@ export default function MyRecipes() {
         ) : (
           <div className="space-y-3">
             <AnimatePresence>
-              {customRecipes.map((recipe, i) => (
+              {displayedRecipes.length === 0 && search.trim() ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>Aucune recette trouvée.</p>
+                  <Button variant="outline" size="sm" className="mt-3" onClick={() => setSearch('')}>Réinitialiser la recherche</Button>
+                </div>
+              ) : null}
+              {displayedRecipes.map((recipe, i) => (
                 <motion.div
                   key={recipe.id}
                   initial={{ opacity: 0, y: 10 }}
