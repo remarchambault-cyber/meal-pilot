@@ -111,20 +111,33 @@ export default function Tracking() {
     }
   };
 
-  const addCalories = async () => {
-    if (!newCalConsumed && !newCalBurned) return;
+  const handleCalorieAction = async (field: 'consumed' | 'burned', mode: 'add' | 'replace') => {
+    const raw = field === 'consumed' ? newCalConsumed : newCalBurned;
+    if (!raw) return;
+    const value = parseInt(raw, 10);
+    if (isNaN(value) || value < 0) return;
+
     try {
       const existing = calorieLogs.find(l => l.date === today);
-      const consumed = newCalConsumed ? parseInt(newCalConsumed, 10) : (existing?.consumedManual ?? 0);
-      const burned = newCalBurned ? parseInt(newCalBurned, 10) : (existing?.burnedExtra ?? 0);
-      const isUpdate = await upsertCalories(
-        today,
-        consumed,
-        burned,
-      );
-      setNewCalConsumed('');
-      setNewCalBurned('');
-      toast({ title: isUpdate ? '🔄 Calories du jour mises à jour' : '✅ Calories enregistrées' });
+      const currentConsumed = existing?.consumedManual ?? 0;
+      const currentBurned = existing?.burnedExtra ?? 0;
+
+      let finalConsumed = currentConsumed;
+      let finalBurned = currentBurned;
+
+      if (field === 'consumed') {
+        finalConsumed = mode === 'add' ? currentConsumed + value : value;
+      } else {
+        finalBurned = mode === 'add' ? currentBurned + value : value;
+      }
+
+      await upsertCalories(today, finalConsumed, finalBurned);
+
+      if (field === 'consumed') setNewCalConsumed('');
+      else setNewCalBurned('');
+
+      const label = field === 'consumed' ? 'Consommées' : 'Dépensées';
+      toast({ title: mode === 'add' ? `➕ ${label} : +${value} kcal` : `🔄 ${label} → ${value} kcal` });
     } catch (err) {
       console.error(err);
       toast({ title: '❌ Erreur', description: 'Impossible d\'enregistrer les calories.', variant: 'destructive' });
@@ -395,28 +408,43 @@ export default function Tracking() {
                 </div>
               </div>
             )}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-3">
               <div>
-                <Label className="text-xs">Consommées</Label>
-                <Input type="number" placeholder={todayCalorieLog ? String(manualConsumed) : 'kcal'} value={newCalConsumed} onChange={e => setNewCalConsumed(e.target.value)} />
+                <Label className="text-xs">Consommées manuelles (kcal)</Label>
+                <div className="flex gap-1.5 mt-1">
+                  <Input type="number" min="0" placeholder="kcal" value={newCalConsumed} onChange={e => setNewCalConsumed(e.target.value)} className="flex-1" />
+                  <Button size="sm" className="gap-1 tap-scale" onClick={() => handleCalorieAction('consumed', 'add')} disabled={!newCalConsumed}>
+                    <Plus className="w-3.5 h-3.5" /> Ajouter
+                  </Button>
+                  {todayCalorieLog && (
+                    <Button size="sm" variant="outline" className="gap-1 tap-scale" onClick={() => handleCalorieAction('consumed', 'replace')} disabled={!newCalConsumed}>
+                      🔄 Corriger
+                    </Button>
+                  )}
+                </div>
               </div>
               <div>
-                <Label className="text-xs">Dépensées</Label>
-                <Input type="number" placeholder={todayCalorieLog ? String(extraBurned) : 'kcal'} value={newCalBurned} onChange={e => setNewCalBurned(e.target.value)} />
+                <Label className="text-xs">Dépensées extra (kcal)</Label>
+                <div className="flex gap-1.5 mt-1">
+                  <Input type="number" min="0" placeholder="kcal" value={newCalBurned} onChange={e => setNewCalBurned(e.target.value)} className="flex-1" />
+                  <Button size="sm" className="gap-1 tap-scale" onClick={() => handleCalorieAction('burned', 'add')} disabled={!newCalBurned}>
+                    <Plus className="w-3.5 h-3.5" /> Ajouter
+                  </Button>
+                  {todayCalorieLog && (
+                    <Button size="sm" variant="outline" className="gap-1 tap-scale" onClick={() => handleCalorieAction('burned', 'replace')} disabled={!newCalBurned}>
+                      🔄 Corriger
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button className="flex-1 gap-1.5 tap-scale" variant="outline" onClick={addCalories}>
-                {todayCalorieLog ? '🔄 Modifier' : <><Plus className="w-4 h-4" /> Enregistrer</>}
+            {todayCalorieLog && (
+              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive gap-1 w-full" onClick={resetCalories}>
+                🗑️ Réinitialiser le jour
               </Button>
-              {todayCalorieLog && (
-                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive shrink-0" onClick={resetCalories} title="Réinitialiser">
-                  🗑️
-                </Button>
-              )}
-            </div>
+            )}
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              {todayCalorieLog ? 'Une saisie par jour. Modifie ou réinitialise la valeur.' : 'Une seule saisie par jour. Tu pourras la modifier ensuite.'}
+              <strong>Ajouter</strong> = cumule au total existant. <strong>Corriger</strong> = remplace la valeur du jour.
             </p>
           </motion.div>
         </div>
