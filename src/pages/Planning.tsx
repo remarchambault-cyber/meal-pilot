@@ -335,7 +335,7 @@ export default function Planning() {
                 </div>
 
                 {meals.length === 0 ? (
-                  <p className="text-xs text-muted-foreground mb-2">Aucun repas</p>
+                  <p className="text-xs text-muted-foreground mb-2 italic">Aucun repas prévu — ajoute-en un ci-dessous.</p>
                 ) : (
                   <div className="space-y-1.5 mb-2">
                     <AnimatePresence>
