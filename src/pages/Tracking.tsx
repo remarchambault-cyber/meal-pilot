@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { UserProfile, WeightLog, CalorieLog, MealPlanItem, Recipe } from '@/data/types';
+import { useProfile } from '@/hooks/useProfile';
+import { useRecipes } from '@/hooks/useRecipes';
+import { useMealPlan } from '@/hooks/useMealPlan';
+import { useWeightLogs } from '@/hooks/useWeightLogs';
+import { useCalorieLogs } from '@/hooks/useCalorieLogs';
 import { calculateCalorieTarget } from '@/lib/calories';
-import { mockRecipes } from '@/data/recipes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,17 +18,16 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export default function Tracking() {
-  const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
-  const [weightLogs, setWeightLogs] = useLocalStorage<WeightLog[]>('mealpilot_weight', []);
-  const [calorieLogs, setCalorieLogs] = useLocalStorage<CalorieLog[]>('mealpilot_calories', []);
-  const [mealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
-  const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
+  const { profile } = useProfile();
+  const { allRecipes } = useRecipes();
+  const { mealPlan } = useMealPlan();
+  const { weightLogs, upsertWeight } = useWeightLogs();
+  const { calorieLogs, upsertCalories, deleteCalories } = useCalorieLogs();
 
   const [newWeight, setNewWeight] = useState('');
   const [newCalConsumed, setNewCalConsumed] = useState('');
   const [newCalBurned, setNewCalBurned] = useState('');
 
-  const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
   const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -80,54 +81,62 @@ export default function Tracking() {
           consumed: !!m.consumed,
         } : null;
       })
-      .filter(Boolean) as { name: string; calories: number; mealType: MealPlanItem['mealType']; consumed: boolean }[];
+      .filter(Boolean) as { name: string; calories: number; mealType: string; consumed: boolean }[];
   }, [mealPlan, today, allRecipes]);
 
   const todayCalorieLog = calorieLogs.find(l => l.date === today);
-  const manualConsumed = todayCalorieLog?.caloriesConsumed || 0;
-  const extraBurned = todayCalorieLog?.caloriesBurned || 0;
+  const manualConsumed = todayCalorieLog?.consumedManual || 0;
+  const extraBurned = todayCalorieLog?.burnedExtra || 0;
   const consumed = consumedFromMeals + manualConsumed;
   const netConsumed = consumed - extraBurned;
   const dailyTarget = target?.target || 0;
 
-  // Two distinct gaps
   const ecartPlanifie = plannedCalories - dailyTarget;
   const ecartConsomme = netConsumed - dailyTarget;
 
   const todayWeightLog = weightLogs.find(l => l.date === today);
 
-  const addWeight = () => {
+  const addWeight = async () => {
     if (!newWeight) return;
-    const isUpdate = !!todayWeightLog;
-    const log: WeightLog = { id: `w_${Date.now()}`, date: today, weight: parseFloat(newWeight), updatedAt: new Date().toISOString() };
-    setWeightLogs(prev => [...prev.filter(l => l.date !== today), log]);
-    setNewWeight('');
-    toast({
-      title: isUpdate ? '🔄 Pesée du jour mise à jour' : '✅ Poids enregistré',
-      description: `${log.weight} kg`,
-    });
+    try {
+      const isUpdate = await upsertWeight(today, parseFloat(newWeight));
+      setNewWeight('');
+      toast({
+        title: isUpdate ? '🔄 Pesée du jour mise à jour' : '✅ Poids enregistré',
+        description: `${parseFloat(newWeight)} kg`,
+      });
+    } catch (err) {
+      console.error(err);
+      toast({ title: '❌ Erreur', description: 'Impossible d\'enregistrer le poids.', variant: 'destructive' });
+    }
   };
 
-  const addCalories = () => {
+  const addCalories = async () => {
     if (!newCalConsumed && !newCalBurned) return;
-    const isUpdate = !!todayCalorieLog;
-    const log: CalorieLog = {
-      id: todayCalorieLog?.id || `c_${Date.now()}`,
-      date: today,
-      caloriesConsumed: parseInt(newCalConsumed, 10) || 0,
-      caloriesBurned: parseInt(newCalBurned, 10) || 0,
-    };
-    setCalorieLogs(prev => [...prev.filter(l => l.date !== today), log]);
-    setNewCalConsumed('');
-    setNewCalBurned('');
-    toast({ title: isUpdate ? '🔄 Calories du jour mises à jour' : '✅ Calories enregistrées' });
+    try {
+      const isUpdate = await upsertCalories(
+        today,
+        parseInt(newCalConsumed, 10) || 0,
+        parseInt(newCalBurned, 10) || 0,
+      );
+      setNewCalConsumed('');
+      setNewCalBurned('');
+      toast({ title: isUpdate ? '🔄 Calories du jour mises à jour' : '✅ Calories enregistrées' });
+    } catch (err) {
+      console.error(err);
+      toast({ title: '❌ Erreur', description: 'Impossible d\'enregistrer les calories.', variant: 'destructive' });
+    }
   };
 
-  const resetCalories = () => {
-    setCalorieLogs(prev => prev.filter(l => l.date !== today));
-    setNewCalConsumed('');
-    setNewCalBurned('');
-    toast({ title: '🗑️ Calories manuelles du jour réinitialisées' });
+  const resetCalories = async () => {
+    try {
+      await deleteCalories(today);
+      setNewCalConsumed('');
+      setNewCalBurned('');
+      toast({ title: '🗑️ Calories manuelles du jour réinitialisées' });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const advice = useMemo(() => {
@@ -187,7 +196,6 @@ export default function Tracking() {
         {/* ═══ NIVEAU 1 — 4 indicateurs principaux ═══ */}
         <motion.div custom={0} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4">
           <div className="grid grid-cols-4 gap-2 text-center">
-            {/* Cible */}
             <div>
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-1.5">
                 <Target className="w-4 h-4 text-primary" />
@@ -195,7 +203,6 @@ export default function Tracking() {
               <p className="font-display font-bold text-base leading-tight">{dailyTarget || '—'}</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Cible</p>
             </div>
-            {/* Prévues */}
             <div>
               <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center mx-auto mb-1.5">
                 <CalendarCheck className="w-4 h-4 text-muted-foreground" />
@@ -203,7 +210,6 @@ export default function Tracking() {
               <p className="font-display font-bold text-base leading-tight">{plannedCalories}</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Prévues</p>
             </div>
-            {/* Net consommé */}
             <div>
               <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mx-auto mb-1.5">
                 <Utensils className="w-4 h-4 text-accent" />
@@ -211,7 +217,6 @@ export default function Tracking() {
               <p className="font-display font-bold text-base leading-tight">{netConsumed}</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Net conso.</p>
             </div>
-            {/* Écart vs cible */}
             <div>
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-1.5 ${gapBg(ecartConsomme)}`}>
                 <Target className={`w-4 h-4 ${gapColor(ecartConsomme)}`} />
@@ -242,7 +247,6 @@ export default function Tracking() {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="card-elevated mt-1 p-4 rounded-xl space-y-3">
-                {/* Secondary metrics row */}
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div className="p-2 rounded-lg bg-muted/40">
                     <p className="font-display font-semibold text-sm">{consumedFromMeals}</p>
@@ -258,7 +262,6 @@ export default function Tracking() {
                   </div>
                 </div>
 
-                {/* Full recap table */}
                 <div className="space-y-1 text-sm border-t border-border pt-3">
                   <div className="flex justify-between"><span className="text-muted-foreground">Cible</span><span>{dailyTarget} kcal</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Prévues (planning)</span><span>{plannedCalories} kcal</span></div>
@@ -350,7 +353,6 @@ export default function Tracking() {
 
         {/* ═══ Saisies ═══ */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Poids */}
           <motion.div custom={4} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
             <h2 className="font-display font-semibold text-sm flex items-center gap-2">
               <Scale className="w-4 h-4 text-primary" /> Poids
@@ -374,7 +376,6 @@ export default function Tracking() {
             </p>
           </motion.div>
 
-          {/* Calories manuelles */}
           <motion.div custom={5} variants={cardVariants} initial="hidden" animate="visible" className="card-elevated p-4 space-y-3">
             <h2 className="font-display font-semibold text-sm flex items-center gap-2">
               <Flame className="w-4 h-4 text-accent" /> Calories extra

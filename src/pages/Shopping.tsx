@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { MealPlanItem, Recipe } from '@/data/types';
-import { mockRecipes } from '@/data/recipes';
+import { useMealPlan } from '@/hooks/useMealPlan';
+import { useRecipes } from '@/hooks/useRecipes';
 import AppLayout from '@/components/AppLayout';
 import { Checkbox } from '@/components/ui/checkbox';
 import { motion } from 'framer-motion';
@@ -42,12 +41,10 @@ function capitalize(s: string): string {
 }
 
 export default function Shopping() {
-  const [mealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
-  const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
+  const { mealPlan } = useMealPlan();
+  const { allRecipes } = useRecipes();
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-
-  const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
 
   const shoppingList = useMemo(() => {
     const map: Record<string, ShoppingItem> = {};
