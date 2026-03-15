@@ -460,7 +460,7 @@ export default function Planning() {
                   className="gap-1.5 text-muted-foreground hover:text-primary tap-scale w-full justify-center text-xs"
                   onClick={() => openAddDialog(toDateKey(day))}
                 >
-                  <Plus className="w-3.5 h-3.5" /> Ajouter
+                  <Plus className="w-3.5 h-3.5" /> Ajouter un repas
                 </Button>
               </motion.div>
             );
