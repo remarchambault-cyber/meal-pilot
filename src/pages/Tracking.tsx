@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { gapTextColor, gapBgColor } from '@/lib/gapColor';
 import { useProfile } from '@/hooks/useProfile';
 import { useRecipes } from '@/hooks/useRecipes';
 import { useMealPlan } from '@/hooks/useMealPlan';
