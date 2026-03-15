@@ -567,7 +567,7 @@ export default function Planning() {
               />
               <label htmlFor="batch-planning" className="text-sm flex items-center gap-1.5 cursor-pointer">
                 <ChefHat className="w-4 h-4 text-secondary" />
-                Batch cooking (multi-jours & créneaux)
+                Batch cooking (préparer pour plusieurs jours)
               </label>
             </div>
 
