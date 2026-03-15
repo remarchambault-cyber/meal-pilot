@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { UserProfile, Recipe, MealPlanItem } from '@/data/types';
-import { mockRecipes } from '@/data/recipes';
+import { useRecipes } from '@/hooks/useRecipes';
+import { useMealPlan } from '@/hooks/useMealPlan';
+import { useProfile } from '@/hooks/useProfile';
+import { Recipe } from '@/data/types';
 import { calculateCalorieTarget, getMealCalorieSuggestion } from '@/lib/calories';
 import { PLANNING_MEAL_TYPE_LABELS_SHORT } from '@/lib/mealTypes';
 import { getScaleFactorForMealType, scaleRecipe } from '@/lib/recipeScaling';
@@ -35,14 +36,13 @@ function getSeededJitter(seed: number, recipeId: string) {
 
 export default function Meals() {
   const navigate = useNavigate();
-  const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
-  const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
-  const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
+  const { profile } = useProfile();
+  const { allRecipes, loading: recipesLoading } = useRecipes();
+  const { addMeals } = useMealPlan();
   const [filter, setFilter] = useState<MealFilter>('all');
   const [seed, setSeed] = useState(0);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
 
-  const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
   const mealTargets = useMemo(() => target ? getMealCalorieSuggestion(target.target) : null, [target]);
 
@@ -105,74 +105,76 @@ export default function Meals() {
           )}
         </div>
 
-        <div className="space-y-3">
-          {filtered.map(({ recipe, scaleFactor, scaledCalories }, i) => {
-            const mealTarget = mealTargets?.[recipe.mealType] || 0;
-            const calorieDelta = mealTarget ? scaledCalories - mealTarget : null;
-            const scaled = scaleRecipe(recipe, scaleFactor);
+        {recipesLoading ? (
+          <div className="text-center py-12 text-muted-foreground">Chargement…</div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map(({ recipe, scaleFactor, scaledCalories }, i) => {
+              const scaled = scaleRecipe(recipe, scaleFactor);
 
-            return (
-              <motion.div
-                key={recipe.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03, duration: 0.3 }}
-                className="card-elevated p-4 space-y-3 transition-shadow duration-200 hover:shadow-md"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-display font-semibold text-base">{recipe.title}</h3>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-                        {PLANNING_MEAL_TYPE_LABELS_SHORT[recipe.mealType]}
-                      </span>
+              return (
+                <motion.div
+                  key={recipe.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.03, duration: 0.3 }}
+                  className="card-elevated p-4 space-y-3 transition-shadow duration-200 hover:shadow-md"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-display font-semibold text-base">{recipe.title}</h3>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                          {PLANNING_MEAL_TYPE_LABELS_SHORT[recipe.mealType]}
+                        </span>
+                      </div>
+                      <p className="text-sm text-body-text mt-0.5">{recipe.description}</p>
                     </div>
-                    <p className="text-sm text-body-text mt-0.5">{recipe.description}</p>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                  <span className="flex items-center gap-1">
-                    <Flame className="w-4 h-4 text-accent" />
-                    {scaledCalories} kcal
-                  </span>
-                  {scaled.isScaled && (
-                    <span className="text-xs text-primary">
-                      Portion ajustée
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                    <span className="flex items-center gap-1">
+                      <Flame className="w-4 h-4 text-accent" />
+                      {scaledCalories} kcal
                     </span>
-                  )}
-                  <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{recipe.prepTime} min</span>
-                </div>
-
-                {scaled.isScaled && (
-                  <div className="flex gap-3 text-xs text-muted-foreground">
-                    <span>P {scaled.protein}g</span>
-                    <span>G {scaled.carbs}g</span>
-                    <span>L {scaled.fat}g</span>
+                    {scaled.isScaled && (
+                      <span className="text-xs text-primary">
+                        Portion ajustée
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{recipe.prepTime} min</span>
                   </div>
-                )}
 
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="gap-1.5 tap-scale" onClick={() => navigate(`/recipe/${recipe.id}?scale=${scaleFactor}`)}>
-                    <Eye className="w-4 h-4" /> Recette
-                  </Button>
-                  <Button size="sm" className="gap-1.5 tap-scale" onClick={() => setModalRecipe(recipe)}>
-                    <Plus className="w-4 h-4" /> Au planning
-                  </Button>
-                </div>
-              </motion.div>
-            );
-          })}
+                  {scaled.isScaled && (
+                    <div className="flex gap-3 text-xs text-muted-foreground">
+                      <span>P {scaled.protein}g</span>
+                      <span>G {scaled.carbs}g</span>
+                      <span>L {scaled.fat}g</span>
+                    </div>
+                  )}
 
-          {filtered.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>Aucune recette pour ce type de repas.</p>
-              <Button variant="outline" className="mt-3" onClick={() => { setFilter('all'); setSeed(s => s + 1); }}>
-                Réinitialiser les filtres
-              </Button>
-            </div>
-          )}
-        </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-1.5 tap-scale" onClick={() => navigate(`/recipe/${recipe.id}?scale=${scaleFactor}`)}>
+                      <Eye className="w-4 h-4" /> Recette
+                    </Button>
+                    <Button size="sm" className="gap-1.5 tap-scale" onClick={() => setModalRecipe(recipe)}>
+                      <Plus className="w-4 h-4" /> Au planning
+                    </Button>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            {filtered.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <p>Aucune recette pour ce type de repas.</p>
+                <Button variant="outline" className="mt-3" onClick={() => { setFilter('all'); setSeed(s => s + 1); }}>
+                  Réinitialiser les filtres
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {modalRecipe && (
@@ -181,7 +183,7 @@ export default function Meals() {
           onOpenChange={(open) => !open && setModalRecipe(null)}
           recipe={modalRecipe}
           mealTargets={mealTargets}
-          onAdd={(items) => setMealPlan(prev => [...prev, ...items])}
+          onAdd={(items) => addMeals(items)}
         />
       )}
     </AppLayout>

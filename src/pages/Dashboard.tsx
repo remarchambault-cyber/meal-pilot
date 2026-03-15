@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { UserProfile, WeightLog, CalorieLog, MealPlanItem, Recipe } from '@/data/types';
+import { UserProfile, WeightLog, CalorieLog, MealPlanItem } from '@/data/types';
+import { useRecipes } from '@/hooks/useRecipes';
+import { useMealPlan } from '@/hooks/useMealPlan';
+import { useProfile } from '@/hooks/useProfile';
 import { calculateCalorieTarget, getGoalLabel } from '@/lib/calories';
-import { mockRecipes } from '@/data/recipes';
 import { PLANNING_MEAL_TYPE_LABELS_SHORT, PLANNING_MEAL_TYPE_ORDER } from '@/lib/mealTypes';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -13,13 +15,12 @@ import { format } from 'date-fns';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [profile] = useLocalStorage<UserProfile | null>('mealpilot_profile', null);
+  const { profile } = useProfile();
+  const { allRecipes } = useRecipes();
+  const { mealPlan, toggleConsumed } = useMealPlan();
   const [weightLogs] = useLocalStorage<WeightLog[]>('mealpilot_weight', []);
   const [calorieLogs] = useLocalStorage<CalorieLog[]>('mealpilot_calories', []);
-  const [mealPlan, setMealPlan] = useLocalStorage<MealPlanItem[]>('mealpilot_mealplan', []);
-  const [customRecipes] = useLocalStorage<Recipe[]>('mealpilot_custom_recipes', []);
 
-  const allRecipes = useMemo(() => [...mockRecipes, ...customRecipes], [customRecipes]);
   const target = useMemo(() => profile ? calculateCalorieTarget(profile) : null, [profile]);
 
   const currentWeight = weightLogs.length > 0
@@ -56,10 +57,6 @@ export default function Dashboard() {
       })
       .filter(Boolean) as { id: string; name: string; mealType: MealPlanItem['mealType']; calories: number; consumed: boolean }[];
   }, [mealPlan, today, allRecipes]);
-
-  const toggleConsumed = (mealId: string) => {
-    setMealPlan(prev => prev.map(m => m.id === mealId ? { ...m, consumed: !m.consumed } : m));
-  };
 
   if (!profile || !target) {
     navigate('/onboarding');
