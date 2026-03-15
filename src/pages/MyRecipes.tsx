@@ -38,6 +38,13 @@ export default function MyRecipes() {
   const [newStep, setNewStep] = useState('');
   const [planRecipe, setPlanRecipe] = useState<Recipe | null>(null);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const displayedRecipes = customRecipes.filter(r => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase().trim();
+    return r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q);
+  });
 
   const startCreate = () => { setEditingId(null); setForm({ ...EMPTY_RECIPE, ingredients: [], steps: [] }); setShowEditor(true); };
   const startEdit = (recipe: Recipe) => { setEditingId(recipe.id); const { id, ...rest } = recipe; setForm({ ...rest }); setShowEditor(true); };
