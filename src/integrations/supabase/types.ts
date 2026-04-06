@@ -133,10 +133,12 @@ export type Database = {
           goal_type: string
           height_cm: number
           id: string
+          onboarding_done: boolean | null
           preferences_json: Json | null
           sex: string
           target_calories: number | null
           target_rate: string | null
+          target_weight_kg: number | null
           updated_at: string
           user_id: string
         }
@@ -151,10 +153,12 @@ export type Database = {
           goal_type?: string
           height_cm?: number
           id?: string
+          onboarding_done?: boolean | null
           preferences_json?: Json | null
           sex?: string
           target_calories?: number | null
           target_rate?: string | null
+          target_weight_kg?: number | null
           updated_at?: string
           user_id: string
         }
@@ -169,10 +173,12 @@ export type Database = {
           goal_type?: string
           height_cm?: number
           id?: string
+          onboarding_done?: boolean | null
           preferences_json?: Json | null
           sex?: string
           target_calories?: number | null
           target_rate?: string | null
+          target_weight_kg?: number | null
           updated_at?: string
           user_id?: string
         }
