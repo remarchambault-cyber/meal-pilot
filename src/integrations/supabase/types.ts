@@ -258,6 +258,7 @@ export type Database = {
           is_system_recipe: boolean
           meal_type: string
           owner_profile_id: string | null
+          photo_uri: string | null
           prep_time_min: number
           title: string
           updated_at: string
@@ -274,6 +275,7 @@ export type Database = {
           is_system_recipe?: boolean
           meal_type?: string
           owner_profile_id?: string | null
+          photo_uri?: string | null
           prep_time_min?: number
           title: string
           updated_at?: string
@@ -290,6 +292,7 @@ export type Database = {
           is_system_recipe?: boolean
           meal_type?: string
           owner_profile_id?: string | null
+          photo_uri?: string | null
           prep_time_min?: number
           title?: string
           updated_at?: string
