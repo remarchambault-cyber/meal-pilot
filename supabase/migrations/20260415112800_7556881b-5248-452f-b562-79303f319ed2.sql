@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN tracking_enabled boolean NOT NULL DEFAULT false;
