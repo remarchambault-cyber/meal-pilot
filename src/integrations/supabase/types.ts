@@ -139,6 +139,7 @@ export type Database = {
           target_calories: number | null
           target_rate: string | null
           target_weight_kg: number | null
+          tracking_enabled: boolean
           updated_at: string
           user_id: string
         }
@@ -159,6 +160,7 @@ export type Database = {
           target_calories?: number | null
           target_rate?: string | null
           target_weight_kg?: number | null
+          tracking_enabled?: boolean
           updated_at?: string
           user_id: string
         }
@@ -179,6 +181,7 @@ export type Database = {
           target_calories?: number | null
           target_rate?: string | null
           target_weight_kg?: number | null
+          tracking_enabled?: boolean
           updated_at?: string
           user_id?: string
         }
